@@ -31,6 +31,8 @@ class CnqsState {
 
     CnqsState operator-(const CnqsState &v) { return CnqsState(vec_ - v.vec_); }
 
+    const double &operator()(unsigned long i) const { return vec_(i); }
+
     double &operator()(unsigned long i) { return vec_(i); }
 
     void save(const std::string &file_name, unsigned long id = 0);
