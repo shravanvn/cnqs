@@ -33,13 +33,9 @@ class CnqsState {
 
     double &operator()(unsigned long i) { return vec_(i); }
 
-    void save(const std::string &file_name) {
-        vec_.save(arma::hdf5_name(file_name, "state"));
-    }
+    void save(const std::string &file_name, unsigned long id = 0);
 
-    void load(const std::string &file_name) {
-        vec_.load(arma::hdf5_name(file_name, "state"));
-    }
+    void load(const std::string &file_name, unsigned long id = 0);
 
     friend CnqsState operator*(double c, const CnqsState &v) {
         return CnqsState(c * v.vec_);

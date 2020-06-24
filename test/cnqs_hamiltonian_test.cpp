@@ -26,7 +26,7 @@ TEST(cnqs_hamiltonian, initialize_state) {
     CnqsHamiltonian hamiltonian(d, n, edges, g, J);
 
     CnqsState state = hamiltonian.initialize_state();
-    state.save("cnqs_hamiltonian_initial_state.h5");
+    state.save("cnqs_hamiltonian_initial_state.h5", 0);
 }
 
 int main(int argc, char **argv) {

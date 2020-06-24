@@ -1,4 +1,5 @@
-add_library(cnqs cnqs_hamiltonian.cpp)
+add_library(cnqs cnqs_state.cpp
+                 cnqs_hamiltonian.cpp)
 target_include_directories(cnqs PUBLIC ${PROJECT_SOURCE_DIR}/include
                                        ${ARMADILLO_INCLUDE_DIRS})
 target_link_libraries(cnqs PUBLIC ${ARMADILLO_LIBRARIES})
