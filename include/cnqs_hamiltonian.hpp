@@ -11,8 +11,7 @@ class CnqsHamiltonian {
     CnqsHamiltonian(
         unsigned long d, unsigned long n,
         std::vector<const std::tuple<unsigned long, unsigned long>> edges,
-        double g, double J)
-        : d_(d), n_(n), edges_(edges), g_(g), J_(J) {}
+        double g, double J);
 
     ~CnqsHamiltonian() = default;
 
@@ -30,6 +29,9 @@ class CnqsHamiltonian {
     std::vector<const std::tuple<unsigned long, unsigned long>> edges_;
     double g_;
     double J_;
+    unsigned long num_element_;
+    unsigned long num_edge_;
+    std::vector<double> theta_;
 };
 
 #endif
