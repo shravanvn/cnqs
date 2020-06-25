@@ -27,15 +27,29 @@ class CnqsState {
         return *this;
     }
 
-    CnqsState operator+(const CnqsState &v) { return CnqsState(vec_ + v.vec_); }
+    CnqsState operator+=(const CnqsState &v) {
+        this->vec_ += v.vec_;
+        return *this;
+    }
 
-    CnqsState operator-(const CnqsState &v) { return CnqsState(vec_ - v.vec_); }
+    CnqsState operator+(const CnqsState &v) const {
+        return CnqsState(vec_ + v.vec_);
+    }
+
+    CnqsState operator-=(const CnqsState &v) {
+        this->vec_ -= v.vec_;
+        return *this;
+    }
+
+    CnqsState operator-(const CnqsState &v) const {
+        return CnqsState(vec_ - v.vec_);
+    }
 
     const double &operator()(unsigned long i) const { return vec_(i); }
 
     double &operator()(unsigned long i) { return vec_(i); }
 
-    void save(const std::string &file_name, unsigned long id = 0);
+    void save(const std::string &file_name, unsigned long id = 0) const;
 
     void load(const std::string &file_name, unsigned long id = 0);
 
