@@ -1,0 +1,2 @@
+add_executable(inverse_power_direct inverse_power_direct.cpp)
+target_link_libraries(inverse_power_direct cnqs::cnqs)
