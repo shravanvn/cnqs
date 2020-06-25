@@ -8,10 +8,8 @@
 
 class CnqsHamiltonian {
   public:
-    CnqsHamiltonian(
-        unsigned long d, unsigned long n,
-        std::vector<const std::tuple<unsigned long, unsigned long>> edges,
-        double g, double J);
+    CnqsHamiltonian(int d, int n, std::vector<std::tuple<int, int>> edges,
+                    double g, double J);
 
     ~CnqsHamiltonian() = default;
 
@@ -19,18 +17,18 @@ class CnqsHamiltonian {
 
     CnqsState operator*(const CnqsState &state) const;
 
-    inline CnqsState trans_mult(const CnqsState &state) const {
-        return *this * state;
-    }
+    void inverse_power_iteration(int cg_max_iter, double cg_tol,
+                                 int power_max_iter, double power_tol,
+                                 const std::string &file_name) const;
 
   private:
-    unsigned long d_;
-    unsigned long n_;
-    std::vector<const std::tuple<unsigned long, unsigned long>> edges_;
+    int d_;
+    int n_;
+    std::vector<std::tuple<int, int>> edges_;
     double g_;
     double J_;
-    unsigned long num_element_;
-    unsigned long num_edge_;
+    int num_element_;
+    int num_edge_;
     std::vector<double> theta_;
 };
 
