@@ -3,6 +3,8 @@
 #include <tuple>
 #include <vector>
 
+#include <hdf5.h>
+
 #include "cnqs_hamiltonian.hpp"
 #include "cnqs_state.hpp"
 
@@ -25,8 +27,13 @@ TEST(cnqs_hamiltonian, initialize_state) {
 
     CnqsHamiltonian hamiltonian(d, n, edges, g, J);
 
+    hid_t file_id = H5Fcreate("cnqs_hamiltonian_initial_state.h5",
+                              H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
     CnqsState state = hamiltonian.initialize_state();
-    state.save("cnqs_hamiltonian_initial_state.h5", 0);
+    state.save(file_id, 0);
+
+    H5Fclose(file_id);
 }
 
 TEST(cnqs_hamiltonian, operator_apply_no_edge) {
@@ -38,11 +45,16 @@ TEST(cnqs_hamiltonian, operator_apply_no_edge) {
 
     CnqsHamiltonian hamiltonian(d, n, edges, g, J);
 
+    hid_t file_id = H5Fcreate("cnqs_hamiltonian_operator_apply_no_edge.h5",
+                              H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
     CnqsState state = hamiltonian.initialize_state();
-    state.save("cnqs_hamiltonian_operator_apply_no_edge.h5", 0);
+    state.save(file_id, 0);
 
     CnqsState new_state = hamiltonian * state;
-    new_state.save("cnqs_hamiltonian_operator_apply_no_edge.h5", 1);
+    new_state.save(file_id, 1);
+
+    H5Fclose(file_id);
 }
 
 TEST(cnqs_hamiltonian, operator_apply_one_edge) {
@@ -54,11 +66,16 @@ TEST(cnqs_hamiltonian, operator_apply_one_edge) {
 
     CnqsHamiltonian hamiltonian(d, n, edges, g, J);
 
+    hid_t file_id = H5Fcreate("cnqs_hamiltonian_operator_apply_one_edge.h5",
+                              H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+
     CnqsState state = hamiltonian.initialize_state();
-    state.save("cnqs_hamiltonian_operator_apply_one_edge.h5", 0);
+    state.save(file_id, 0);
 
     CnqsState new_state = hamiltonian * state;
-    new_state.save("cnqs_hamiltonian_operator_apply_one_edge.h5", 1);
+    new_state.save(file_id, 1);
+
+    H5Fclose(file_id);
 }
 
 int main(int argc, char **argv) {
