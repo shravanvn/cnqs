@@ -1,7 +1,9 @@
 #ifndef CNQS_STATE_HPP
 #define CNQS_STATE_HPP
 
-#include <armadillo>
+#include <vector>
+
+#include <hdf5.h>
 
 class CnqsState {
   public:
@@ -17,54 +19,38 @@ class CnqsState {
 
     CnqsState &operator=(CnqsState &&) = default;
 
-    CnqsState(unsigned long n)
-        : vec_(arma::Col<double>(n, arma::fill::zeros)) {}
+    CnqsState(int n) : size_(n), data_(std::vector<double>(n, 0.0)) {}
 
-    CnqsState(const arma::Col<double> &vec) : vec_(vec) {}
+    CnqsState(const std::vector<double> &data)
+        : size_(data.size()), data_(data) {}
 
-    CnqsState operator=(double c) {
-        vec_.fill(c);
-        return *this;
-    }
+    CnqsState operator=(double c);
 
-    CnqsState operator+=(const CnqsState &v) {
-        this->vec_ += v.vec_;
-        return *this;
-    }
+    const double &operator()(int i) const { return data_[i]; }
 
-    CnqsState operator+(const CnqsState &v) const {
-        return CnqsState(vec_ + v.vec_);
-    }
+    double &operator()(int i) { return data_[i]; }
 
-    CnqsState operator-=(const CnqsState &v) {
-        this->vec_ -= v.vec_;
-        return *this;
-    }
+    CnqsState operator+=(const CnqsState &v);
 
-    CnqsState operator-(const CnqsState &v) const {
-        return CnqsState(vec_ - v.vec_);
-    }
+    CnqsState operator+(const CnqsState &v) const;
 
-    const double &operator()(unsigned long i) const { return vec_(i); }
+    CnqsState operator-=(const CnqsState &v);
 
-    double &operator()(unsigned long i) { return vec_(i); }
+    CnqsState operator-(const CnqsState &v) const;
 
-    void save(const std::string &file_name, unsigned long id = 0) const;
+    void save(const hid_t &file_id, int shapshot_id = 0) const;
 
-    void load(const std::string &file_name, unsigned long id = 0);
+    void load(const hid_t &file_id, int snapshot_id = 0);
 
-    friend CnqsState operator*(double c, const CnqsState &v) {
-        return CnqsState(c * v.vec_);
-    }
+    friend CnqsState operator*(double c, const CnqsState &v);
 
-    friend double dot(const CnqsState &v1, const CnqsState &v2) {
-        return arma::dot(v1.vec_, v2.vec_);
-    }
+    friend double dot(const CnqsState &v1, const CnqsState &v2);
 
-    friend double norm(const CnqsState &v) { return arma::norm(v.vec_); }
+    friend double norm(const CnqsState &v);
 
   private:
-    arma::Col<double> vec_;
+    int size_;
+    std::vector<double> data_;
 };
 
 #endif
