@@ -1,17 +1,17 @@
-#ifndef CNQS_HAMILTONIAN_HPP
-#define CNQS_HAMILTONIAN_HPP
+#ifndef CNQS_HAMILTONIAN_DIRECT_HPP
+#define CNQS_HAMILTONIAN_DIRECT_HPP
 
 #include <tuple>
 #include <vector>
 
 #include "cnqs_state.hpp"
 
-class CnqsHamiltonian {
+class CnqsHamiltonianDirect {
   public:
-    CnqsHamiltonian(int d, int n, std::vector<std::tuple<int, int>> edges,
-                    double g, double J);
+    CnqsHamiltonianDirect(int d, int n, std::vector<std::tuple<int, int>> edges,
+                          double g, double J);
 
-    ~CnqsHamiltonian() = default;
+    ~CnqsHamiltonianDirect() = default;
 
     CnqsState initialize_state() const;
 

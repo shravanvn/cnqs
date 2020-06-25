@@ -5,7 +5,7 @@
 
 #include <hdf5.h>
 
-#include "cnqs_hamiltonian.hpp"
+#include "cnqs_hamiltonian_direct.hpp"
 #include "cnqs_state.hpp"
 
 TEST(cnqs_hamiltonian, constructor_params) {
@@ -15,7 +15,7 @@ TEST(cnqs_hamiltonian, constructor_params) {
     double g = 1.0;
     double J = 1.0;
 
-    CnqsHamiltonian hamiltonian(d, n, edges, g, J);
+    CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 }
 
 TEST(cnqs_hamiltonian, initialize_state) {
@@ -25,7 +25,7 @@ TEST(cnqs_hamiltonian, initialize_state) {
     double g = 1.0;
     double J = 1.0;
 
-    CnqsHamiltonian hamiltonian(d, n, edges, g, J);
+    CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
     hid_t file_id = H5Fcreate("cnqs_hamiltonian_initial_state.h5",
                               H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -43,7 +43,7 @@ TEST(cnqs_hamiltonian, operator_apply_no_edge) {
     double g = 1.0;
     double J = 1.0;
 
-    CnqsHamiltonian hamiltonian(d, n, edges, g, J);
+    CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
     hid_t file_id = H5Fcreate("cnqs_hamiltonian_operator_apply_no_edge.h5",
                               H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
@@ -64,7 +64,7 @@ TEST(cnqs_hamiltonian, operator_apply_one_edge) {
     double g = 1.0;
     double J = 1.0;
 
-    CnqsHamiltonian hamiltonian(d, n, edges, g, J);
+    CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
     hid_t file_id = H5Fcreate("cnqs_hamiltonian_operator_apply_one_edge.h5",
                               H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);

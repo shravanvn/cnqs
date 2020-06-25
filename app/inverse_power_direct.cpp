@@ -5,7 +5,7 @@
 #include <tuple>
 #include <vector>
 
-#include "cnqs_hamiltonian.hpp"
+#include "cnqs_hamiltonian_direct.hpp"
 
 int main(int argc, char **argv) {
     // validate number of command line arguments
@@ -49,7 +49,7 @@ int main(int argc, char **argv) {
     }
     std::cout << std::endl;
 
-    CnqsHamiltonian hamiltonian(d, n, edges, g, J);
+    CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
     // setup parameters for inverse power iteration
     int cg_max_it = std::atoi(argv[5]);

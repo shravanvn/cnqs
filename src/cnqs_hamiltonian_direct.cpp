@@ -1,4 +1,4 @@
-#include "cnqs_hamiltonian.hpp"
+#include "cnqs_hamiltonian_direct.hpp"
 
 #include <cmath>
 #include <iomanip>
@@ -31,7 +31,7 @@ static int powint(int n, int d) {
 
 class CnqsShiftedHamiltonian {
   public:
-    CnqsShiftedHamiltonian(const CnqsHamiltonian *hamiltonian, double mu)
+    CnqsShiftedHamiltonian(const CnqsHamiltonianDirect *hamiltonian, double mu)
         : hamiltonian_(hamiltonian), mu_(mu) {}
 
     ~CnqsShiftedHamiltonian() = default;
@@ -45,13 +45,12 @@ class CnqsShiftedHamiltonian {
     }
 
   private:
-    const CnqsHamiltonian *hamiltonian_;
+    const CnqsHamiltonianDirect *hamiltonian_;
     double mu_;
 };
 
-CnqsHamiltonian::CnqsHamiltonian(int d, int n,
-                                 std::vector<std::tuple<int, int>> edges,
-                                 double g, double J)
+CnqsHamiltonianDirect::CnqsHamiltonianDirect(
+    int d, int n, std::vector<std::tuple<int, int>> edges, double g, double J)
     : d_(d), n_(n), edges_(edges), g_(g), J_(J), num_element_(powint(n_, d_)),
       num_edge_(edges_.size()), theta_(std::vector<double>(n)) {
     // assign theta values
@@ -60,7 +59,7 @@ CnqsHamiltonian::CnqsHamiltonian(int d, int n,
     }
 }
 
-CnqsState CnqsHamiltonian::initialize_state() const {
+CnqsState CnqsHamiltonianDirect::initialize_state() const {
     CnqsState state(num_element_);
     state = 1.0;
 
@@ -125,7 +124,7 @@ CnqsState CnqsHamiltonian::initialize_state() const {
     return state;
 }
 
-CnqsState CnqsHamiltonian::operator*(const CnqsState &state) const {
+CnqsState CnqsHamiltonianDirect::operator*(const CnqsState &state) const {
     CnqsState new_state(num_element_);
 
     // differential operator
@@ -211,7 +210,7 @@ CnqsState CnqsHamiltonian::operator*(const CnqsState &state) const {
     return new_state;
 }
 
-void CnqsHamiltonian::inverse_power_iteration(
+void CnqsHamiltonianDirect::inverse_power_iteration(
     int cg_max_iter, double cg_tol, int power_max_iter, double power_tol,
     const std::string &file_name) const {
     // open HDF5 file
