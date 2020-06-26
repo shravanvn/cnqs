@@ -57,10 +57,9 @@ CnqsState CnqsHamiltonianDirect::initialize_state() const {
         // update values
         for (int i_gj = 0; i_gj < n_gj; ++i_gj) {
             for (int i_j = 0; i_j < n_j; ++i_j) {
-                double sin_factor = std::sin(theta_[i_j]);
-
                 for (int i_lj = 0; i_lj < n_lj; ++i_lj) {
-                    state(i_lj + f_j * i_j + f_gj * i_gj) *= sin_factor;
+                    state(i_lj + f_j * i_j + f_gj * i_gj) *=
+                        std::cos(theta_[i_j]);
                 }
             }
         }
