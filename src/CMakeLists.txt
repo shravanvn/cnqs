@@ -3,6 +3,8 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/extern/iml" "extern/iml")
 add_library(cnqs cnqs_state.cpp
                  cnqs_hamiltonian.cpp
                  cnqs_hamiltonian_direct.cpp
+                 cnqs_hamiltonian_fourier.cpp
+                 cnqs_preconditioner_fourier.cpp
                  utils.cpp)
 
 target_include_directories(cnqs PUBLIC ${PROJECT_SOURCE_DIR}/include)

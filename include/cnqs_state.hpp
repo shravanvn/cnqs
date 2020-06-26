@@ -25,6 +25,8 @@ class CnqsState {
 
     CnqsState operator=(double c);
 
+    int size() const { return size_; }
+
     const double &operator()(int i) const { return data_[i]; }
 
     double &operator()(int i) { return data_[i]; }

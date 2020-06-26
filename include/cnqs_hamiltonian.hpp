@@ -15,6 +15,10 @@ class CnqsHamiltonian {
 
     virtual ~CnqsHamiltonian() = default;
 
+    double g() const { return g_; }
+
+    double J() const { return J_; }
+
     virtual CnqsState initialize_state() const = 0;
 
     virtual CnqsState operator*(const CnqsState &state) const = 0;
