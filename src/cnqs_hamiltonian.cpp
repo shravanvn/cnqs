@@ -5,8 +5,6 @@
 #include <iostream>
 #include <stdexcept>
 
-#include <hdf5.h>
-
 #include "cg.h"
 
 #include "utils.hpp"
@@ -45,14 +43,6 @@ CnqsHamiltonian::CnqsHamiltonian(int d, int n,
 void CnqsHamiltonian::inverse_power_iteration(
     const CnqsPreconditioner &preconditioner, int cg_max_iter, double cg_tol,
     int power_max_iter, double power_tol, const std::string &file_name) const {
-    // open HDF5 file
-    hid_t file_id =
-        H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-
-    if (file_id < 0) {
-        throw std::runtime_error("--HDF5-- Could not create file " + file_name);
-    }
-
     // output parameters
     std::cout << "============================================================="
                  "========="
@@ -89,7 +79,7 @@ void CnqsHamiltonian::inverse_power_iteration(
 
     double lambda = dot(state, *this * state);
 
-    state.save(file_id, 0);
+    // initial diagnostics
     std::cout << std::setw(9) << 0 << " " << std::setw(24)
               << std::setprecision(16) << lambda << std::endl;
 
@@ -115,9 +105,6 @@ void CnqsHamiltonian::inverse_power_iteration(
         double new_lambda = dot(new_state, *this * new_state);
         double d_lambda = std::abs(lambda - new_lambda);
 
-        // save new eigenvector estimate to file
-        new_state.save(file_id, power_iter);
-
         // report diagnostics
         std::cout << std::setw(9) << power_iter << " " << std::setw(24)
                   << std::setprecision(16) << new_lambda << " " << std::setw(12)
@@ -137,10 +124,6 @@ void CnqsHamiltonian::inverse_power_iteration(
                  "========="
               << std::endl;
 
-    // close HDF5 file
-    herr_t status = H5Fclose(file_id);
-
-    if (status < 0) {
-        throw std::runtime_error("--HDF5-- Could not close file " + file_name);
-    }
+    // save final state to file
+    state.save(file_name);
 }

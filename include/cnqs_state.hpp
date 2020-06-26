@@ -1,9 +1,8 @@
 #ifndef CNQS_STATE_HPP
 #define CNQS_STATE_HPP
 
+#include <string>
 #include <vector>
-
-#include <hdf5.h>
 
 class CnqsState {
   public:
@@ -38,9 +37,7 @@ class CnqsState {
 
     CnqsState operator-(const CnqsState &v) const;
 
-    void save(const hid_t &file_id, int shapshot_id = 0) const;
-
-    void load(const hid_t &file_id, int snapshot_id = 0);
+    void save(const std::string &file_name) const;
 
     friend CnqsState operator*(double c, const CnqsState &v);
 

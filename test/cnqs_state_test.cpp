@@ -4,8 +4,6 @@
 #include <iostream>
 #include <vector>
 
-#include <hdf5.h>
-
 #include "cnqs_state.hpp"
 
 static const double PI = 4.0 * std::atan(1.0);
@@ -91,30 +89,14 @@ TEST(cnqs_state, vector_subtraction) {
     }
 }
 
-TEST(cnqs_state, save_and_load) {
+TEST(cnqs_state, save) {
     std::vector<double> data(100);
     for (int i = 0; i < 100; ++i) {
         data[i] = std::cos(0.02 * PI * i);
     }
 
-    hid_t file_id =
-        H5Fcreate("cnqs_state.h5", H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-
     CnqsState vec1(data);
-    vec1.save(file_id);
-
-    H5Fclose(file_id);
-
-    file_id = H5Fopen("cnqs_state.h5", H5F_ACC_RDONLY, H5P_DEFAULT);
-
-    CnqsState vec2;
-    vec2.load(file_id);
-
-    for (int i = 0; i < 100; ++i) {
-        ASSERT_DOUBLE_EQ(vec2(i), std::cos(0.02 * PI * i));
-    }
-
-    H5Fclose(file_id);
+    vec1.save("cnqs_state.txt");
 }
 
 TEST(cnqs_state, scalar_product) {
