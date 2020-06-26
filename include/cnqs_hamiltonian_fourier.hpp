@@ -27,6 +27,8 @@ class CnqsHamiltonianFourier : public CnqsHamiltonian {
     int SquaredDistanceFromCenter(int linear_index) const;
 
   private:
+    bool initial_state_index_qualifies(int linear_index) const;
+
     int max_freq_;
 };
 

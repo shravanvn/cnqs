@@ -4,14 +4,28 @@
 
 #include "utils.hpp"
 
+bool CnqsHamiltonianFourier::initial_state_index_qualifies(
+    int linear_index) const {
+    for (int i = 0; i < d_; ++i) {
+        int dim_index = linear_index % n_;
+
+        if ((dim_index != max_freq_ - 1) && (dim_index != max_freq_ + 1)) {
+            return false;
+        }
+
+        linear_index /= n_;
+    }
+
+    return true;
+}
+
 CnqsState CnqsHamiltonianFourier::initialize_state() const {
     CnqsState state(num_element_);
 
-    int index = 1;
     double value = std::pow(4.0 * std::atan(1.0), d_);
 
     for (int i = 0; i < num_element_; ++i) {
-        if (SquaredDistanceFromCenter(i) == 1) {
+        if (initial_state_index_qualifies(i)) {
             state(i) = value;
         }
     }
