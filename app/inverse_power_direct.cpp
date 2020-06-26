@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "cnqs_hamiltonian_direct.hpp"
+#include "cnqs_preconditioner_trivial.hpp"
 
 int main(int argc, char **argv) {
     // validate number of command line arguments
@@ -51,6 +52,9 @@ int main(int argc, char **argv) {
 
     CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
+    // create preconditioner
+    CnqsPreconditionerTrivial preconditioner;
+
     // setup parameters for inverse power iteration
     int cg_max_it = std::atoi(argv[5]);
     double cg_tol = std::atof(argv[6]);
@@ -59,8 +63,8 @@ int main(int argc, char **argv) {
 
     // run inverse power iteration
     std::string file_name = argv[9];
-    hamiltonian.inverse_power_iteration(cg_max_it, cg_tol, power_max_it,
-                                        power_tol, file_name);
+    hamiltonian.inverse_power_iteration(preconditioner, cg_max_it, cg_tol,
+                                        power_max_it, power_tol, file_name);
 
     return 0;
 }

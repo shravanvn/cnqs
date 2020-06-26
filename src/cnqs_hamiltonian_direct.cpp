@@ -1,63 +1,8 @@
 #include "cnqs_hamiltonian_direct.hpp"
 
 #include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <stdexcept>
 
-#include <hdf5.h>
-
-#include "cg.h"
-#include "cnqs_trivial_preconditioner.hpp"
-
-static const double TWO_PI = 8.0 * std::atan(1.0);
-
-static int powint(int n, int d) {
-    if (d < 0) {
-        throw std::domain_error(
-            "powint is only intended for non-negative integer arguments");
-    }
-
-    if (d == 0) {
-        return 1;
-    }
-
-    if (d == 1) {
-        return n;
-    }
-
-    return powint(n, d / 2) * powint(n, d - d / 2);
-}
-
-class CnqsShiftedHamiltonian {
-  public:
-    CnqsShiftedHamiltonian(const CnqsHamiltonianDirect *hamiltonian, double mu)
-        : hamiltonian_(hamiltonian), mu_(mu) {}
-
-    ~CnqsShiftedHamiltonian() = default;
-
-    CnqsState operator*(const CnqsState &state) const {
-        return (*hamiltonian_) * state - mu_ * state;
-    }
-
-    inline CnqsState trans_mult(const CnqsState &state) const {
-        return *this * state;
-    }
-
-  private:
-    const CnqsHamiltonianDirect *hamiltonian_;
-    double mu_;
-};
-
-CnqsHamiltonianDirect::CnqsHamiltonianDirect(
-    int d, int n, std::vector<std::tuple<int, int>> edges, double g, double J)
-    : d_(d), n_(n), edges_(edges), g_(g), J_(J), num_element_(powint(n_, d_)),
-      num_edge_(edges_.size()), theta_(std::vector<double>(n)) {
-    // assign theta values
-    for (int i = 0; i < n_; ++i) {
-        theta_[i] = (TWO_PI * i) / n_;
-    }
-}
+#include "utils.hpp"
 
 CnqsState CnqsHamiltonianDirect::initialize_state() const {
     CnqsState state(num_element_);
@@ -95,7 +40,7 @@ CnqsState CnqsHamiltonianDirect::initialize_state() const {
 
         // index i_lj := i[<j]
         //      max value: n_lj := n[<j]
-        int n_lj = powint(n_, j);
+        int n_lj = IntPow(n_, j);
 
         // index i_j := i[j]
         //      multiplicative factor in unwrapping: f_j = n[<j]
@@ -128,11 +73,11 @@ CnqsState CnqsHamiltonianDirect::operator*(const CnqsState &state) const {
     CnqsState new_state(num_element_);
 
     // differential operator
-    double h = TWO_PI / n_;
+    double h = theta_[1] - theta_[0];
     double fact = g_ * J_ / (24.0 * h * h);
 
     for (int j = 0; j < d_; ++j) {
-        int n_lj = powint(n_, j);
+        int n_lj = IntPow(n_, j);
 
         int f_j = n_lj;
         int n_j = n_;
@@ -175,13 +120,13 @@ CnqsState CnqsHamiltonianDirect::operator*(const CnqsState &state) const {
         }
 
         // split indices into five groups: i[<j], i[j], i[j<<k], i[k], i[>k]
-        int n_lj = powint(n_, j);
+        int n_lj = IntPow(n_, j);
 
         int f_j = n_lj;
         int n_j = n_;
 
         int f_jk = f_j * n_j;
-        int n_jk = powint(n_, k - j - 1);
+        int n_jk = IntPow(n_, k - j - 1);
 
         int f_k = f_jk * n_jk;
         int n_k = n_;
@@ -208,110 +153,4 @@ CnqsState CnqsHamiltonianDirect::operator*(const CnqsState &state) const {
     }
 
     return new_state;
-}
-
-void CnqsHamiltonianDirect::inverse_power_iteration(
-    int cg_max_iter, double cg_tol, int power_max_iter, double power_tol,
-    const std::string &file_name) const {
-    // open HDF5 file
-    hid_t file_id =
-        H5Fcreate(file_name.data(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-
-    if (file_id < 0) {
-        throw std::runtime_error("--HDF5-- Could not create file " + file_name);
-    }
-
-    // output parameters
-    std::cout << "============================================================="
-                 "========="
-              << std::endl
-              << "          parameters       conjugate gradient  inverse power "
-                 "iteration"
-              << std::endl
-              << "-------------------- ------------------------ "
-                 "------------------------"
-              << std::endl
-              << "   maximum iteration " << std::setw(24) << cg_max_iter << " "
-              << std::setw(24) << power_max_iter << std::endl
-              << " specified tolerance " << std::setw(24) << cg_tol << " "
-              << std::setw(24) << power_tol << std::endl;
-
-    // set format of floating point outputs in inverse power iteration
-    std::cout << std::scientific
-              << "============================================================="
-                 "========="
-              << std::endl
-              << " inv_iter                   lambda     d_lambda   cg_iter    "
-                 "   cg_tol"
-              << std::endl
-              << "--------- ------------------------ ------------ --------- "
-                 "------------"
-              << std::endl;
-
-    // shifted operator
-    CnqsShiftedHamiltonian shifted_hamiltonian(this, -num_edge_ * J_);
-
-    // trivial preconditioner
-    CnqsTrivialPreconditioner preconditioner;
-
-    // initial estimate for eigenstate and eigenvalue
-    CnqsState state = this->initialize_state();
-    state = (1.0 / norm(state)) * state;
-
-    double lambda = dot(state, *this * state);
-
-    state.save(file_id, 0);
-    std::cout << std::setw(9) << 0 << " " << std::setw(24)
-              << std::setprecision(16) << lambda << std::endl;
-
-    // inverse power iteration
-
-    for (int power_iter = 1; power_iter <= power_max_iter; ++power_iter) {
-        // initialize CG parameters
-        int max_iter = cg_max_iter;
-        double tol = cg_tol;
-
-        // solve using CG and normalize
-        CnqsState new_state(num_element_);
-        int cg_return = CG(shifted_hamiltonian, new_state, state,
-                           preconditioner, max_iter, tol);
-
-        if (cg_return != 0) {
-            throw std::runtime_error("CG iteration did not converge");
-        }
-
-        new_state = (1.0 / norm(new_state)) * new_state;
-
-        // compute new eigenvalue
-        double new_lambda = dot(new_state, *this * new_state);
-        double d_lambda = std::abs(lambda - new_lambda);
-
-        // save new eigenvector estimate to file
-        new_state.save(file_id, power_iter);
-
-        // report diagnostics
-        std::cout << std::setw(9) << power_iter << " " << std::setw(24)
-                  << std::setprecision(16) << new_lambda << " " << std::setw(12)
-                  << std::setprecision(6) << d_lambda << " " << std::setw(9)
-                  << max_iter << " " << std::setw(12) << tol << std::endl;
-
-        if (d_lambda < power_tol) {
-            break;
-        }
-
-        // update eigenvalue and eigenstate estiamtes
-        state = new_state;
-        lambda = new_lambda;
-    }
-
-    std::cout << "============================================================="
-                 "========="
-              << std::endl;
-
-    // close HDF5 file
-    herr_t status = H5Fclose(file_id);
-
-    if (status < 0) {
-        throw std::runtime_error("--HDF5-- Could not close file " + file_name);
-    }
 }
