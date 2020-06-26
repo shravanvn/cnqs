@@ -1,6 +1,8 @@
 add_subdirectory("${PROJECT_SOURCE_DIR}/extern/iml" "extern/iml")
 
-add_library(cnqs cnqs_state.cpp
+add_library(cnqs CnqsVector.cpp
+
+                 cnqs_state.cpp
                  cnqs_hamiltonian.cpp
                  cnqs_hamiltonian_direct.cpp
                  cnqs_hamiltonian_fourier.cpp
