@@ -6,7 +6,7 @@
 #include "cnqs_hamiltonian_direct.hpp"
 #include "cnqs_state.hpp"
 
-TEST(cnqs_hamiltonian, constructor_params) {
+TEST(cnqs_hamiltonian_direct, constructor_params) {
     int d = 2;
     int n = 128;
     std::vector<std::tuple<int, int>> edges{{0, 1}};
@@ -16,7 +16,7 @@ TEST(cnqs_hamiltonian, constructor_params) {
     CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 }
 
-TEST(cnqs_hamiltonian, initialize_state) {
+TEST(cnqs_hamiltonian_direct, initialize_state) {
     int d = 2;
     int n = 128;
     std::vector<std::tuple<int, int>> edges{{0, 1}};
@@ -26,10 +26,10 @@ TEST(cnqs_hamiltonian, initialize_state) {
     CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
     CnqsState state = hamiltonian.initialize_state();
-    state.save("cnqs_hamiltonian_initial_state.txt");
+    state.save("cnqs_hamiltonian_direct_initial_state.txt");
 }
 
-TEST(cnqs_hamiltonian, operator_apply_no_edge) {
+TEST(cnqs_hamiltonian_direct, operator_apply_no_edge) {
     int d = 2;
     int n = 128;
     std::vector<std::tuple<int, int>> edges{};
@@ -39,13 +39,14 @@ TEST(cnqs_hamiltonian, operator_apply_no_edge) {
     CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
     CnqsState state = hamiltonian.initialize_state();
-    state.save("cnqs_hamiltonian_operator_apply_no_edge_state_0.txt");
+    state.save("cnqs_hamiltonian_direct_operator_apply_no_edge_state_0.txt");
 
     CnqsState new_state = hamiltonian * state;
-    new_state.save("cnqs_hamiltonian_operator_apply_no_edge_state_1.txt");
+    new_state.save(
+        "cnqs_hamiltonian_direct_operator_apply_no_edge_state_1.txt");
 }
 
-TEST(cnqs_hamiltonian, operator_apply_one_edge) {
+TEST(cnqs_hamiltonian_direct, operator_apply_one_edge) {
     int d = 2;
     int n = 128;
     std::vector<std::tuple<int, int>> edges{{0, 1}};
@@ -55,10 +56,11 @@ TEST(cnqs_hamiltonian, operator_apply_one_edge) {
     CnqsHamiltonianDirect hamiltonian(d, n, edges, g, J);
 
     CnqsState state = hamiltonian.initialize_state();
-    state.save("cnqs_hamiltonian_operator_apply_one_edge_state_0.txt");
+    state.save("cnqs_hamiltonian_direct_operator_apply_one_edge_state_0.txt");
 
     CnqsState new_state = hamiltonian * state;
-    new_state.save("cnqs_hamiltonian_operator_apply_one_edge_state_1.txt");
+    new_state.save(
+        "cnqs_hamiltonian_direct_operator_apply_one_edge_state_1.txt");
 }
 
 int main(int argc, char **argv) {
