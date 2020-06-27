@@ -3,5 +3,5 @@ macro(cnqs_add_app APPNAME)
     target_link_libraries(${APPNAME} cnqs::cnqs)
 endmacro()
 
-cnqs_add_app(inverse_power_direct inverse_power_direct.cpp)
-cnqs_add_app(inverse_power_fourier inverse_power_fourier.cpp)
+configure_file(parameters_basic.txt parameters_basic.txt COPYONLY)
+cnqs_add_app(inv_power_iter_basic InvPowerIterBasic.cpp)

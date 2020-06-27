@@ -12,3 +12,4 @@ if(cnqs_ENABLE_TESTS)
     add_subdirectory(test)
 endif()
 
+add_subdirectory(app)
