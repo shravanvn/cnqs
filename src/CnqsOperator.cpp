@@ -5,7 +5,13 @@
 CnqsOperator::CnqsOperator(int d, int n,
                            const std::vector<std::tuple<int, int>> &edges,
                            double g, double J, const std::string &name)
-    : d_(d), n_(n), edges_(edges), g_(g), J_(J), name_(name) {
+    : d_(d),
+      n_(n),
+      edges_(edges),
+      g_(g),
+      J_(J),
+      name_(name),
+      num_element_(std::vector<int>(d + 1)) {
     if (d_ < 2) {
         throw std::domain_error("==CnqsOperator== Need at least two rotors");
     }
@@ -39,6 +45,18 @@ CnqsOperator::CnqsOperator(int d, int n,
         throw std::domain_error(
             "==CnqsOperator== Parameter choice may not lead to positive "
             "definite operator");
+    }
+
+    num_element_[0] = 1;
+    for (int i = 0; i < d_; ++i) {
+        num_element_[i + 1] = n_ * num_element_[i];
+    }
+}
+
+void CnqsOperator::TestCompatibility(const CnqsVector &state) const {
+    if (state.Size() != num_element_[d_]) {
+        throw std::length_error(
+            "==CnqsOperator== Vector length is not compatible with operator");
     }
 }
 

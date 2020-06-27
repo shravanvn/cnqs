@@ -12,6 +12,8 @@ public:
 
     virtual ~CnqsPreconditioner() = default;
 
+    virtual void TestCompatibility(const CnqsVector &state) const = 0;
+
     virtual void Solve(const CnqsVector &input_state,
                        CnqsVector &output_state) const = 0;
 

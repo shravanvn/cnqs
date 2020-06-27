@@ -13,6 +13,8 @@ public:
 
     ~CnqsTrivialPrecondtioner() = default;
 
+    void TestCompatibility(const CnqsVector &state) const {}
+
     void Solve(const CnqsVector &input_state, CnqsVector &output_state) const {
         output_state = input_state;
     }

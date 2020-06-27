@@ -14,6 +14,8 @@ public:
 
     virtual ~CnqsOperator() = default;
 
+    void TestCompatibility(const CnqsVector &state) const;
+
     virtual void ConstructInitialState(CnqsVector &state) const = 0;
 
     virtual void Apply(const CnqsVector &input_state,
@@ -34,6 +36,7 @@ protected:
     double g_;
     double J_;
     std::string name_;
+    std::vector<int> num_element_;
 };
 
 #endif
