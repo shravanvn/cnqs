@@ -49,16 +49,20 @@ CnqsOperator::CnqsOperator(int d, int n,
 }
 
 std::ostream &operator<<(std::ostream &os, const CnqsOperator &cnqs_operator) {
-    os << "==CnqsOperator==         name : " << cnqs_operator.name_ << std::endl
-       << "==CnqsOperator==    num_rotor : " << cnqs_operator.d_ << std::endl
-       << "==CnqsOperator== num_grid_pts : " << cnqs_operator.n_ << std::endl
-       << "==CnqsOperator==    edge_list : ";
+    os << "==CnqsOperator==" << std::endl
+       << "    name         : " << cnqs_operator.name_ << std::endl
+       << "    num_rotor    : " << cnqs_operator.d_ << std::endl
+       << "    num_grid_pts : " << cnqs_operator.n_ << std::endl
+       << "    edge_list    : ";
+
     for (const auto &edge : cnqs_operator.edges_) {
         os << "(" << std::get<0>(edge) << ", " << std::get<1>(edge) << "), ";
     }
+
     os << std::endl
-       << "==CnqsOperator==            g : " << cnqs_operator.g_ << std::endl
-       << "==CnqsOperator==            J : " << cnqs_operator.J_;
+       << "    g            : " << cnqs_operator.g_ << std::endl
+       << "    J            : " << cnqs_operator.J_ << std::endl
+       << "==CnqsOperator==" << std::flush;
 
     return os;
 }
