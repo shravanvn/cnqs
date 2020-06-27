@@ -53,13 +53,6 @@ CnqsOperator::CnqsOperator(int d, int n,
     }
 }
 
-void CnqsOperator::TestCompatibility(const CnqsVector &state) const {
-    if (state.Size() != num_element_[d_]) {
-        throw std::length_error(
-            "==CnqsOperator== Vector length is not compatible with operator");
-    }
-}
-
 void CnqsOperator::ShiftedApply(const CnqsVector &input_state, double shift,
                                 CnqsVector &output_state) const {
     Apply(input_state, output_state);

@@ -2,6 +2,7 @@
 #define CNQS_OPERATOR_HPP
 
 #include <iostream>
+#include <stdexcept>
 #include <tuple>
 #include <vector>
 
@@ -14,7 +15,13 @@ public:
 
     virtual ~CnqsOperator() = default;
 
-    void TestCompatibility(const CnqsVector &state) const;
+    void TestCompatibility(const CnqsVector &state) const {
+        if (state.Size() != num_element_[d_]) {
+            throw std::length_error(
+                "==CnqsOperator== Vector length is not compatible with "
+                "operator");
+        }
+    }
 
     virtual void ConstructInitialState(CnqsVector &state) const = 0;
 
