@@ -42,7 +42,8 @@ TEST(InvPowerIter, FindMinimalEigenState) {
     auto cnqs_preconditioner =
         std::make_shared<const CnqsTrivialPrecondtioner>();
 
-    InvPowerIter iterator(cnqs_operator, 0.0, cnqs_preconditioner);
+    InvPowerIter iterator(cnqs_operator, cnqs_operator->EigValLowerBound(),
+                          cnqs_preconditioner);
     iterator.SetCgIterParams(1000, 1.0e-02);
     iterator.SetPowerIterParams(100, 1.0e-02);
 
