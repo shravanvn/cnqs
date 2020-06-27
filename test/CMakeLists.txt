@@ -26,7 +26,3 @@ endmacro()
 
 cnqs_add_test(cnqs_vector_test CnqsVectorTest.cpp)
 cnqs_add_test(cnqs_basic_operator_test CnqsBasicOperatorTest.cpp)
-
-cnqs_add_test(cnqs_state_test cnqs_state_test.cpp)
-cnqs_add_test(cnqs_hamiltonian_direct_test cnqs_hamiltonian_direct_test.cpp)
-cnqs_add_test(cnqs_hamiltonian_fourier_test cnqs_hamiltonian_fourier_test.cpp)
