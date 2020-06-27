@@ -26,3 +26,4 @@ endmacro()
 
 cnqs_add_test(cnqs_vector_test CnqsVectorTest.cpp)
 cnqs_add_test(cnqs_basic_operator_test CnqsBasicOperatorTest.cpp)
+cnqs_add_test(cnqs_trivial_preconditioner_test CnqsTrivialPreconditionerTest.cpp)
