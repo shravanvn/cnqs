@@ -19,7 +19,7 @@ public:
     virtual void Apply(const CnqsVector &input_state,
                        CnqsVector &output_state) const = 0;
 
-    double EigValLowerBound() const { return mu_; }
+    double EigValLowerBound() const { return -edges_.size() * J_; }
 
     friend std::ostream &operator<<(std::ostream &os,
                                     const CnqsOperator &cnqs_operator);
@@ -31,7 +31,6 @@ protected:
     double g_;
     double J_;
     std::string name_;
-    double mu_;
 };
 
 #endif
