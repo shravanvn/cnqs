@@ -8,7 +8,7 @@
 #include "CnqsVector.hpp"
 
 class CnqsOperator {
-  public:
+public:
     CnqsOperator(int d, int n, const std::vector<std::tuple<int, int>> &edges,
                  double g, double J, const std::string &name);
 
@@ -24,7 +24,7 @@ class CnqsOperator {
     friend std::ostream &operator<<(std::ostream &os,
                                     const CnqsOperator &cnqs_operator);
 
-  protected:
+protected:
     int d_;
     int n_;
     std::vector<std::tuple<int, int>> edges_;

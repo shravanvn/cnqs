@@ -1,10 +1,9 @@
-#include "gtest/gtest.h"
-
 #include <cmath>
 #include <iostream>
 #include <vector>
 
 #include "CnqsVector.hpp"
+#include "gtest/gtest.h"
 
 static const double PI = 4.0 * std::atan(1.0);
 

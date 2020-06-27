@@ -18,8 +18,9 @@ CnqsBasicOperator::CnqsBasicOperator(
 
 void CnqsBasicOperator::ConstructInitialState(CnqsVector &state) const {
     if (state.Size() != IntPow(n_, d_)) {
-        throw std::logic_error("==CnqsBasicOperator== Mismatch in number of "
-                               "elements in operator and vector");
+        throw std::logic_error(
+            "==CnqsBasicOperator== Mismatch in number of elements in operator "
+            "and vector");
     }
 
     state = 1.0;
@@ -87,8 +88,9 @@ void CnqsBasicOperator::Apply(const CnqsVector &input_state,
     int num_element = IntPow(n_, d_);
     if (input_state.Size() != num_element ||
         output_state.Size() != num_element) {
-        throw std::logic_error("==CnqsBasicOperator== Mismatch in number of "
-                               "elements in operator and vector");
+        throw std::logic_error(
+            "==CnqsBasicOperator== Mismatch in number of elements in operator "
+            "and vector");
     }
 
     output_state = 0.0;

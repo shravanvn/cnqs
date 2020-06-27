@@ -13,7 +13,7 @@
  * product and Euclidean norm computation.
  */
 class CnqsVector {
-  public:
+public:
     /**
      * @brief Default constructor
      */
@@ -203,7 +203,7 @@ class CnqsVector {
      */
     double Norm() const { return std::sqrt(this->Dot(*this)); }
 
-  private:
+private:
     std::vector<double> entries_;
 };
 

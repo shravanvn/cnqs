@@ -7,7 +7,7 @@
 #include "CnqsOperator.hpp"
 
 class CnqsBasicOperator : public CnqsOperator {
-  public:
+public:
     CnqsBasicOperator(int d, int n,
                       const std::vector<std::tuple<int, int>> &edges, double g,
                       double J);
@@ -16,7 +16,7 @@ class CnqsBasicOperator : public CnqsOperator {
 
     void Apply(const CnqsVector &input_state, CnqsVector &output_state) const;
 
-  private:
+private:
     std::vector<double> theta_;
 };
 

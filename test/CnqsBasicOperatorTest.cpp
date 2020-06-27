@@ -1,11 +1,10 @@
-#include "gtest/gtest.h"
-
 #include <iostream>
 #include <tuple>
 #include <vector>
 
 #include "CnqsBasicOperator.hpp"
 #include "CnqsUtils.hpp"
+#include "gtest/gtest.h"
 
 TEST(CnqsBasicOperator, ConstructFromParameters) {
     int d = 2;

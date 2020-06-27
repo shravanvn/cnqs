@@ -5,7 +5,12 @@
 CnqsOperator::CnqsOperator(int d, int n,
                            const std::vector<std::tuple<int, int>> &edges,
                            double g, double J, const std::string &name)
-    : d_(d), n_(n), edges_(edges), g_(g), J_(J), name_(name),
+    : d_(d),
+      n_(n),
+      edges_(edges),
+      g_(g),
+      J_(J),
+      name_(name),
       mu_(-edges.size() * J) {
     if (d_ < 2) {
         throw std::domain_error("==CnqsOperator== Need at least two rotors");
@@ -37,8 +42,9 @@ CnqsOperator::CnqsOperator(int d, int n,
     }
 
     if (g_ * J_ <= 0) {
-        throw std::domain_error("==CnqsOperator== Parameter choice may not "
-                                "lead to positive definite operator");
+        throw std::domain_error(
+            "==CnqsOperator== Parameter choice may not lead to positive "
+            "definite operator");
     }
 }
 
