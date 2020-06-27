@@ -28,7 +28,7 @@ public:
     virtual void Apply(const CnqsVector &input_state,
                        CnqsVector &output_state) const = 0;
 
-    double EigValLowerBound() const { return -edges_.size() * J_; }
+    double EigValLowerBound() const { return -J_ * edges_.size(); }
 
     void ShiftedApply(const CnqsVector &input_state, double shift,
                       CnqsVector &output_state) const;
