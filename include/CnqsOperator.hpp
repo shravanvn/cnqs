@@ -21,6 +21,9 @@ public:
 
     double EigValLowerBound() const { return -edges_.size() * J_; }
 
+    void ShiftedApply(const CnqsVector &input_state, double shift,
+                      CnqsVector &output_state) const;
+
     friend std::ostream &operator<<(std::ostream &os,
                                     const CnqsOperator &cnqs_operator);
 
