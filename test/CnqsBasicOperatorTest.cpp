@@ -3,7 +3,6 @@
 #include <vector>
 
 #include "CnqsBasicOperator.hpp"
-#include "CnqsUtils.hpp"
 #include "gtest/gtest.h"
 
 TEST(CnqsBasicOperator, ConstructFromParameters) {
@@ -24,9 +23,10 @@ TEST(CnqsBasicOperator, ConstructInitialState) {
     std::vector<std::tuple<int, int>> edges{{0, 1}};
     double g = 1.0;
     double J = 1.0;
+    int num_element = n * n;
 
     CnqsBasicOperator cnqs_operator(d, n, edges, g, J);
-    CnqsVector cnqs_vector(IntPow(n, d));
+    CnqsVector cnqs_vector(num_element);
 
     cnqs_operator.ConstructInitialState(cnqs_vector);
 
@@ -39,10 +39,9 @@ TEST(CnqsBasicOperator, Apply) {
     std::vector<std::tuple<int, int>> edges{{0, 1}};
     double g = 1.0;
     double J = 1.0;
+    int num_element = n * n;
 
     CnqsBasicOperator cnqs_operator(d, n, edges, g, J);
-
-    int num_element = IntPow(n, d);
 
     CnqsVector cnqs_vector_0(num_element);
     CnqsVector cnqs_vector_1(num_element);

@@ -3,8 +3,7 @@ add_subdirectory("${PROJECT_SOURCE_DIR}/extern/iml" "extern/iml")
 add_library(cnqs CnqsVector.cpp
                  CnqsOperator.cpp
                  CnqsBasicOperator.cpp
-                 CnqsPreconditioner.cpp
-                 CnqsUtils.cpp)
+                 CnqsPreconditioner.cpp)
 
 target_include_directories(cnqs PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
