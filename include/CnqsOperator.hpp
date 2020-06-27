@@ -12,7 +12,7 @@ public:
     CnqsOperator(int d, int n, const std::vector<std::tuple<int, int>> &edges,
                  double g, double J, const std::string &name);
 
-    ~CnqsOperator() = default;
+    virtual ~CnqsOperator() = default;
 
     virtual void ConstructInitialState(CnqsVector &state) const = 0;
 

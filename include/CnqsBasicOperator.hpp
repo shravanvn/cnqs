@@ -12,6 +12,8 @@ public:
                       const std::vector<std::tuple<int, int>> &edges, double g,
                       double J);
 
+    ~CnqsBasicOperator() = default;
+
     void ConstructInitialState(CnqsVector &state) const;
 
     void Apply(const CnqsVector &input_state, CnqsVector &output_state) const;
