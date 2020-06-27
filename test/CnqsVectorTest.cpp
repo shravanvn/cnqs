@@ -228,6 +228,16 @@ TEST(CnqsVector, Norm) {
     ASSERT_DOUBLE_EQ(vec.Norm(), 40.0);
 }
 
+TEST(CnqsVector, Normalize) {
+    CnqsVector vec(100);
+    vec = 4.0;
+    vec.Normalize();
+
+    for (int i = 0; i < 100; ++i) {
+        ASSERT_DOUBLE_EQ(vec(i), 0.1);
+    }
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
 

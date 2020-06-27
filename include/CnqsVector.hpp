@@ -203,6 +203,11 @@ public:
      */
     double Norm() const { return std::sqrt(this->Dot(*this)); }
 
+    /**
+     * @brief Normalize CnqsVector in Euclidean norm
+     */
+    void Normalize();
+
 private:
     std::vector<double> entries_;
 };

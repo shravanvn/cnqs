@@ -154,3 +154,11 @@ double CnqsVector::Dot(const CnqsVector &v) const {
 
     return dot_product;
 }
+
+void CnqsVector::Normalize() {
+    double norm_value = Norm();
+
+    for (auto &entry : entries_) {
+        entry /= norm_value;
+    }
+}
