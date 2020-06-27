@@ -1,7 +1,5 @@
 #include "CnqsBasicOperator.hpp"
 
-#include "CnqsUtils.hpp"
-
 CnqsBasicOperator::CnqsBasicOperator(
     int d, int n, const std::vector<std::tuple<int, int>> &edges, double g,
     double J)
@@ -17,11 +15,7 @@ CnqsBasicOperator::CnqsBasicOperator(
 }
 
 void CnqsBasicOperator::ConstructInitialState(CnqsVector &state) const {
-    if (state.Size() != IntPow(n_, d_)) {
-        throw std::logic_error(
-            "==CnqsBasicOperator== Mismatch in number of elements in operator "
-            "and vector");
-    }
+    TestCompatibility(state);
 
     state = 1.0;
 
@@ -57,7 +51,7 @@ void CnqsBasicOperator::ConstructInitialState(CnqsVector &state) const {
 
         // index i_lj := i[<j]
         //      max value: n_lj := n[<j]
-        int n_lj = IntPow(n_, j);
+        int n_lj = num_element_[j];
 
         // index i_j := i[j]
         //      multiplicative factor in unwrapping: f_j = n[<j]
@@ -69,7 +63,7 @@ void CnqsBasicOperator::ConstructInitialState(CnqsVector &state) const {
         //      multiplicative factor in unwrapping: f_gj = f[>j]
         //      max value: n_gj := n[>j]
         int f_gj = f_j * n_j;
-        int n_gj = IntPow(n_, d_ - j - 1);
+        int n_gj = num_element_[d_ - j - 1];
 
         // update values
         for (int i_gj = 0; i_gj < n_gj; ++i_gj) {
@@ -85,13 +79,8 @@ void CnqsBasicOperator::ConstructInitialState(CnqsVector &state) const {
 
 void CnqsBasicOperator::Apply(const CnqsVector &input_state,
                               CnqsVector &output_state) const {
-    int num_element = IntPow(n_, d_);
-    if (input_state.Size() != num_element ||
-        output_state.Size() != num_element) {
-        throw std::logic_error(
-            "==CnqsBasicOperator== Mismatch in number of elements in operator "
-            "and vector");
-    }
+    TestCompatibility(input_state);
+    TestCompatibility(output_state);
 
     output_state = 0.0;
 
@@ -100,13 +89,13 @@ void CnqsBasicOperator::Apply(const CnqsVector &input_state,
     double fact = g_ * J_ / (24.0 * h * h);
 
     for (int j = 0; j < d_; ++j) {
-        int n_lj = IntPow(n_, j);
+        int n_lj = num_element_[j];
 
         int f_j = n_lj;
         int n_j = n_;
 
         int f_gj = f_j * n_j;
-        int n_gj = IntPow(n_, d_ - j - 1);
+        int n_gj = num_element_[d_ - j - 1];
 
         for (int i_gj = 0; i_gj < n_gj; ++i_gj) {
             for (int i_j = 0; i_j < n_j; ++i_j) {
@@ -138,19 +127,19 @@ void CnqsBasicOperator::Apply(const CnqsVector &input_state,
         int k = std::get<1>(edge);
 
         // split indices into five groups: i[<j], i[j], i[j<<k], i[k], i[>k]
-        int n_lj = IntPow(n_, j);
+        int n_lj = num_element_[j];
 
         int f_j = n_lj;
         int n_j = n_;
 
         int f_jk = f_j * n_j;
-        int n_jk = IntPow(n_, k - j - 1);
+        int n_jk = num_element_[k - j - 1];
 
         int f_k = f_jk * n_jk;
         int n_k = n_;
 
         int f_gk = f_k * n_k;
-        int n_gk = IntPow(n_, d_ - k - 1);
+        int n_gk = num_element_[d_ - k - 1];
 
         // update new state
         for (int i_gk = 0; i_gk < n_gk; ++i_gk) {
