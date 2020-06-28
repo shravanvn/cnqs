@@ -60,20 +60,20 @@ void CnqsOperator::ShiftedApply(const CnqsVector &input_state, double shift,
 }
 
 std::ostream &operator<<(std::ostream &os, const CnqsOperator &cnqs_operator) {
-    os << "==CnqsOperator==" << std::endl
-       << "    name         : " << cnqs_operator.name_ << std::endl
-       << "    num_rotor    : " << cnqs_operator.d_ << std::endl
-       << "    num_grid_pts : " << cnqs_operator.n_ << std::endl
-       << "    edge_list    : ";
+    os << "CnqsOperator {" << std::endl
+       << "              name : " << cnqs_operator.name_ << std::endl
+       << "         num_rotor : " << cnqs_operator.d_ << std::endl
+       << "    discretization : " << cnqs_operator.n_ << std::endl
+       << "         edge_list : ";
 
     for (const auto &edge : cnqs_operator.edges_) {
         os << "(" << std::get<0>(edge) << ", " << std::get<1>(edge) << "), ";
     }
 
     os << std::endl
-       << "    g            : " << cnqs_operator.g_ << std::endl
-       << "    J            : " << cnqs_operator.J_ << std::endl
-       << "==CnqsOperator==" << std::flush;
+       << "                 g : " << cnqs_operator.g_ << std::endl
+       << "                 J : " << cnqs_operator.J_ << std::endl
+       << "}" << std::flush;
 
     return os;
 }

@@ -55,6 +55,8 @@ public:
 private:
     double SquaredDistanceFromCenter(int i) const;
 
+    void Describe(std::string &description) const;
+
     int d_;
     int n_;
     double g_;

@@ -82,15 +82,15 @@ void InvPowerIter::FindMinimalEigenState(CnqsVector &vector) const {
 }
 
 std::ostream &operator<<(std::ostream &os, const InvPowerIter &iterator) {
-    os << "==InvPowerIter==" << std::endl
+    os << "InvPowerIter {" << std::endl
        << *(iterator.operator_) << std::endl
        << *(iterator.preconditioner_) << std::endl
-       << "    shift          : " << iterator.shift_ << std::endl
-       << "    cg_max_iter    : " << iterator.cg_max_iter_ << std::endl
-       << "    cg_tol         : " << iterator.cg_tol_ << std::endl
+       << "             shift : " << iterator.shift_ << std::endl
+       << "       cg_max_iter : " << iterator.cg_max_iter_ << std::endl
+       << "            cg_tol : " << iterator.cg_tol_ << std::endl
        << "    power_max_iter : " << iterator.power_max_iter_ << std::endl
-       << "    power_tol      : " << iterator.power_tol_ << std::endl
-       << "==InvPowerIter==";
+       << "         power_tol : " << iterator.power_tol_ << std::endl
+       << "}";
 
     return os;
 }

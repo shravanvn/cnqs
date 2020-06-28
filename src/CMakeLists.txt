@@ -5,6 +5,7 @@ add_library(cnqs CnqsVector.cpp
                  CnqsBasicOperator.cpp
                  CnqsFourierOperator.cpp
                  CnqsPreconditioner.cpp
+                 CnqsTrivialPreconditioner.cpp
                  CnqsFourierPreconditioner.cpp
                  InvPowerIter.cpp)
 

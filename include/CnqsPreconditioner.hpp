@@ -7,20 +7,13 @@
 #include "CnqsVector.hpp"
 
 /**
- * @brief Preconditioner abstract class for CnqsOperator objects
+ * @brief Preconditioner pure abstract class for CnqsOperator objects
  *
  * This class lays out the framework for implementing preconditioners
  * corresponding to CnqsOperator objects.
  */
 class CnqsPreconditioner {
 public:
-    /**
-     * @brief Construct a new CnqsPreconditioner object
-     *
-     * @param name String identifier (to identify subclasses in std::cout)
-     */
-    CnqsPreconditioner(const std::string &name) : name_(name) {}
-
     /**
      * @brief Default destructor
      *
@@ -53,17 +46,16 @@ public:
      * @brief Enable outputting to output streams including `std::cout`
      *
      */
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const CnqsPreconditioner &preconditioner);
+    friend std::ostream &operator<<(
+        std::ostream &os, const CnqsPreconditioner &cnqs_preconditioner);
 
 protected:
     /**
-     * @brief String identifier
+     * @brief Create a string representation of the CnqsPreconditioner object
      *
-     * This is used to identify any subclasses in output streams (such as
-     * `std::cout`)
+     * @param description Variable to store the description in
      */
-    std::string name_;
+    virtual void Describe(std::string &description) const = 0;
 };
 
 #endif

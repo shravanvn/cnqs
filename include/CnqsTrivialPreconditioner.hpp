@@ -16,8 +16,7 @@ public:
      * @brief Default constructor
      *
      */
-    CnqsTrivialPreconditioner()
-        : CnqsPreconditioner("cnqs trivial preconditioner") {}
+    CnqsTrivialPreconditioner() = default;
 
     /**
      * @brief Default destructor
@@ -30,7 +29,7 @@ public:
      *
      * @param vector CnqsVector object that will be operated on
      */
-    void TestCompatibility(const CnqsVector &vector) const {}
+    void TestCompatibility(const CnqsVector &vector) const;
 
     /**
      * @brief Apply the preconditioner to a CnqsVector
@@ -40,10 +39,10 @@ public:
      * @param input_vector Input Vector
      * @param output_vector Output Vector
      */
-    void Solve(const CnqsVector &input_vector,
-               CnqsVector &output_vector) const {
-        output_vector = input_vector;
-    }
+    void Solve(const CnqsVector &input_vector, CnqsVector &output_vector) const;
+
+private:
+    void Describe(std::string &description) const;
 };
 
 #endif

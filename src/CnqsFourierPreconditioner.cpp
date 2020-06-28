@@ -4,13 +4,7 @@
 
 CnqsFourierPreconditioner::CnqsFourierPreconditioner(int d, int n, double g,
                                                      double J, double shift)
-    : CnqsPreconditioner("cnqs Fourier preconditioner"),
-      d_(d),
-      n_(n),
-      g_(g),
-      J_(J),
-      shift_(shift),
-      max_freq_((n - 1) / 2) {
+    : d_(d), n_(n), g_(g), J_(J), shift_(shift), max_freq_((n - 1) / 2) {
     if (d_ < 2) {
         throw std::domain_error(
             "==CnqsFourierPreconditioner== Need at least two rotors");
@@ -58,4 +52,15 @@ void CnqsFourierPreconditioner::Solve(const CnqsVector &input_state,
         output_state(i) =
             input_state(i) / (fact * SquaredDistanceFromCenter(i) - shift_);
     }
+}
+
+void CnqsFourierPreconditioner::Describe(std::string &description) const {
+    description += "CnqsPreconditioner {\n";
+    description += "     name : cnqs Fourier preconditioner\n";
+    description += "        d : " + std::to_string(d_) + "\n";
+    description += "        n : " + std::to_string(n_) + "\n";
+    description += "        g : " + std::to_string(g_) + "\n";
+    description += "        J : " + std::to_string(J_) + "\n";
+    description += "    shift : " + std::to_string(shift_) + "\n";
+    description += "}";
 }
