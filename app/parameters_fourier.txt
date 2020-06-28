@@ -19,4 +19,4 @@ Maximum number of power iterations
 Power iteration tolerance
 1.0e-06
 File name where to output the computed lowest-eigenvalue state (if NULL, no output is generated)
-state_basic.txt
+state_fourier.txt
