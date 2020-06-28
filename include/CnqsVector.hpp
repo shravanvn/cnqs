@@ -22,7 +22,7 @@ public:
     /**
      * @brief Default copy constructor
      */
-    CnqsVector(const CnqsVector &v) = default;
+    CnqsVector(const CnqsVector &) = default;
 
     /**
      * @brief Default move constructor
@@ -45,89 +45,92 @@ public:
     ~CnqsVector() = default;
 
     /**
-     * @brief Construct a CnqsVector of given length
+     * @brief Construct a new CnqsVector object given the length
      *
-     * @param [in] n Length of the vector
+     * All entries of the new object are zeros.
      *
-     * @returns A CnqsVector of all zeros with specified length
+     * @param n Length of the vector
      */
     CnqsVector(int n) : entries_(std::vector<double>(n, 0.0)) {}
 
     /**
-     * @brief Construct a CnqsVector from data
+     * @brief Construct a new CnqsVector object given the entries
      *
-     * @param [in] entries A C++ stanard vector of doubles
-     *
-     * @returns A CnqsVector with specified entries
+     * @param entries A C++ standard vector of doubles
      */
     CnqsVector(const std::vector<double> &entries) : entries_(entries) {}
 
     /**
-     * @brief Size of CnqsVector
+     * @brief Size of the CnqsVector
      *
-     * @returns Length of the CnqsVector
+     * @return Number of elements in the vector
      */
     int Size() const { return entries_.size(); }
 
     /**
      * @brief Access element of CnqsVector at index
      *
-     * @param [in] i Vector index
-     *
-     * @returns Constant reference to the CnqsVector element
+     * @param i Vector Index
+     * @return Constant reference to element
      */
     const double &operator()(int i) const { return entries_[i]; }
 
     /**
      * @brief Access element of CnqsVector at index
      *
-     * @param [in] i Vector index
-     *
-     * @returns Non-constant reference to the CnqsVector element
+     * @param i Vector index
+     * @return Non-constant reference to element
      */
     double &operator()(int i) { return entries_[i]; }
 
     /**
      * @brief Assign all entries of a CnqsVector to a scalar
      *
-     * @param [in] c Scalar value to set the vector entries equal to
+     * Running `v = c` sets \f$v(i) \gets c\f$ for all indices \f$i\f$.
      *
-     * @returns A CnqsVector all of whose entries are set to c
+     * @param c Scalar value to set all vector entries equal to
+     * @return Self with updated entries
      */
     CnqsVector operator=(double c);
 
     /**
      * @brief In-place addition operator
      *
-     * @param [in] v Other CnqsVector
+     * Running `v += w` sets \f$v(i) \gets v(i) + w(i)\f$ for all indices
+     * \f$i\f$.
      *
-     * @returns Self with updated values
+     * @param v Other CnqsVector
+     * @return Self with updated entries
      */
     CnqsVector operator+=(const CnqsVector &v);
 
     /**
      * @brief In-place subtraction operator
      *
-     * @param [in] v Other CnqsVector
+     * Running `v -= w` sets \f$v(i) \gets v(i) - w(i)\f$ for all indices
+     * \f$i\f$.
      *
-     * @returns Self with updated values
+     * @param v Other CnqsVector
+     * @return Self with updated entries
      */
     CnqsVector operator-=(const CnqsVector &v);
 
     /**
      * @brief In-place scalar multiplication operator
      *
-     * @param [in] c Scalar
+     * Running `v *= c` sets \f$v(i) \gets c v(i)\f$ for all indices \f$i\f$.
      *
-     * @returns Self with updated values
+     * @param c Scalar
+     * @return Self with updated entries
      */
     CnqsVector operator*=(double c);
 
     /**
      * @brief In-place scalar division operator
      *
-     * @param [in] c Scalar
+     * Running `v /= c` sets \f$v(i) \gets v(i) / c\f$ for all indices \f$i\f$.
      *
+     * @param c Scalar
      * @returns Self with updated values
      */
     CnqsVector operator/=(double c);
@@ -135,26 +138,31 @@ public:
     /**
      * @brief Addition operator
      *
-     * @param [in] v Other CnqsVector
+     * Running `x = v + w` sets \f$x(i) \gets v(i) + w(i)\f$ for all indices
+     * \f$i\f$.
      *
-     * @returns New CnqsVector with sum of the values
+     * @param v Other CnqsVector
+     * @return New CnqsVector with the sum.
      */
     CnqsVector operator+(const CnqsVector &v) const;
 
     /**
      * @brief Substraction operator
      *
-     * @param [in] v Other CnqsVector
+     * Running `x = v - w` sets \f$x(i) \gets v(i) - w(i)\f$ for all indices
+     * \f$i\f$.
      *
-     * @returns New CnqsVector with signed difference of the values
+     * @param v Other CnqsVector
+     * @returns New CnqsVector with the difference
      */
     CnqsVector operator-(const CnqsVector &v) const;
 
     /**
      * @brief Scalar right multiplication operator
      *
-     * @param [in] c Scalar
+     * Running `x = v * c` sets \f$x(i) \gets c v(i)\f$ for all indices \f$i\f$.
      *
+     * @param c Scalar
      * @returns New CnqsVector with scaled values
      */
     CnqsVector operator*(double c) const;
@@ -162,8 +170,10 @@ public:
     /**
      * @brief Scalar right division operator
      *
-     * @param [in] c Scalar
+     * Running `x = v / c` sets \f$x(i) \gets v(i) / c\f$ for all indices
+     * \f$i\f$.
      *
+     * @param c Scalar
      * @returns New CnqsVector with scaled values
      */
     CnqsVector operator/(double c) const;
@@ -171,40 +181,46 @@ public:
     /**
      * @brief Scalar left multiplication
      *
-     * @param [in] c Scalar
-     * @param [in] v CnqsVector
+     * Running `x = c * v` sets \f$x(i) \gets c v(i)\f$ for all indices \f$i\f$.
      *
-     * @returns New CnqsVector with scaled values
+     * @param c Scalar
+     * @param v CnqsVector
+     * @return New CnqsVector with scaled values
      */
     friend CnqsVector operator*(double c, const CnqsVector &v) { return v * c; }
 
     /**
      * @brief Save CnqsVector data to ASCII formatted file
      *
-     * @param [in] file_name Name of the text file
+     * @param file_name Name of the text file
      */
     void Save(const std::string &file_name) const;
 
     /**
      * @brief Dot/Scalar product between two CnqsVector objects
      *
-     * @param [in] v Other CnqsVector
+     * Given two vectors \f$v\f$ and \f$w\f$ computes \f$\langle v, w \rangle =
+     * \sum_{i = 0}^{n - 1} v(i) w(i)\f$ where \f$n\f$ is the size of the
+     * vector.
      *
-     * @returns The dot product of two CnqsVector objects
+     * @param v Other CnqsVector
+     * @return Dot product
      */
     double Dot(const CnqsVector &v) const;
 
     /**
      * @brief Euclidean norm of CnqsVector
      *
-     * @param [in] v CnqsVector
+     * Given vector \f$v\f$ computes \f$\| v \|_2 = \sqrt{\langle v, v
+     * \rangle}\f$.
      *
-     * @returns The 2-norm of the CnqsVector
+     * @return Two-norm
      */
     double Norm() const { return std::sqrt(this->Dot(*this)); }
 
     /**
      * @brief Normalize CnqsVector in Euclidean norm
+     *
      */
     void Normalize();
 

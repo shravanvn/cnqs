@@ -6,17 +6,43 @@
 #include "CnqsPreconditioner.hpp"
 #include "CnqsVector.hpp"
 
+/**
+ * @brief Trivial preconditioner for CnqsOperator objects
+ *
+ */
 class CnqsTrivialPreconditioner : public CnqsPreconditioner {
 public:
+    /**
+     * @brief Default constructor
+     *
+     */
     CnqsTrivialPreconditioner()
         : CnqsPreconditioner("cnqs trivial preconditioner") {}
 
+    /**
+     * @brief Default destructor
+     *
+     */
     ~CnqsTrivialPreconditioner() = default;
 
-    void TestCompatibility(const CnqsVector &state) const {}
+    /**
+     * @brief Test if preconditioner can be applied on a CnqsVector
+     *
+     * @param vector CnqsVector object that will be operated on
+     */
+    void TestCompatibility(const CnqsVector &vector) const {}
 
-    void Solve(const CnqsVector &input_state, CnqsVector &output_state) const {
-        output_state = input_state;
+    /**
+     * @brief Apply the preconditioner to a CnqsVector
+     *
+     * This function simply copies the input vector to the output
+     *
+     * @param input_vector Input Vector
+     * @param output_vector Output Vector
+     */
+    void Solve(const CnqsVector &input_vector,
+               CnqsVector &output_vector) const {
+        output_vector = input_vector;
     }
 };
 
