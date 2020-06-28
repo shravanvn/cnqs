@@ -1,0 +1,22 @@
+Dimension of problem/Number of quantum rotors
+2
+Discretization Parameter/Total number of Fourier modes per dimension (must be odd)
+17
+Number of edges/Connection between rotors
+1
+Edges (Identify boundary nodes of each edge using 0-based indexing. One edge per line)
+0 1
+Parameter g
+1.0
+parameter J
+1.0
+Maximum number of CG iterations
+10000
+CG iteration tolerance
+1.0e-06
+Maximum number of power iterations
+100
+Power iteration tolerance
+1.0e-06
+File name where to output the computed lowest-eigenvalue state (if NULL, no output is generated)
+state_basic.txt
