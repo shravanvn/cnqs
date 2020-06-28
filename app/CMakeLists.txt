@@ -5,3 +5,6 @@ endmacro()
 
 configure_file(parameters_basic.txt parameters_basic.txt COPYONLY)
 cnqs_add_app(inv_power_iter_basic InvPowerIterBasic.cpp)
+
+configure_file(parameters_fourier.txt parameters_fourier.txt COPYONLY)
+cnqs_add_app(inv_power_iter_fourier InvPowerIterFourier.cpp)
