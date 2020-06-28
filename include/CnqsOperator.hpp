@@ -42,7 +42,7 @@ public:
                  double g, double J, const std::string &name);
 
     /**
-     * @brief Destroy the CnqsOperator object
+     * @brief Default destructor
      *
      */
     virtual ~CnqsOperator() = default;
@@ -66,18 +66,12 @@ public:
     /**
      * @brief Construct initial CnqsVector object corresponding to the operator
      *
-     * @attention This is a pure virtual member function that will be overloaded
-     * by concrete subclasses of CnqsOperator.
-     *
      * @param cnqs_vector The CnqsVector object to be updated with new values
      */
     virtual void ConstructInitialState(CnqsVector &cnqs_vector) const = 0;
 
     /**
      * @brief Apply the operator to a CnqsVector
-     *
-     * @attention This is a pure virtual member function that will be overloaded
-     * by CnqsOperator concrete subclasses.
      *
      * @param input_vector Input vector
      * @param output_vector Output vector

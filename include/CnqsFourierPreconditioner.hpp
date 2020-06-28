@@ -12,14 +12,20 @@
  *
  * This class preconditions by inverting the Laplace part of the Hamiltonian:
  * \f[
- * \widehat{L} \widehat{\psi}(k) = \frac{g J}{2} \| k \|^2 \widehat{\psi}(k)
+ * \widehat{L}_\mu \widehat{\psi}(k) = \frac{g J}{2} \| k \|^2 \widehat{\psi}(k)
+ * - \mu \widehat{\psi}(k)
  * \f]
  */
 class CnqsFourierPreconditioner : public CnqsPreconditioner {
 public:
     /**
-     * @brief Default constructor
+     * @brief Construct a new Cnqs Fourier Preconditioner object
      *
+     * @param d Dimensionality
+     * @param n Discretization level (\f$2 k_\text{max} + 1\f$)
+     * @param g Parameter
+     * @param J Parameter
+     * @param shift Shift \f$\mu\f$
      */
     CnqsFourierPreconditioner(int d, int n, double g, double J, double shift);
 

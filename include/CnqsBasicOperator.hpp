@@ -37,7 +37,7 @@ public:
                       double J);
 
     /**
-     * @brief Destroy the Cnqs Basic Operator object
+     * @brief Default destructor
      *
      */
     ~CnqsBasicOperator() = default;
@@ -57,14 +57,6 @@ public:
      */
     void ConstructInitialState(CnqsVector &cnqs_vector) const;
 
-    /**
-     * @brief Apply the CnqsBasicOperator to CnqsVector
-     *
-     * The ouput is computed using the five-point stencil on an uniform grid.
-     *
-     * @param input_vector Input vector
-     * @param output_vector Output vector
-     */
     void Apply(const CnqsVector &input_vector, CnqsVector &output_vector) const;
 
 private:

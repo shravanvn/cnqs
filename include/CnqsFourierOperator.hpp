@@ -39,7 +39,7 @@ public:
                         double g, double J);
 
     /**
-     * @brief Destroy the CnqsFourierOperator object
+     * @brief Default destructor
      *
      */
     ~CnqsFourierOperator() = default;
@@ -60,14 +60,6 @@ public:
      */
     void ConstructInitialState(CnqsVector &cnqs_vector) const;
 
-    /**
-     * @brief Apply the CnqsFourierOperator to CnqsVector
-     *
-     * The ouput is computed in the frequency domain.
-     *
-     * @param input_vector Input vector
-     * @param output_vector Output vector
-     */
     void Apply(const CnqsVector &input_vector, CnqsVector &output_vector) const;
 
 private:
