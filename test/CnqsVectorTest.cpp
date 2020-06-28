@@ -10,6 +10,8 @@ static const double PI = 4.0 * std::atan(1.0);
 TEST(CnqsVector, ConstructFromSize) {
     CnqsVector vec(100);
 
+    std::cout << vec << std::endl;
+
     ASSERT_EQ(vec.Size(), 100);
 
     for (int i = 0; i < 100; ++i) {

@@ -8,8 +8,10 @@ void CnqsTrivialPreconditioner::Solve(const CnqsVector &input_vector,
     output_vector = input_vector;
 }
 
-void CnqsTrivialPreconditioner::Describe(std::string &description) const {
-    description += "CnqsPreconditioner {\n";
-    description += "    name : cnqs trivial preconditioner\n";
+std::string CnqsTrivialPreconditioner::Describe() const {
+    std::string description = "{\n";
+    description += "    \"name\": \"CnqsTrivialPreconditioner\"\n";
     description += "}";
+
+    return description;
 }

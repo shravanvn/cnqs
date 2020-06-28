@@ -4,13 +4,12 @@
 
 CnqsOperator::CnqsOperator(int d, int n,
                            const std::vector<std::tuple<int, int>> &edges,
-                           double g, double J, const std::string &name)
+                           double g, double J)
     : d_(d),
       n_(n),
       edges_(edges),
       g_(g),
       J_(J),
-      name_(name),
       num_element_(std::vector<int>(d + 1)) {
     if (d_ < 2) {
         throw std::domain_error("==CnqsOperator== Need at least two rotors");
@@ -60,20 +59,6 @@ void CnqsOperator::ShiftedApply(const CnqsVector &input_state, double shift,
 }
 
 std::ostream &operator<<(std::ostream &os, const CnqsOperator &cnqs_operator) {
-    os << "CnqsOperator {" << std::endl
-       << "              name : " << cnqs_operator.name_ << std::endl
-       << "         num_rotor : " << cnqs_operator.d_ << std::endl
-       << "    discretization : " << cnqs_operator.n_ << std::endl
-       << "         edge_list : ";
-
-    for (const auto &edge : cnqs_operator.edges_) {
-        os << "(" << std::get<0>(edge) << ", " << std::get<1>(edge) << "), ";
-    }
-
-    os << std::endl
-       << "                 g : " << cnqs_operator.g_ << std::endl
-       << "                 J : " << cnqs_operator.J_ << std::endl
-       << "}" << std::flush;
-
+    os << cnqs_operator.Describe() << std::flush;
     return os;
 }

@@ -4,6 +4,7 @@
 #include <stdexcept>
 
 #include "ImlCnqsInterface.hpp"
+#include "Utils.hpp"
 #include "cg.h"
 
 void InvPowerIter::FindMinimalEigenState(CnqsVector &vector) const {
@@ -81,16 +82,27 @@ void InvPowerIter::FindMinimalEigenState(CnqsVector &vector) const {
               << std::endl;
 }
 
-std::ostream &operator<<(std::ostream &os, const InvPowerIter &iterator) {
-    os << "InvPowerIter {" << std::endl
-       << *(iterator.operator_) << std::endl
-       << *(iterator.preconditioner_) << std::endl
-       << "             shift : " << iterator.shift_ << std::endl
-       << "       cg_max_iter : " << iterator.cg_max_iter_ << std::endl
-       << "            cg_tol : " << iterator.cg_tol_ << std::endl
-       << "    power_max_iter : " << iterator.power_max_iter_ << std::endl
-       << "         power_tol : " << iterator.power_tol_ << std::endl
-       << "}";
+std::string InvPowerIter::Describe() const {
+    std::string description = "{\n";
+    description += "    \"name\": \"InvPowerIter\",\n";
+    description +=
+        "    \"operator\": " + PadString(operator_->Describe()) + ",\n";
+    description += "    \"shift\": " + std::to_string(shift_) + ",\n";
+    description +=
+        "    \"preconditioner\": " + PadString(preconditioner_->Describe()) +
+        ",\n";
+    description +=
+        "    \"cg_max_iter\": " + std::to_string(cg_max_iter_) + ",\n";
+    description += "    \"cg_tol\": " + std::to_string(cg_tol_) + ",\n";
+    description +=
+        "    \"power_max_iter\": " + std::to_string(power_max_iter_) + ",\n";
+    description += "    \"power_tol\": " + std::to_string(power_tol_) + "\n";
+    description += "}";
 
+    return description;
+}
+
+std::ostream &operator<<(std::ostream &os, const InvPowerIter &iterator) {
+    os << iterator.Describe() << std::flush;
     return os;
 }

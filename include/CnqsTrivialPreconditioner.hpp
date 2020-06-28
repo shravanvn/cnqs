@@ -41,8 +41,13 @@ public:
      */
     void Solve(const CnqsVector &input_vector, CnqsVector &output_vector) const;
 
-private:
-    void Describe(std::string &description) const;
+    /**
+     * @brief Create a string representation of the CnqsTrivialPreconditioner
+     * object
+     *
+     * @return C++ standard string containing the description
+     */
+    std::string Describe() const;
 };
 
 #endif

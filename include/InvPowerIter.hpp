@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <memory>
+#include <string>
 
 #include "CnqsOperator.hpp"
 #include "CnqsPreconditioner.hpp"
@@ -78,11 +79,11 @@ public:
     void FindMinimalEigenState(CnqsVector &vector) const;
 
     /**
-     * @brief Enable outputting to output streams including `std::cout`
+     * @brief Create a string representation of the InvPowerIter object
      *
+     * @return C++ standard string with description
      */
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const InvPowerIter &iterator);
+    std::string Describe() const;
 
 private:
     std::shared_ptr<const CnqsOperator> operator_;
@@ -93,5 +94,11 @@ private:
     int cg_max_iter_;
     double cg_tol_;
 };
+
+/**
+ * @brief Print InvPowerIter objects to output streams (e.g. `std::cout`)
+ *
+ */
+std::ostream &operator<<(std::ostream &os, const InvPowerIter &iterator);
 
 #endif

@@ -6,8 +6,7 @@
 CnqsFourierOperator::CnqsFourierOperator(
     int d, int n, const std::vector<std::tuple<int, int>> &edges, double g,
     double J)
-    : CnqsOperator(d, n, edges, g, J, "cnqs Fourier operator"),
-      max_freq_((n - 1) / 2) {
+    : CnqsOperator(d, n, edges, g, J), max_freq_((n - 1) / 2) {
     if (n_ % 2 == 0) {
         throw std::domain_error(
             "==CnqsFourierOperator== Total number of Fourier modes must be "
@@ -127,4 +126,34 @@ void CnqsFourierOperator::Apply(const CnqsVector &input_state,
             }
         }
     }
+}
+
+std::string CnqsFourierOperator::Describe() const {
+    std::string description = "{\n";
+    description += "    \"name\": \"CnqsFourierOperator\",\n";
+    description += "    \"num_rotor\": " + std::to_string(d_) + ",\n";
+
+    int num_edge = edges_.size();
+
+    description += "    \"edge_list\": [\n";
+    for (int edge_id = 0; edge_id < num_edge; ++edge_id) {
+        int j = std::get<0>(edges_[edge_id]);
+        int k = std::get<1>(edges_[edge_id]);
+
+        if (edge_id != num_edge - 1) {
+            description += "        [" + std::to_string(j) + ", " +
+                           std::to_string(k) + "],\n";
+        } else {
+            description += "        [" + std::to_string(j) + ", " +
+                           std::to_string(k) + "]\n";
+        }
+    }
+    description += "    ],\n";
+
+    description += "    \"g\": " + std::to_string(g_) + ",\n";
+    description += "    \"J\": " + std::to_string(J_) + ",\n";
+    description += "    \"max_freq\": " + std::to_string(max_freq_) + "\n";
+    description += "}";
+
+    return description;
 }

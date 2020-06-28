@@ -3,8 +3,7 @@
 CnqsBasicOperator::CnqsBasicOperator(
     int d, int n, const std::vector<std::tuple<int, int>> &edges, double g,
     double J)
-    : CnqsOperator(d, n, edges, g, J, "cnqs basic operator"),
-      theta_(std::vector<double>(n_, 0.0)) {
+    : CnqsOperator(d, n, edges, g, J), theta_(std::vector<double>(n_, 0.0)) {
     // compute 2 * pi
     const double TWO_PI = 8.0 * std::atan(1.0);
 
@@ -158,4 +157,34 @@ void CnqsBasicOperator::Apply(const CnqsVector &input_state,
             }
         }
     }
+}
+
+std::string CnqsBasicOperator::Describe() const {
+    std::string description = "{\n";
+    description += "    \"name\": \"CnqsBasicOperator\",\n";
+    description += "    \"num_rotor\": " + std::to_string(d_) + ",\n";
+
+    int num_edge = edges_.size();
+
+    description += "    \"edge_list\": [\n";
+    for (int edge_id = 0; edge_id < num_edge; ++edge_id) {
+        int j = std::get<0>(edges_[edge_id]);
+        int k = std::get<1>(edges_[edge_id]);
+
+        if (edge_id != num_edge - 1) {
+            description += "        [" + std::to_string(j) + ", " +
+                           std::to_string(k) + "],\n";
+        } else {
+            description += "        [" + std::to_string(j) + ", " +
+                           std::to_string(k) + "]\n";
+        }
+    }
+    description += "    ],\n";
+
+    description += "    \"g\": " + std::to_string(g_) + ",\n";
+    description += "    \"J\": " + std::to_string(J_) + ",\n";
+    description += "    \"num_grid_point\": " + std::to_string(n_) + "\n";
+    description += "}";
+
+    return description;
 }

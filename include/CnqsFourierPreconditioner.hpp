@@ -58,10 +58,16 @@ public:
      */
     void Solve(const CnqsVector &input_vector, CnqsVector &output_vector) const;
 
+    /**
+     * @brief Create a string representation of the CnqsTrivialPreconditioner
+     * object
+     *
+     * @return C++ standard string containing the description
+     */
+    std::string Describe() const;
+
 private:
     double SquaredDistanceFromCenter(int i) const;
-
-    void Describe(std::string &description) const;
 
     int d_;
     int n_;

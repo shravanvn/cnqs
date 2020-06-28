@@ -224,8 +224,21 @@ public:
      */
     void Normalize();
 
+    /**
+     * @brief Create a string representation of the CnqsVector object
+     *
+     * @return C++ standard string with description
+     */
+    std::string Describe() const;
+
 private:
     std::vector<double> entries_;
 };
+
+/**
+ * @brief Print CnqsVector objects to output streams (e.g. `std::cout`)
+ *
+ */
+std::ostream &operator<<(std::ostream &os, const CnqsVector &v);
 
 #endif

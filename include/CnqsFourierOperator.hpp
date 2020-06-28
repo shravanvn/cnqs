@@ -1,6 +1,7 @@
 #ifndef CNQS_FOURIER_OPERATOR_HPP
 #define CNQS_FOURIER_OPERATOR_HPP
 
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -60,7 +61,20 @@ public:
      */
     void ConstructInitialState(CnqsVector &cnqs_vector) const;
 
+    /**
+     * @brief Apply the operator to a CnqsVector
+     *
+     * @param input_vector Input vector
+     * @param output_vector Output vector
+     */
     void Apply(const CnqsVector &input_vector, CnqsVector &output_vector) const;
+
+    /**
+     * @brief Create a string representation of the CnqsFourierOperator object
+     *
+     * @return C++ standard string with description
+     */
+    std::string Describe() const;
 
 private:
     bool IndexQualifiesForInitialState(int i) const;

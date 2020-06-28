@@ -43,19 +43,21 @@ public:
                        CnqsVector &output_vector) const = 0;
 
     /**
-     * @brief Enable outputting to output streams including `std::cout`
-     *
-     */
-    friend std::ostream &operator<<(
-        std::ostream &os, const CnqsPreconditioner &cnqs_preconditioner);
-
-protected:
-    /**
      * @brief Create a string representation of the CnqsPreconditioner object
      *
-     * @param description Variable to store the description in
+     * @attention This is a pure virtual member function that will be overloaded
+     * by concrete subclasses of CnqsPreconditioner.
+     *
+     * @return C++ standard string containing the description
      */
-    virtual void Describe(std::string &description) const = 0;
+    virtual std::string Describe() const = 0;
 };
+
+/**
+ * @brief Print CnqsPreconditioner objects to output streams (e.g. `std::cout`)
+ *
+ */
+std::ostream &operator<<(std::ostream &os,
+                         const CnqsPreconditioner &cnqs_preconditioner);
 
 #endif

@@ -54,13 +54,15 @@ void CnqsFourierPreconditioner::Solve(const CnqsVector &input_state,
     }
 }
 
-void CnqsFourierPreconditioner::Describe(std::string &description) const {
-    description += "CnqsPreconditioner {\n";
-    description += "     name : cnqs Fourier preconditioner\n";
-    description += "        d : " + std::to_string(d_) + "\n";
-    description += "        n : " + std::to_string(n_) + "\n";
-    description += "        g : " + std::to_string(g_) + "\n";
-    description += "        J : " + std::to_string(J_) + "\n";
-    description += "    shift : " + std::to_string(shift_) + "\n";
+std::string CnqsFourierPreconditioner::Describe() const {
+    std::string description = "{\n";
+    description += "    \"name\": \"CnqsFourierPreconditioner\",\n";
+    description += "    \"num_rotor\": " + std::to_string(d_) + ",\n";
+    description += "    \"g\": " + std::to_string(g_) + ",\n";
+    description += "    \"J\": " + std::to_string(J_) + ",\n";
+    description += "    \"shift\": " + std::to_string(shift_) + ",\n";
+    description += "    \"max_freq\": " + std::to_string(max_freq_) + "\n";
     description += "}";
+
+    return description;
 }

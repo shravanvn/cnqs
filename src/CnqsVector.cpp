@@ -162,3 +162,17 @@ void CnqsVector::Normalize() {
         entry /= norm_value;
     }
 }
+
+std::string CnqsVector::Describe() const {
+    std::string description = "{\n";
+    description += "    \"name\": \"CnqsVector\",\n";
+    description += "    \"size\": " + std::to_string(entries_.size()) + "\n";
+    description += "}";
+
+    return description;
+}
+
+std::ostream &operator<<(std::ostream &os, const CnqsVector &v) {
+    os << v.Describe() << std::flush;
+    return os;
+}

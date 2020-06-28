@@ -36,10 +36,9 @@ public:
      * \f$0 \leq j, k \leq d - 1\f$.
      * @param g Parameter
      * @param J Parameter. Note that \f$gJ\f$ must be positive.
-     * @param name String identifier (to identify subclasses in std::cout)
      */
     CnqsOperator(int d, int n, const std::vector<std::tuple<int, int>> &edges,
-                 double g, double J, const std::string &name);
+                 double g, double J);
 
     /**
      * @brief Default destructor
@@ -66,12 +65,18 @@ public:
     /**
      * @brief Construct initial CnqsVector object corresponding to the operator
      *
+     * @attention This is a pure virtual member function that must be overloaded
+     * by concrete subclasses of CnqsOperator.
+     *
      * @param cnqs_vector The CnqsVector object to be updated with new values
      */
     virtual void ConstructInitialState(CnqsVector &cnqs_vector) const = 0;
 
     /**
      * @brief Apply the operator to a CnqsVector
+     *
+     * @attention This is a pure virtual member function that must be overloaded
+     * by concrete subclasses of CnqsOperator.
      *
      * @param input_vector Input vector
      * @param output_vector Output vector
@@ -101,11 +106,14 @@ public:
                       CnqsVector &output_vector) const;
 
     /**
-     * @brief Enable outputting to output streams including `std::cout`
+     * @brief Create a string representation of the CnqsOperator object
      *
+     * @attention This is a pure virtual member function that must be overloaded
+     * by concrete subclasses of CnqsOperator.
+     *
+     * @return C++ standard string with description
      */
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const CnqsOperator &cnqs_operator);
+    virtual std::string Describe() const = 0;
 
 protected:
     /**
@@ -141,14 +149,6 @@ protected:
     double J_;
 
     /**
-     * @brief String identifier
-     *
-     * This is used to identify any subclasses in output streams (such as
-     * `std::cout`)
-     */
-    std::string name_;
-
-    /**
      * @brief Sizes of different unfoldings of the \f$d\f$-dimensional operator
      *
      * This is a array \f$s\f$ of length \f$d + 1\f$ with the \f$j\f$-th entry
@@ -167,5 +167,11 @@ protected:
      */
     std::vector<int> num_element_;
 };
+
+/**
+ * @brief Print CnqsOperator objects to output streams (e.g. `std::cout`)
+ *
+ */
+std::ostream &operator<<(std::ostream &os, const CnqsOperator &cnqs_operator);
 
 #endif
