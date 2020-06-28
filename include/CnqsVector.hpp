@@ -2,6 +2,7 @@
 #define CNQS_VECTOR_HPP
 
 #include <cmath>
+#include <ostream>
 #include <string>
 #include <vector>
 
@@ -179,24 +180,6 @@ public:
     CnqsVector operator/(double c) const;
 
     /**
-     * @brief Scalar left multiplication
-     *
-     * Running `x = c * v` sets \f$x(i) \gets c v(i)\f$ for all indices \f$i\f$.
-     *
-     * @param c Scalar
-     * @param v CnqsVector
-     * @return New CnqsVector with scaled values
-     */
-    friend CnqsVector operator*(double c, const CnqsVector &v) { return v * c; }
-
-    /**
-     * @brief Save CnqsVector data to ASCII formatted file
-     *
-     * @param file_name Name of the text file
-     */
-    void Save(const std::string &file_name) const;
-
-    /**
      * @brief Dot/Scalar product between two CnqsVector objects
      *
      * Given two vectors \f$v\f$ and \f$w\f$ computes \f$\langle v, w \rangle =
@@ -222,7 +205,14 @@ public:
      * @brief Normalize CnqsVector in Euclidean norm
      *
      */
-    void Normalize();
+    void Normalize() { *this /= Norm(); }
+
+    /**
+     * @brief Save CnqsVector data to ASCII formatted file
+     *
+     * @param file_name Name of the text file
+     */
+    void Save(const std::string &file_name) const;
 
     /**
      * @brief Create a string representation of the CnqsVector object
@@ -234,6 +224,17 @@ public:
 private:
     std::vector<double> entries_;
 };
+
+/**
+ * @brief Scalar left multiplication
+ *
+ * Running `x = c * v` sets \f$x(i) \gets c v(i)\f$ for all indices \f$i\f$.
+ *
+ * @param c Scalar
+ * @param v CnqsVector
+ * @return New CnqsVector with scaled values
+ */
+inline CnqsVector operator*(double c, const CnqsVector &v) { return v * c; }
 
 /**
  * @brief Print CnqsVector objects to output streams (e.g. `std::cout`)

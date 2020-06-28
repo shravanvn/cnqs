@@ -10,8 +10,6 @@ static const double PI = 4.0 * std::atan(1.0);
 TEST(CnqsVector, ConstructFromSize) {
     CnqsVector vec(100);
 
-    std::cout << vec << std::endl;
-
     ASSERT_EQ(vec.Size(), 100);
 
     for (int i = 0; i < 100; ++i) {
@@ -36,7 +34,6 @@ TEST(CnqsVector, ConstructFromData) {
 
 TEST(CnqsVector, ScalarAssignment) {
     CnqsVector vec(100);
-
     vec = 1.0;
 
     for (int i = 0; i < 100; ++i) {
@@ -47,7 +44,6 @@ TEST(CnqsVector, ScalarAssignment) {
 TEST(CnqsVector, VectorAdditionInPlace) {
     std::vector<double> data1(100);
     std::vector<double> data2(100);
-
     for (int i = 0; i < 100; ++i) {
         data1[i] = i;
         data2[i] = 100 - i;
@@ -55,7 +51,6 @@ TEST(CnqsVector, VectorAdditionInPlace) {
 
     CnqsVector vec1(data1);
     CnqsVector vec2(data2);
-
     vec1 += vec2;
 
     for (int i = 0; i < 100; ++i) {
@@ -66,7 +61,6 @@ TEST(CnqsVector, VectorAdditionInPlace) {
 TEST(CnqsVector, VectorSubtractionInPlace) {
     std::vector<double> data1(100);
     std::vector<double> data2(100);
-
     for (int i = 0; i < 100; ++i) {
         data1[i] = 100 - i;
         data2[i] = i;
@@ -74,7 +68,6 @@ TEST(CnqsVector, VectorSubtractionInPlace) {
 
     CnqsVector vec1(data1);
     CnqsVector vec2(data2);
-
     vec1 -= vec2;
 
     for (int i = 0; i < 100; ++i) {
@@ -84,13 +77,11 @@ TEST(CnqsVector, VectorSubtractionInPlace) {
 
 TEST(CnqsVector, ScalarMultiplicationInPlace) {
     std::vector<double> data(100);
-
     for (int i = 0; i < 100; ++i) {
         data[i] = i * (100.0 - i);
     }
 
     CnqsVector vec(data);
-
     vec *= 2.0;
 
     for (int i = 0; i < 100; ++i) {
@@ -100,13 +91,11 @@ TEST(CnqsVector, ScalarMultiplicationInPlace) {
 
 TEST(CnqsVector, ScalarDivisionInPlace) {
     std::vector<double> data(100);
-
     for (int i = 0; i < 100; ++i) {
         data[i] = i * (100.0 - i);
     }
 
     CnqsVector vec(data);
-
     vec /= 3.0;
 
     for (int i = 0; i < 100; ++i) {
@@ -117,7 +106,6 @@ TEST(CnqsVector, ScalarDivisionInPlace) {
 TEST(CnqsVector, VectorAddition) {
     std::vector<double> data1(100);
     std::vector<double> data2(100);
-
     for (int i = 0; i < 100; ++i) {
         data1[i] = i;
         data2[i] = 100.0 - i;
@@ -125,10 +113,11 @@ TEST(CnqsVector, VectorAddition) {
 
     CnqsVector vec1(data1);
     CnqsVector vec2(data2);
-
     CnqsVector vec = vec1 + vec2;
 
     for (int i = 0; i < 100; ++i) {
+        ASSERT_DOUBLE_EQ(vec1(i), i);
+        ASSERT_DOUBLE_EQ(vec2(i), 100.0 - i);
         ASSERT_DOUBLE_EQ(vec(i), 100.0);
     }
 }
@@ -136,7 +125,6 @@ TEST(CnqsVector, VectorAddition) {
 TEST(CnqsVector, VectorSubtraction) {
     std::vector<double> data1(100);
     std::vector<double> data2(100);
-
     for (int i = 0; i < 100; ++i) {
         data1[i] = i;
         data2[i] = 100.0 - i;
@@ -144,65 +132,73 @@ TEST(CnqsVector, VectorSubtraction) {
 
     CnqsVector vec1(data1);
     CnqsVector vec2(data2);
-
     CnqsVector vec = vec1 - vec2;
 
     for (int i = 0; i < 100; ++i) {
+        ASSERT_DOUBLE_EQ(vec1(i), i);
+        ASSERT_DOUBLE_EQ(vec2(i), 100.0 - i);
         ASSERT_DOUBLE_EQ(vec(i), 2.0 * i - 100);
     }
 }
 
 TEST(CnqsVector, ScalarMultiplicationOnRight) {
     std::vector<double> data1(100);
-
     for (int i = 0; i < 100; ++i) {
         data1[i] = i;
     }
 
     CnqsVector vec1(data1);
-
     CnqsVector vec = vec1 * 2.0;
 
     for (int i = 0; i < 100; ++i) {
+        ASSERT_DOUBLE_EQ(vec1(i), i);
         ASSERT_DOUBLE_EQ(vec(i), 2.0 * i);
     }
 }
 
 TEST(CnqsVector, ScalarDivisionOnRight) {
     std::vector<double> data1(100);
-
     for (int i = 0; i < 100; ++i) {
         data1[i] = i;
     }
 
     CnqsVector vec1(data1);
-
-    CnqsVector vec = vec1 / 2.0;
+    CnqsVector vec = vec1 / 5.0;
 
     for (int i = 0; i < 100; ++i) {
-        ASSERT_DOUBLE_EQ(vec(i), 0.5 * i);
+        ASSERT_DOUBLE_EQ(vec1(i), i);
+        ASSERT_DOUBLE_EQ(vec(i), 0.2 * i);
     }
 }
 
-TEST(CnqsVector, ScalarMultiplicationOnLeft) {
-    std::vector<double> data1(100);
+TEST(CnqsVector, Dot) {
+    CnqsVector vec1(100);
+    CnqsVector vec2(100);
+    vec1 = 1.0;
+    vec2 = 2.0;
+
+    ASSERT_DOUBLE_EQ(vec1.Dot(vec2), 200.0);
+}
+
+TEST(CnqsVector, Norm) {
+    CnqsVector vec(100);
+    vec = 4.0;
+
+    ASSERT_DOUBLE_EQ(vec.Norm(), 40.0);
+}
+
+TEST(CnqsVector, Normalize) {
+    CnqsVector vec(100);
+    vec = 5.0;
+    vec.Normalize();
 
     for (int i = 0; i < 100; ++i) {
-        data1[i] = i;
-    }
-
-    CnqsVector vec1(data1);
-
-    CnqsVector vec = 3.0 * vec1;
-
-    for (int i = 0; i < 100; ++i) {
-        ASSERT_DOUBLE_EQ(vec(i), 3.0 * i);
+        ASSERT_DOUBLE_EQ(vec(i), 0.1);
     }
 }
 
 TEST(CnqsVector, Save) {
     std::vector<double> data(100);
-
     for (int i = 0; i < 100; ++i) {
         data[i] = std::cos(0.02 * PI * i);
     }
@@ -212,32 +208,24 @@ TEST(CnqsVector, Save) {
     vec.Save("cnqs_vector.txt");
 }
 
-TEST(CnqsVector, Dot) {
-    CnqsVector vec1(100);
-    CnqsVector vec2(100);
+TEST(CnqsVector, ScalarMultiplicationOnLeft) {
+    std::vector<double> data1(100);
+    for (int i = 0; i < 100; ++i) {
+        data1[i] = i;
+    }
 
-    vec1 = 1.0;
-    vec2 = 2.0;
-
-    ASSERT_DOUBLE_EQ(vec1.Dot(vec2), 200.0);
-}
-
-TEST(CnqsVector, Norm) {
-    CnqsVector vec(100);
-
-    vec = 4.0;
-
-    ASSERT_DOUBLE_EQ(vec.Norm(), 40.0);
-}
-
-TEST(CnqsVector, Normalize) {
-    CnqsVector vec(100);
-    vec = 4.0;
-    vec.Normalize();
+    CnqsVector vec1(data1);
+    CnqsVector vec = 3.0 * vec1;
 
     for (int i = 0; i < 100; ++i) {
-        ASSERT_DOUBLE_EQ(vec(i), 0.1);
+        ASSERT_DOUBLE_EQ(vec(i), 3.0 * i);
     }
+}
+
+TEST(CnqsVector, StdOut) {
+    CnqsVector vec(100);
+
+    std::cout << vec << std::endl;
 }
 
 int main(int argc, char **argv) {

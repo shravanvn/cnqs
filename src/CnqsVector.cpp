@@ -66,76 +66,23 @@ CnqsVector CnqsVector::operator/=(double c) {
 }
 
 CnqsVector CnqsVector::operator+(const CnqsVector &v) const {
-    int size = entries_.size();
-
-    if (v.Size() != size) {
-        throw std::length_error("==CnqsVector== Size mismatch in operator +");
-    }
-
-    CnqsVector w(size);
-
-    for (int i = 0; i < size; ++i) {
-        w(i) = entries_[i] + v(i);
-    }
-
-    return w;
+    CnqsVector w = *this;
+    return w += v;
 }
 
 CnqsVector CnqsVector::operator-(const CnqsVector &v) const {
-    int size = entries_.size();
-
-    if (v.Size() != size) {
-        throw std::length_error("==CnqsVector== Size mismatch in operator -");
-    }
-
-    CnqsVector w(size);
-
-    for (int i = 0; i < size; ++i) {
-        w(i) = entries_[i] - v(i);
-    }
-
-    return w;
+    CnqsVector w = *this;
+    return w -= v;
 }
 
 CnqsVector CnqsVector::operator*(double c) const {
-    int size = entries_.size();
-
-    CnqsVector w(size);
-
-    for (int i = 0; i < size; ++i) {
-        w(i) = c * entries_[i];
-    }
-
-    return w;
+    CnqsVector w = *this;
+    return w *= c;
 }
 
 CnqsVector CnqsVector::operator/(double c) const {
-    if (std::abs(c) < 1.0e-16) {
-        throw std::logic_error(
-            "==CnqsVector== Cannot divide by a near-zero number");
-    }
-
-    int size = entries_.size();
-
-    CnqsVector w(size);
-
-    for (int i = 0; i < size; ++i) {
-        w(i) = entries_[i] / c;
-    }
-
-    return w;
-}
-
-void CnqsVector::Save(const std::string &file_name) const {
-    std::ofstream file(file_name);
-
-    file << std::scientific << std::setprecision(16);
-
-    for (const auto &entry : entries_) {
-        file << entry << std::endl;
-    }
-
-    file.close();
+    CnqsVector w = *this;
+    return w /= c;
 }
 
 double CnqsVector::Dot(const CnqsVector &v) const {
@@ -155,12 +102,16 @@ double CnqsVector::Dot(const CnqsVector &v) const {
     return dot_product;
 }
 
-void CnqsVector::Normalize() {
-    double norm_value = Norm();
+void CnqsVector::Save(const std::string &file_name) const {
+    std::ofstream file(file_name);
 
-    for (auto &entry : entries_) {
-        entry /= norm_value;
+    file << std::scientific << std::setprecision(16);
+
+    for (const auto &entry : entries_) {
+        file << entry << std::endl;
     }
+
+    file.close();
 }
 
 std::string CnqsVector::Describe() const {
