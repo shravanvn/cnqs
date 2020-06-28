@@ -5,6 +5,7 @@ add_library(cnqs CnqsVector.cpp
                  CnqsBasicOperator.cpp
                  CnqsFourierOperator.cpp
                  CnqsPreconditioner.cpp
+                 CnqsFourierPreconditioner.cpp
                  InvPowerIter.cpp)
 
 target_include_directories(cnqs PUBLIC ${PROJECT_SOURCE_DIR}/include)

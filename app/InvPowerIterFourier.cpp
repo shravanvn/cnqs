@@ -6,7 +6,7 @@
 #include <vector>
 
 #include "CnqsFourierOperator.hpp"
-#include "CnqsTrivialPreconditioner.hpp"
+#include "CnqsFourierPreconditioner.hpp"
 #include "CnqsVector.hpp"
 #include "InvPowerIter.hpp"
 
@@ -125,13 +125,15 @@ int main(int argc, char **argv) {
         // construct hamiltonian
         auto cnqs_operator =
             std::make_shared<const CnqsFourierOperator>(d, n, edges, g, J);
+        double eig_val_lower_bound = cnqs_operator->EigValLowerBound();
 
         // construct preconditioner
         auto cnqs_preconditioner =
-            std::make_shared<const CnqsTrivialPrecondtioner>();
+            std::make_shared<const CnqsFourierPreconditioner>(
+                d, n, g, J, eig_val_lower_bound);
 
         // construct inverse power iterator
-        InvPowerIter iterator(cnqs_operator, cnqs_operator->EigValLowerBound(),
+        InvPowerIter iterator(cnqs_operator, eig_val_lower_bound,
                               cnqs_preconditioner);
         iterator.SetCgIterParams(cg_max_iter, cg_tol);
         iterator.SetPowerIterParams(power_max_iter, power_tol);
