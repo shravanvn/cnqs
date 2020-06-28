@@ -6,12 +6,12 @@
 #include "CnqsPreconditioner.hpp"
 #include "CnqsVector.hpp"
 
-class CnqsTrivialPrecondtioner : public CnqsPreconditioner {
+class CnqsTrivialPreconditioner : public CnqsPreconditioner {
 public:
-    CnqsTrivialPrecondtioner()
+    CnqsTrivialPreconditioner()
         : CnqsPreconditioner("cnqs trivial preconditioner") {}
 
-    ~CnqsTrivialPrecondtioner() = default;
+    ~CnqsTrivialPreconditioner() = default;
 
     void TestCompatibility(const CnqsVector &state) const {}
 

@@ -19,7 +19,7 @@ TEST(InvPowerIter, ConstructFromParameters) {
         std::make_shared<const CnqsBasicOperator>(d, n, edges, g, J);
 
     auto cnqs_preconditioner =
-        std::make_shared<const CnqsTrivialPrecondtioner>();
+        std::make_shared<const CnqsTrivialPreconditioner>();
 
     InvPowerIter iterator(cnqs_operator, 0.0, cnqs_preconditioner);
     iterator.SetCgIterParams(1000, 1.0e-06);
@@ -40,7 +40,7 @@ TEST(InvPowerIter, FindMinimalEigenState) {
         std::make_shared<const CnqsBasicOperator>(d, n, edges, g, J);
 
     auto cnqs_preconditioner =
-        std::make_shared<const CnqsTrivialPrecondtioner>();
+        std::make_shared<const CnqsTrivialPreconditioner>();
 
     InvPowerIter iterator(cnqs_operator, cnqs_operator->EigValLowerBound(),
                           cnqs_preconditioner);

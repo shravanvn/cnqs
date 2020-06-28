@@ -128,7 +128,7 @@ int main(int argc, char **argv) {
 
         // construct preconditioner
         auto cnqs_preconditioner =
-            std::make_shared<const CnqsTrivialPrecondtioner>();
+            std::make_shared<const CnqsTrivialPreconditioner>();
 
         // construct inverse power iterator
         InvPowerIter iterator(cnqs_operator, cnqs_operator->EigValLowerBound(),

@@ -4,16 +4,16 @@
 #include "CnqsTrivialPreconditioner.hpp"
 #include "gtest/gtest.h"
 
-TEST(CnqsBasicOperator, ConstructFromParameters) {
-    CnqsTrivialPrecondtioner preconditioner;
+TEST(CnqsTrivialPreconditioner, ConstructFromParameters) {
+    CnqsTrivialPreconditioner preconditioner;
 
     std::cout << preconditioner << std::endl;
 }
 
-TEST(CnqsBasicOperator, Solve) {
+TEST(CnqsTrivialPreconditioner, Solve) {
     const double PI = 4.0 * std::atan(1.0);
 
-    CnqsTrivialPrecondtioner preconditioner;
+    CnqsTrivialPreconditioner preconditioner;
 
     CnqsVector cnqs_vector_0(100);
     for (int i = 0; i < 100; ++i) {
