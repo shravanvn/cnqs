@@ -8,12 +8,13 @@
 #include "gtest/gtest.h"
 
 TEST(CnqsFourierPreconditioner, ConstructFromParameters) {
-    int d = 2;
-    int n = 17;
+    int num_rotor = 2;
+    int max_freq = 8;
     double g = 1.0;
     double J = 1.0;
 
-    CnqsFourierPreconditioner preconditioner(d, n, g, J, -1.0);
+    CnqsFourierPreconditioner preconditioner(num_rotor, 2 * max_freq + 1, g, J,
+                                             -1.0);
 
     std::cout << preconditioner << std::endl;
 }
@@ -21,16 +22,16 @@ TEST(CnqsFourierPreconditioner, ConstructFromParameters) {
 TEST(CnqsFourierPreconditioner, Solve) {
     const double PI = 4.0 * std::atan(1.0);
 
-    int d = 2;
-    int n = 17;
+    int num_rotor = 2;
+    int max_freq = 8;
     std::vector<std::tuple<int, int>> edges{{0, 1}};
     double g = 1.0;
     double J = 1.0;
-    int num_element = n * n;
+    int num_element = (2 * max_freq + 1) * (2 * max_freq + 1);
 
-    CnqsFourierOperator cnqs_operator(d, n, edges, g, J);
+    CnqsFourierOperator cnqs_operator(num_rotor, max_freq, edges, g, J);
     CnqsFourierPreconditioner cnqs_preconditioner(
-        d, n, g, J, cnqs_operator.EigValLowerBound());
+        num_rotor, 2 * max_freq + 1, g, J, cnqs_operator.EigValLowerBound());
 
     CnqsVector cnqs_vector_0(num_element);
     cnqs_operator.ConstructInitialState(cnqs_vector_0);

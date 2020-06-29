@@ -6,26 +6,26 @@
 #include "gtest/gtest.h"
 
 TEST(CnqsFourierOperator, ConstructFromParameters) {
-    int d = 2;
-    int n = 17;
+    int num_rotor = 2;
+    int max_freq = 8;
     std::vector<std::tuple<int, int>> edges{{1, 0}};
     double g = 1.0;
     double J = 1.0;
 
-    CnqsFourierOperator cnqs_operator(d, n, edges, g, J);
+    CnqsFourierOperator cnqs_operator(num_rotor, max_freq, edges, g, J);
 
     std::cout << cnqs_operator << std::endl;
 }
 
 TEST(CnqsFourierOperator, ConstructInitialState) {
-    int d = 2;
-    int n = 17;
+    int num_rotor = 2;
+    int max_freq = 8;
     std::vector<std::tuple<int, int>> edges{{0, 1}};
     double g = 1.0;
     double J = 1.0;
-    int num_element = n * n;
+    int num_element = (2 * max_freq + 1) * (2 * max_freq + 1);
 
-    CnqsFourierOperator cnqs_operator(d, n, edges, g, J);
+    CnqsFourierOperator cnqs_operator(num_rotor, max_freq, edges, g, J);
     CnqsVector cnqs_vector(num_element);
 
     cnqs_operator.ConstructInitialState(cnqs_vector);
@@ -34,14 +34,14 @@ TEST(CnqsFourierOperator, ConstructInitialState) {
 }
 
 TEST(CnqsFourierOperator, Apply) {
-    int d = 2;
-    int n = 17;
+    int num_rotor = 2;
+    int max_freq = 8;
     std::vector<std::tuple<int, int>> edges{{0, 1}};
     double g = 1.0;
     double J = 1.0;
-    int num_element = n * n;
+    int num_element = (2 * max_freq + 1) * (2 * max_freq + 1);
 
-    CnqsFourierOperator cnqs_operator(d, n, edges, g, J);
+    CnqsFourierOperator cnqs_operator(num_rotor, max_freq, edges, g, J);
 
     CnqsVector cnqs_vector_0(num_element);
     CnqsVector cnqs_vector_1(num_element);

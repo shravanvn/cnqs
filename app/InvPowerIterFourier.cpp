@@ -20,8 +20,8 @@ int main(int argc, char **argv) {
     }
 
     // simulation parameters
-    int d = 0;
-    int n = 0;
+    int num_rotor = 0;
+    int max_freq = 0;
     std::vector<std::tuple<int, int>> edges;
     double g = 0.0;
     double J = 0.0;
@@ -37,11 +37,11 @@ int main(int argc, char **argv) {
         std::string line;
 
         std::getline(file, line);
-        file >> d;
+        file >> num_rotor;
         std::getline(file, line);
 
         std::getline(file, line);
-        file >> n;
+        file >> max_freq;
         std::getline(file, line);
 
         int num_edges = 0;
@@ -95,8 +95,8 @@ int main(int argc, char **argv) {
 
     // dump the simulation parameters to screen
     {
-        std::cout << "d: " << d << std::endl;
-        std::cout << "n: " << n << std::endl;
+        std::cout << "num_rotor: " << num_rotor << std::endl;
+        std::cout << "max_freq: " << max_freq << std::endl;
         std::cout << "edges: " << std::flush;
         for (const auto &edge : edges) {
             std::cout << "(" << std::get<0>(edge) << ", " << std::get<1>(edge)
@@ -116,21 +116,21 @@ int main(int argc, char **argv) {
     {
         // allocate memory for state
         int num_element = 1;
-        for (int i = 0; i < d; ++i) {
-            num_element *= n;
+        for (int i = 0; i < num_rotor; ++i) {
+            num_element *= (2 * max_freq + 1);
         }
 
         CnqsVector cnqs_vector(num_element);
 
         // construct hamiltonian
-        auto cnqs_operator =
-            std::make_shared<const CnqsFourierOperator>(d, n, edges, g, J);
+        auto cnqs_operator = std::make_shared<const CnqsFourierOperator>(
+            num_rotor, max_freq, edges, g, J);
         double eig_val_lower_bound = cnqs_operator->EigValLowerBound();
 
         // construct preconditioner
         auto cnqs_preconditioner =
             std::make_shared<const CnqsFourierPreconditioner>(
-                d, n, g, J, eig_val_lower_bound);
+                num_rotor, 2 * max_freq + 1, g, J, eig_val_lower_bound);
 
         // construct inverse power iterator
         InvPowerIter iterator(cnqs_operator, eig_val_lower_bound,

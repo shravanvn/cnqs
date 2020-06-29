@@ -1,7 +1,7 @@
 Dimension of problem/Number of quantum rotors
 2
-Discretization Parameter/Total number of Fourier modes per dimension (must be odd)
-17
+Discretization Parameter/Maximum frequency cutoff in each dimension
+8
 Number of edges/Connection between rotors
 1
 Edges (Identify boundary nodes of each edge using 0-based indexing. One edge per line)

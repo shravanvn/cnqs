@@ -4,29 +4,82 @@
 #include <stdexcept>
 
 CnqsFourierOperator::CnqsFourierOperator(
-    int d, int n, const std::vector<std::tuple<int, int>> &edges, double g,
-    double J)
-    : CnqsOperator(d, n, edges, g, J), max_freq_((n - 1) / 2) {
-    if (n_ % 2 == 0) {
+    int num_rotor, int max_freq, const std::vector<std::tuple<int, int>> &edges,
+    double g, double J)
+    : num_rotor_(num_rotor),
+      max_freq_(max_freq),
+      edges_(edges),
+      g_(g),
+      J_(J),
+      num_tot_freq_(2 * max_freq + 1),
+      unfolding_factor_(std::vector<int>(num_rotor + 1)) {
+    // validate inputs
+    if (num_rotor_ < 2) {
         throw std::domain_error(
-            "==CnqsFourierOperator== Total number of Fourier modes must be "
-            "odd");
+            "==CnqsFourierOperator== Need at least two quantum rotors");
+    }
+
+    if (max_freq_ < 1) {
+        throw std::domain_error(
+            "==CnqsFourierOperator== Maximum frequency cut-off must be at "
+            "least one");
+    }
+
+    for (std::tuple<int, int> &edge : edges_) {
+        int j = std::get<0>(edge);
+        int k = std::get<1>(edge);
+
+        // switch order to ensure j < k
+        if (j > k) {
+            int temp = j;
+            j = k;
+            k = temp;
+
+            edge = std::make_tuple(j, k);
+        }
+
+        // check validity of boundary node identifiers
+        if (j < 0 || k >= num_rotor_) {
+            throw std::domain_error(
+                "==CnqsFourierOperator== Edge specification is not valid");
+        }
+    }
+
+    if (g_ * J_ <= 0) {
+        throw std::domain_error(
+            "==CnqsFourierOperator== Values of g and J may not lead to "
+            "positive definite operator");
+    }
+
+    // compute the unfolding factors
+    unfolding_factor_[0] = 1;
+    for (int i = 0; i < num_rotor_; ++i) {
+        unfolding_factor_[i + 1] = num_tot_freq_ * unfolding_factor_[i];
+    }
+}
+
+void CnqsFourierOperator::TestCompatibility(
+    const CnqsVector &cnqs_vector) const {
+    if (cnqs_vector.Size() != unfolding_factor_[num_rotor_]) {
+        throw std::length_error(
+            "==CnqsFourierOperator== Vector length is not compatible with "
+            "operator");
     }
 }
 
 bool CnqsFourierOperator::IndexQualifiesForInitialState(int i) const {
-    for (int j = 0; j < d_; ++j) {
+    for (int j = 0; j < num_rotor_; ++j) {
         if (i == 0) {
             return false;
         }
 
-        int i_j = i % n_;
+        int i_j = i % num_tot_freq_;
 
         if ((i_j != max_freq_ - 1) && (i_j != max_freq_ + 1)) {
             return false;
         }
 
-        i /= n_;
+        i /= num_tot_freq_;
     }
 
     return true;
@@ -35,9 +88,9 @@ bool CnqsFourierOperator::IndexQualifiesForInitialState(int i) const {
 void CnqsFourierOperator::ConstructInitialState(CnqsVector &state) const {
     TestCompatibility(state);
 
-    double value = std::pow(4.0 * std::atan(1.0), d_);
+    double value = std::pow(4.0 * std::atan(1.0), num_rotor_);
 
-    for (int i = 0; i < num_element_[d_]; ++i) {
+    for (int i = 0; i < unfolding_factor_[num_rotor_]; ++i) {
         if (IndexQualifiesForInitialState(i)) {
             state(i) = value;
         }
@@ -47,11 +100,11 @@ void CnqsFourierOperator::ConstructInitialState(CnqsVector &state) const {
 double CnqsFourierOperator::SquaredDistanceFromCenter(int i) const {
     int squared_distance = 0;
 
-    for (int j = 0; j < d_; ++j) {
-        int d_j = i % n_ - max_freq_;
+    for (int j = 0; j < num_rotor_; ++j) {
+        int d_j = i % num_tot_freq_ - max_freq_;
         squared_distance += d_j * d_j;
 
-        i /= n_;
+        i /= num_tot_freq_;
     }
 
     return squared_distance;
@@ -67,7 +120,7 @@ void CnqsFourierOperator::Apply(const CnqsVector &input_state,
     // differential part
     double fact = 0.5 * g_ * J_;
 
-    for (int i = 0; i < num_element_[d_]; ++i) {
+    for (int i = 0; i < unfolding_factor_[num_rotor_]; ++i) {
         output_state(i) += fact * SquaredDistanceFromCenter(i) * input_state(i);
     }
 
@@ -79,19 +132,19 @@ void CnqsFourierOperator::Apply(const CnqsVector &input_state,
         int k = std::get<1>(edge);
 
         // split indices into five groups: i[<j], i[j], i[j<<k], i[k], i[>k]
-        int n_lj = num_element_[j];
+        int n_lj = unfolding_factor_[j];
 
         int f_j = n_lj;
-        int n_j = n_;
+        int n_j = num_tot_freq_;
 
         int f_jk = f_j * n_j;
-        int n_jk = num_element_[k - j - 1];
+        int n_jk = unfolding_factor_[k - j - 1];
 
         int f_k = f_jk * n_jk;
-        int n_k = n_;
+        int n_k = num_tot_freq_;
 
         int f_gk = f_k * n_k;
-        int n_gk = num_element_[d_ - k - 1];
+        int n_gk = unfolding_factor_[num_rotor_ - k - 1];
 
         // update new state
         for (int i_gk = 0; i_gk < n_gk; ++i_gk) {
@@ -131,11 +184,11 @@ void CnqsFourierOperator::Apply(const CnqsVector &input_state,
 std::string CnqsFourierOperator::Describe() const {
     std::string description = "{\n";
     description += "    \"name\": \"CnqsFourierOperator\",\n";
-    description += "    \"num_rotor\": " + std::to_string(d_) + ",\n";
+    description += "    \"num_rotor\": " + std::to_string(num_rotor_) + ",\n";
 
     int num_edge = edges_.size();
 
-    description += "    \"edge_list\": [\n";
+    description += "    \"edges\": [\n";
     for (int edge_id = 0; edge_id < num_edge; ++edge_id) {
         int j = std::get<0>(edges_[edge_id]);
         int k = std::get<1>(edges_[edge_id]);
