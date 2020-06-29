@@ -1,3 +1,3 @@
-# cNQS
+# CNQS
 
-Fast solvers for obtaining the quantum state of a cNQS.
+Fast solvers for computing continuous-variable neural quantum states.
