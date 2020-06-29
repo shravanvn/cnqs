@@ -1,19 +1,19 @@
-find_package(Doxygen REQUIRED dot)
-find_package(Sphinx REQUIRED)
+find_package(Doxygen)
 
-if(DOXYGEN_FOUND AND SPHINX_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/conf.py.in
-                   ${CMAKE_CURRENT_BINARY_DIR}/conf.py
-                   @ONLY)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/index.rst
-                   ${CMAKE_CURRENT_BINARY_DIR}/index.rst
-                   COPYONLY)
+if(DOXYGEN_FOUND)
+    get_target_property(CNQS_PUBLIC_HEADER_DIR cnqs::cnqs INTERFACE_INCLUDE_DIRECTORIES)
+    file(GLOB_RECURSE CNQS_PUBLIC_HEADERS ${CNQS_PUBLIC_HEADER_DIR}/*.hpp)
 
-    add_custom_target(docs
-                      ALL
-                      ${SPHINX_EXECUTABLE} -b html ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_BINARY_DIR}/html
-                      BYPRODUCTS ${CMAKE_CURRET_BINARY_DIR}/html/index.html
-                      COMMENT "Generating documentation")
+    configure_file(Doxyfile.in Doxyfile @ONLY)
+
+    add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/html/index.html
+                       DEPENDS ${CNQS_PUBLIC_HEADERS}
+                       COMMAND ${DOXYGEN_EXECUTABLE} Doxyfile
+                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                       MAIN_DEPENDENCY Doxyfile
+                       COMMENT "Generating documentation")
+
+    add_custom_target(docs ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/html/index.html)
 else()
-    message(WARNING "Doxygen and Sphinx not installed. Skipping documentation generation")
+    message(WARNING "Could not find Doxygen. Skipping documentation generation")
 endif()
