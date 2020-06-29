@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <memory>
@@ -140,8 +141,16 @@ int main(int argc, char **argv) {
 
         std::cout << iterator << std::endl;
 
-        // compute minimal eigenvalue state
+        // compute minimal eigenvalue state, record execution time
+        auto start_time = std::chrono::high_resolution_clock::now();
         iterator.FindMinimalEigenState(cnqs_vector);
+        auto stop_time = std::chrono::high_resolution_clock::now();
+
+        auto elapsed_time =
+            std::chrono::duration_cast<std::chrono::microseconds>(stop_time -
+                                                                  start_time);
+        std::cout << "Elapsed time: " << elapsed_time.count() << " us"
+                  << std::endl;
 
         // save state, if requested
         if (file_name.compare("NULL") != 0) {
