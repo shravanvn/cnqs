@@ -9,14 +9,14 @@
 #include "gtest/gtest.h"
 
 TEST(InvPowerIter, ConstructFromParameters) {
-    int d = 2;
-    int n = 128;
-    std::vector<std::tuple<int, int>> edges{{0, 1}};
+    int num_rotor_ = 2;
+    int num_grid_point = 128;
+    std::vector<std::tuple<int, int>> edges{{1, 0}};
     double g = 1.0;
     double J = 1.0;
 
-    auto cnqs_operator =
-        std::make_shared<const CnqsBasicOperator>(d, n, edges, g, J);
+    auto cnqs_operator = std::make_shared<const CnqsBasicOperator>(
+        num_rotor_, num_grid_point, edges, g, J);
 
     auto cnqs_preconditioner =
         std::make_shared<const CnqsTrivialPreconditioner>();
@@ -29,15 +29,15 @@ TEST(InvPowerIter, ConstructFromParameters) {
 }
 
 TEST(InvPowerIter, FindMinimalEigenState) {
-    int d = 2;
-    int n = 32;
+    int num_rotor_ = 2;
+    int num_grid_point = 32;
     std::vector<std::tuple<int, int>> edges{{0, 1}};
     double g = 1.0;
     double J = 1.0;
-    int num_element = n * n;
+    int num_element = num_grid_point * num_grid_point;
 
-    auto cnqs_operator =
-        std::make_shared<const CnqsBasicOperator>(d, n, edges, g, J);
+    auto cnqs_operator = std::make_shared<const CnqsBasicOperator>(
+        num_rotor_, num_grid_point, edges, g, J);
 
     auto cnqs_preconditioner =
         std::make_shared<const CnqsTrivialPreconditioner>();

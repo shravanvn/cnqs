@@ -13,8 +13,7 @@ TEST(CnqsFourierPreconditioner, ConstructFromParameters) {
     double g = 1.0;
     double J = 1.0;
 
-    CnqsFourierPreconditioner preconditioner(num_rotor, 2 * max_freq + 1, g, J,
-                                             -1.0);
+    CnqsFourierPreconditioner preconditioner(num_rotor, max_freq, g, J, -1.0);
 
     std::cout << preconditioner << std::endl;
 }
@@ -31,7 +30,7 @@ TEST(CnqsFourierPreconditioner, Solve) {
 
     CnqsFourierOperator cnqs_operator(num_rotor, max_freq, edges, g, J);
     CnqsFourierPreconditioner cnqs_preconditioner(
-        num_rotor, 2 * max_freq + 1, g, J, cnqs_operator.EigValLowerBound());
+        num_rotor, max_freq, g, J, cnqs_operator.EigValLowerBound());
 
     CnqsVector cnqs_vector_0(num_element);
     cnqs_operator.ConstructInitialState(cnqs_vector_0);

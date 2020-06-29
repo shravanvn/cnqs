@@ -130,7 +130,7 @@ int main(int argc, char **argv) {
         // construct preconditioner
         auto cnqs_preconditioner =
             std::make_shared<const CnqsFourierPreconditioner>(
-                num_rotor, 2 * max_freq + 1, g, J, eig_val_lower_bound);
+                num_rotor, max_freq, g, J, eig_val_lower_bound);
 
         // construct inverse power iterator
         InvPowerIter iterator(cnqs_operator, eig_val_lower_bound,

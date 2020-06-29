@@ -1,37 +1,59 @@
 #include "CnqsFourierPreconditioner.hpp"
 
 #include <cmath>
+#include <stdexcept>
 
-CnqsFourierPreconditioner::CnqsFourierPreconditioner(int d, int n, double g,
+CnqsFourierPreconditioner::CnqsFourierPreconditioner(int num_rotor,
+                                                     int max_freq, double g,
                                                      double J, double shift)
-    : d_(d), n_(n), g_(g), J_(J), shift_(shift), max_freq_((n - 1) / 2) {
-    if (d_ < 2) {
+    : num_rotor_(num_rotor),
+      max_freq_(max_freq),
+      g_(g),
+      J_(J),
+      shift_(shift),
+      n_(2 * max_freq + 1),
+      num_element_(1) {
+    if (num_rotor_ < 2) {
         throw std::domain_error(
             "==CnqsFourierPreconditioner== Need at least two rotors");
     }
 
-    if (n_ < 3 || n_ % 2 == 0) {
+    if (max_freq_ < 1) {
         throw std::domain_error(
-            "==CnqsFourierPreconditioner== Total number of Fourier modes must "
-            "be odd and at least 3");
+            "==CnqsFourierPreconditioner== Maximum frequency cut-off must be "
+            "at least one");
     }
 
-    if (std::abs(shift) < 1.0e-15) {
+    if (g_ * J_ <= 0) {
         throw std::domain_error(
-            "==CnqsFourierPreconditioner== Shift is too close to zero "
-            "(singular preconditioner)");
+            "==CnqsFourierPreconditioner== Values of g and J may not lead to "
+            "positive definite preconditioner");
     }
 
-    num_element_ = 1;
-    for (int i = 0; i < d_; ++i) {
+    if (shift_ > -1.0e-15) {
+        throw std::domain_error(
+            "==CnqsFourierPreconditioner== Value of shift may not lead to "
+            "positive definite preconditioner");
+    }
+
+    for (int i = 0; i < num_rotor_; ++i) {
         num_element_ *= n_;
+    }
+}
+
+void CnqsFourierPreconditioner::TestCompatibility(
+    const CnqsVector &cnqs_vector) const {
+    if (cnqs_vector.Size() != num_element_) {
+        throw std::length_error(
+            "==CnqsFourierPreconditioner== Vector length is not compatible "
+            "with operator");
     }
 }
 
 double CnqsFourierPreconditioner::SquaredDistanceFromCenter(int i) const {
     int squared_distance = 0;
 
-    for (int j = 0; j < d_; ++j) {
+    for (int j = 0; j < num_rotor_; ++j) {
         int d_j = i % n_ - max_freq_;
         squared_distance += d_j * d_j;
 
@@ -57,7 +79,7 @@ void CnqsFourierPreconditioner::Solve(const CnqsVector &input_state,
 std::string CnqsFourierPreconditioner::Describe() const {
     std::string description = "{\n";
     description += "    \"name\": \"CnqsFourierPreconditioner\",\n";
-    description += "    \"num_rotor\": " + std::to_string(d_) + ",\n";
+    description += "    \"num_rotor\": " + std::to_string(num_rotor_) + ",\n";
     description += "    \"g\": " + std::to_string(g_) + ",\n";
     description += "    \"J\": " + std::to_string(J_) + ",\n";
     description += "    \"shift\": " + std::to_string(shift_) + ",\n";
