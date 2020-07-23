@@ -32,3 +32,5 @@ CNQS_add_test(cnqs_fourier_operator_test CnqsFourierOperatorTest.cpp)
 CNQS_add_test(cnqs_trivial_preconditioner_test CnqsTrivialPreconditionerTest.cpp)
 CNQS_add_test(cnqs_fourier_preconditioner_test CnqsFourierPreconditionerTest.cpp)
 CNQS_add_test(inv_power_iter_test InvPowerIterTest.cpp)
+
+CNQS_add_test(cnqs_network_test Cnqs_NetworkTest.cpp)
