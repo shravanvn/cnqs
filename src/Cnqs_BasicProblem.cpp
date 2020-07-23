@@ -281,6 +281,7 @@ double Cnqs::BasicProblem::runInversePowerIteration(
                                          Tpetra::MultiVector<double, int, int>,
                                          Tpetra::Operator<double, int, int>>(
                     A, z, x.getConst()));
+            problem->setHermitian();
             problem->setProblem();
 
             // create CG solver
