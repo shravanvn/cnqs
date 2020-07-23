@@ -9,7 +9,7 @@
 #include <Teuchos_Time.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Map.hpp>
-#include <Tpetra_Vector.hpp>
+#include <Tpetra_MultiVector.hpp>
 
 #include "Cnqs_Network.hpp"
 #include "Cnqs_Problem.hpp"
@@ -32,7 +32,7 @@ private:
     Teuchos::RCP<const Tpetra::Map<int, int>>
     constructMap(const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<const Tpetra::Vector<double, int, int>>
+    Teuchos::RCP<Tpetra::MultiVector<double, int, int>>
     constructInitialState(const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
                           const Teuchos::RCP<Teuchos::Time> &timer) const;
 

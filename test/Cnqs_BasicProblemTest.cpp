@@ -7,19 +7,34 @@
 #include "Cnqs_Network.hpp"
 
 int main(int argc, char **argv) {
-
     Tpetra::ScopeGuard tpetraScope(&argc, &argv);
     {
-        int num_rotor = 2;
-        std::vector<std::tuple<int, int, double>> edges{{0, 1, 1.0}};
-        auto network = std::make_shared<Cnqs::Network>(num_rotor, edges);
+        const int num_rotor = 2;
+        const std::vector<std::tuple<int, int, double>> edges{{0, 1, 1.0}};
+        const auto network = std::make_shared<Cnqs::Network>(num_rotor, edges);
 
-        int numGridPoint = 32;
-        auto comm = Tpetra::getDefaultComm();
-        Cnqs::BasicProblem problem(network, numGridPoint, comm);
+        const int numGridPoint = 128;
+        const auto comm = Tpetra::getDefaultComm();
+        const Cnqs::BasicProblem problem(network, numGridPoint, comm);
 
         if (comm->getRank() == 0) {
             std::cout << problem << std::endl;
+        }
+
+        const int maxPowerIter = 100;
+        const double tolPowerIter = 1.0e-06;
+        const int maxCgIter = 1000;
+        const double tolCgIter = 1.0e-06;
+        const std::string fileName = "cnqs_basic_problem_state.mm";
+
+        comm->barrier();
+        const double lambda = problem.runInversePowerIteration(
+            maxPowerIter, tolPowerIter, maxCgIter, tolCgIter, fileName);
+
+        comm->barrier();
+        if (comm->getRank() == 0) {
+            std::cout << "Estimated smallest eigenvalue: " << std::scientific
+                      << lambda << std::endl;
         }
     }
 

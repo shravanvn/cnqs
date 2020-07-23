@@ -6,11 +6,13 @@
 #include <tuple>
 #include <vector>
 
-#include <Teuchos_TimeMonitor.hpp>
-#ifndef NDEBUG
+#include <BelosLinearProblem.hpp>
+#include <BelosPseudoBlockCGSolMgr.hpp>
+#include <BelosTpetraAdapter.hpp>
 #include <MatrixMarket_Tpetra.hpp>
-#endif
+#include <Teuchos_TimeMonitor.hpp>
 
+#include "Cnqs_ShiftedOperator.hpp"
 #include "Utils.hpp"
 
 Cnqs::BasicProblem::BasicProblem(
@@ -19,10 +21,9 @@ Cnqs::BasicProblem::BasicProblem(
     : network_(network), numGridPoint_(numGridPoint),
       unfoldingFactors_(std::vector<int>(network->numRotor() + 1)),
       theta_(std::vector<double>(numGridPoint)), comm_(comm) {
-    if (numGridPoint_ < 5) {
-        throw std::domain_error(
-            "==Cnqs::BasicProblem::BasicProblem== Need at least 5 grid points");
-    }
+    TEUCHOS_TEST_FOR_EXCEPTION(
+        numGridPoint_ < 5, std::domain_error,
+        "==Cnqs::BasicProblem::BasicProblem== Need at least 5 grid points");
 
     const int numRotor = network_->numRotor();
     unfoldingFactors_[0] = 1;
@@ -34,37 +35,6 @@ Cnqs::BasicProblem::BasicProblem(
     for (int n = 0; n < numGridPoint_; ++n) {
         theta_[n] = n * dTheta;
     }
-
-    // create timers
-    Teuchos::RCP<Teuchos::Time> mapTime =
-        Teuchos::TimeMonitor::getNewCounter("Map Construction Time");
-    Teuchos::RCP<Teuchos::Time> initialStateTime =
-        Teuchos::TimeMonitor::getNewCounter("Initial State Construction Time");
-    Teuchos::RCP<Teuchos::Time> hamiltonianTime =
-        Teuchos::TimeMonitor::getNewCounter("Hamiltonian Construction Time");
-
-    // construct map
-    auto map = constructMap(mapTime);
-
-    // construct initial state
-    auto initialState = constructInitialState(map, initialStateTime);
-#ifndef NDEBUG
-    Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double, int, int>>::
-        writeDenseFile("cnqs_basic_problem_initial_state.mm", *initialState,
-                       "initial_state", "Initial state for CNQS basic problem");
-#endif
-
-    // construct Hamiltonian
-    auto hamiltonian = constructHamiltonian(map, hamiltonianTime);
-#ifndef NDEBUG
-    Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double, int, int>>::
-        writeSparseFile("cnqs_basic_problem_hamiltonian.mm", *hamiltonian,
-                        "operator",
-                        "Hamiltonian operator for CNQS basic problem");
-#endif
-
-    // get time summary
-    Teuchos::TimeMonitor::summarize();
 }
 
 Teuchos::RCP<const Tpetra::Map<int, int>> Cnqs::BasicProblem::constructMap(
@@ -94,7 +64,7 @@ Teuchos::RCP<const Tpetra::Map<int, int>> Cnqs::BasicProblem::constructMap(
     return map.getConst();
 }
 
-Teuchos::RCP<const Tpetra::Vector<double, int, int>>
+Teuchos::RCP<Tpetra::MultiVector<double, int, int>>
 Cnqs::BasicProblem::constructInitialState(
     const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
@@ -102,7 +72,8 @@ Cnqs::BasicProblem::constructInitialState(
     Teuchos::TimeMonitor localTimer(*timer);
 
     const int numRotor = network_->numRotor();
-    auto state = Teuchos::rcp(new Tpetra::Vector<double, int, int>(map));
+    auto state =
+        Teuchos::rcp(new Tpetra::MultiVector<double, int, int>(map, 1));
 
     {
         const int numLocalRows = map->getNodeNumElements();
@@ -125,11 +96,18 @@ Cnqs::BasicProblem::constructInitialState(
         }
 
         using memory_space =
-            Tpetra::Vector<double, int, int>::device_type::memory_space;
+            Tpetra::MultiVector<double, int, int>::device_type::memory_space;
         state->sync<memory_space>();
     }
 
-    return state.getConst();
+    std::vector<double> stateNorm(1);
+    state->norm2(stateNorm);
+
+    std::vector<double> scaleFactor(1);
+    scaleFactor[0] = 1.0 / stateNorm[0];
+    state->scale(scaleFactor);
+
+    return state;
 }
 
 Teuchos::RCP<const Tpetra::CrsMatrix<double, int, int>>
@@ -215,21 +193,16 @@ Cnqs::BasicProblem::constructHamiltonian(
                     currentRowValues[currentRowNonZeroCount] = 16.0 * fact;
                 } else if (std::abs(k) == 2) {
                     currentRowValues[currentRowNonZeroCount] = -fact;
-                } else {
-                    throw std::logic_error(
-                        "==Cnqs::BasicProblem::ConstructOperators== Index k "
-                        "should not reach a value of 0");
                 }
 
                 ++currentRowNonZeroCount;
             }
         }
 
-        if (currentRowNonZeroCount != numEntryPerRow) {
-            throw std::logic_error(
-                "==Cnqs::BasicProblem::ConstructOperators== Could not match "
-                "number of non-zero entries in a row");
-        }
+        TEUCHOS_TEST_FOR_EXCEPTION(
+            currentRowNonZeroCount != numEntryPerRow, std::logic_error,
+            "==Cnqs::BasicProblem::ConstructOperators== Could not match number "
+            "of non-zero entries in a row");
 
         hamiltonian->insertGlobalValues(globalRowIdLin, currentRowColumnIndices,
                                         currentRowValues);
@@ -240,9 +213,144 @@ Cnqs::BasicProblem::constructHamiltonian(
 }
 
 double Cnqs::BasicProblem::runInversePowerIteration(
-    int numPowerIter, double tolPowerIter, int numCgIter, double tolCgIter,
+    int maxPowerIter, double tolPowerIter, int maxCgIter, double tolCgIter,
     const std::string &fileName) const {
-    return 0.0;
+    // create timers
+    Teuchos::RCP<Teuchos::Time> mapTime =
+        Teuchos::TimeMonitor::getNewCounter("CNQS: Map Construction Time");
+    Teuchos::RCP<Teuchos::Time> initialStateTime =
+        Teuchos::TimeMonitor::getNewCounter(
+            "CNQS: Initial State Construction Time");
+    Teuchos::RCP<Teuchos::Time> hamiltonianTime =
+        Teuchos::TimeMonitor::getNewCounter(
+            "CNQS: Hamiltonian Construction Time");
+    Teuchos::RCP<Teuchos::Time> powerIterationTime =
+        Teuchos::TimeMonitor::getNewCounter(
+            "CNQS: Inverse Power Iteration Time");
+
+    // construct map
+    auto map = constructMap(mapTime);
+
+    // construct initial state
+    auto x = constructInitialState(map, initialStateTime);
+
+    // construct Hamiltonian
+    auto H = constructHamiltonian(map, hamiltonianTime);
+
+    std::vector<double> lambda(1);
+    {
+        // create local timer
+        Teuchos::TimeMonitor localTimer(*powerIterationTime);
+
+        // compute initial guess for lambda
+        auto y = Teuchos::rcp(
+            new Tpetra::MultiVector<double, int, int>(x->getMap(), 1));
+        H->apply(*x, *y);
+        x->dot(*y, lambda);
+
+        if (comm_->getRank() == 0) {
+            std::cout << std::scientific;
+            std::cout << "====================================================="
+                         "================="
+                      << std::endl
+                      << " inv_iter                   lambda     d_lambda   "
+                         "cg_iter       cg_tol"
+                      << std::endl
+                      << "--------- ------------------------ ------------ "
+                         "--------- ------------"
+                      << std::endl;
+            std::cout << std::setw(9) << 0 << " " << std::setw(24)
+                      << std::setprecision(16) << lambda[0] << std::endl;
+        }
+
+        // construct shifted Hamiltonian
+        auto A = Teuchos::rcp(
+            new Cnqs::ShiftedOperator(H, network_->eigValLowerBound()));
+
+        // create solver parameters
+        auto params = Teuchos::rcp(new Teuchos::ParameterList());
+        params->set("Maximum Iterations", maxCgIter);
+        params->set("Convergence Tolerance", tolCgIter);
+
+        for (int i = 1; i <= maxPowerIter; ++i) {
+            // create linear problem
+            auto z = Teuchos::rcp(
+                new Tpetra::MultiVector<double, int, int>(x->getMap(), 1));
+            auto problem = Teuchos::rcp(
+                new Belos::LinearProblem<double,
+                                         Tpetra::MultiVector<double, int, int>,
+                                         Tpetra::Operator<double, int, int>>(
+                    A, z, x.getConst()));
+            problem->setProblem();
+
+            // create CG solver
+            Belos::PseudoBlockCGSolMgr<double,
+                                       Tpetra::MultiVector<double, int, int>,
+                                       Tpetra::Operator<double, int, int>>
+                solver(problem, params);
+
+            // solve
+            Belos::ReturnType status = solver.solve();
+
+            TEUCHOS_TEST_FOR_EXCEPTION(
+                status != Belos::ReturnType::Converged, std::runtime_error,
+                "==Cnqs::BasicProblem::runInversePowerIteration== CG iteration "
+                "did not converge");
+
+            // copy x = solution
+            x = problem->getLHS();
+
+            // normalize x = x / norm2(x)
+            std::vector<double> xNorm(1);
+            x->norm2(xNorm);
+
+            std::vector<double> scaleFactor(1);
+            scaleFactor[0] = 1.0 / xNorm[0];
+            x->scale(scaleFactor);
+
+            // compute new estimate for lambda
+            std::vector<double> lambdaNew(1);
+
+            H->apply(*x, *y);
+            x->dot(*y, lambdaNew);
+            const double dLambda = std::abs(lambda[0] - lambdaNew[0]);
+            lambda[0] = lambdaNew[0];
+
+            if (comm_->getRank() == 0) {
+                std::cout << std::setw(9) << i << " " << std::setw(24)
+                          << std::setprecision(16) << lambda[0] << " "
+                          << std::setw(12) << std::setprecision(6) << dLambda
+                          << " " << std::setw(9) << solver.getNumIters() << " "
+                          << std::setw(12) << solver.achievedTol() << std::endl;
+            }
+
+            // check for convergence
+            if (dLambda < tolPowerIter) {
+                break;
+            }
+        }
+
+        const double h = theta_[1] - theta_[0];
+        x->scale(1.0 / (h * h));
+
+        if (comm_->getRank() == 0) {
+            std::cout << "====================================================="
+                         "================="
+                      << std::endl;
+        }
+    }
+
+    // save estimated state
+    if (fileName.compare("") != 0) {
+        Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double, int, int>>::
+            writeDenseFile(fileName, *x, "low_eigen_state",
+                           "Estimated lowest energy eigenstate of Hamiltonian");
+    }
+
+    // get time summary
+    Teuchos::TimeMonitor::summarize();
+
+    return lambda[0];
 }
 
 std::string Cnqs::BasicProblem::description() const {
