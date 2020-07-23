@@ -1,17 +1,21 @@
 #include "Utils.hpp"
 
-std::string PadString(const std::string &input_string, int padding) {
-    std::string output_string = "";
+std::string padString(const std::string &inputString, int padding) {
+    std::string outputString = "";
 
-    for (const auto &c : input_string) {
-        output_string.push_back(c);
+    for (const auto &c : inputString) {
+        outputString.push_back(c);
 
         if (c == '\n') {
             for (int i = 0; i < padding; ++i) {
-                output_string.push_back(' ');
+                outputString.push_back(' ');
             }
         }
     }
 
-    return output_string;
+    return outputString;
+}
+
+std::string PadString(const std::string &inputString, int padding) {
+    return padString(inputString, padding);
 }

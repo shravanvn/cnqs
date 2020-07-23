@@ -3,6 +3,8 @@
 
 #include <string>
 
-std::string PadString(const std::string &input_string, int padding = 4);
+std::string padString(const std::string &inputString, int padding = 4);
+
+std::string PadString(const std::string &inputString, int padding = 4);
 
 #endif
