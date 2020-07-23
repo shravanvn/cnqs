@@ -19,6 +19,8 @@ public:
         return edgeList_;
     }
 
+    double eigValLowerBound() const;
+
     std::string description() const;
 
 private:

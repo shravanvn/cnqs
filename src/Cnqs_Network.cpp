@@ -38,6 +38,16 @@ Cnqs::Network::Network(
     }
 }
 
+double Cnqs::Network::eigValLowerBound() const {
+    double mu = -1.0e-09;
+
+    for (const auto &edge : edgeList_) {
+        mu -= std::abs(std::get<2>(edge));
+    }
+
+    return mu;
+}
+
 std::string Cnqs::Network::description() const {
     const int numEdge = edgeList_.size();
 
