@@ -2,7 +2,7 @@ add_library(cnqs Cnqs_Network.cpp
                  Cnqs_Problem.cpp
                  Cnqs_BasicProblem.cpp
                  Cnqs_FourierProblem.cpp
-                 Utils.cpp)
+                 Cnqs_Utils.cpp)
 
 target_include_directories(cnqs PUBLIC ${PROJECT_SOURCE_DIR}/include
                                        ${Trilinos_INCLUDE_DIRS}

@@ -13,7 +13,7 @@
 #include <Teuchos_TimeMonitor.hpp>
 
 #include "Cnqs_ShiftedOperator.hpp"
-#include "Utils.hpp"
+#include "Cnqs_Utils.hpp"
 
 Cnqs::BasicProblem::BasicProblem(
     const std::shared_ptr<const Cnqs::Network> &network, int numGridPoint,
@@ -360,7 +360,7 @@ std::string Cnqs::BasicProblem::description() const {
     description +=
         "    \"num_grid_point\": " + std::to_string(numGridPoint_) + ",\n";
     description +=
-        "    \"network\": " + padString(network_->description()) + "\n";
+        "    \"network\": " + Cnqs::padString(network_->description()) + "\n";
     description += "}";
 
     return description;

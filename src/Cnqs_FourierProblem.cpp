@@ -13,7 +13,7 @@
 #include <Teuchos_TimeMonitor.hpp>
 
 #include "Cnqs_ShiftedOperator.hpp"
-#include "Utils.hpp"
+#include "Cnqs_Utils.hpp"
 
 Cnqs::FourierProblem::FourierProblem(
     const std::shared_ptr<const Cnqs::Network> &network, int maxFreq,
@@ -393,7 +393,7 @@ std::string Cnqs::FourierProblem::description() const {
     description += "    \"name\": \"fourier_problem\",\n";
     description += "    \"max_freq\": " + std::to_string(maxFreq_) + ",\n";
     description +=
-        "    \"network\": " + padString(network_->description()) + "\n";
+        "    \"network\": " + Cnqs::padString(network_->description()) + "\n";
     description += "}";
 
     return description;

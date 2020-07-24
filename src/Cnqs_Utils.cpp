@@ -1,6 +1,6 @@
-#include "Utils.hpp"
+#include "Cnqs_Utils.hpp"
 
-std::string padString(const std::string &inputString, int padding) {
+std::string Cnqs::padString(const std::string &inputString, int padding) {
     std::string outputString = "";
 
     for (const auto &c : inputString) {
@@ -14,8 +14,4 @@ std::string padString(const std::string &inputString, int padding) {
     }
 
     return outputString;
-}
-
-std::string PadString(const std::string &inputString, int padding) {
-    return padString(inputString, padding);
 }
