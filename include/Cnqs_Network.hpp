@@ -32,6 +32,13 @@ public:
             const std::vector<std::tuple<int, int, double>> &edgeList);
 
     /**
+     * @brief Construct a new Network object from JSON formatted file
+     *
+     * @param [in] networkFileName JSON file name.
+     */
+    Network(const std::string &networkFileName);
+
+    /**
      * @brief Number of rotors in the network
      *
      * @return Number of rotors \f$d\f$.

@@ -12,6 +12,7 @@ target_link_libraries(cnqs PUBLIC ${Trilinos_LIBRARIES}
                                   ${Trilinos_TPL_LIBRARIES}
                                   OpenMP::OpenMP_CXX
                                   MPI::MPI_CXX)
+target_link_libraries(cnqs PRIVATE json::json)
 
 target_compile_features(cnqs PUBLIC cxx_std_11)
 

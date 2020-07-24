@@ -5,6 +5,8 @@ find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 find_package(Trilinos REQUIRED)
 
+add_subdirectory(extern/json)
+
 add_subdirectory(src)
 
 if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)

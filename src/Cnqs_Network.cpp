@@ -1,5 +1,8 @@
 #include "Cnqs_Network.hpp"
 
+#include "nlohmann/json.hpp"
+
+#include <fstream>
 #include <stdexcept>
 
 Cnqs::Network::Network(
@@ -38,6 +41,40 @@ Cnqs::Network::Network(
     }
 }
 
+Cnqs::Network::Network(const std::string &networkFileName) {
+    nlohmann::json jsonStruct;
+
+    {
+        std::ifstream networkFile(networkFileName);
+        networkFile >> jsonStruct;
+    }
+
+    const auto &edgeList = jsonStruct["edges"];
+
+    numRotor_ = jsonStruct["num_rotor"];
+    edgeList_.reserve(edgeList.size());
+
+    for (const auto &edge : edgeList) {
+        int j = edge["node1"];
+        int k = edge["node2"];
+        const double g = edge["weight"];
+
+        // switch order to ensure j < k
+        if (j > k) {
+            const int temp = j;
+            j = k;
+            k = temp;
+        }
+
+        if (j < 0 || k >= numRotor_) {
+            throw std::domain_error(
+                "==Cnqs::Problem::Problem== Edge specification is not valid");
+        }
+
+        edgeList_.emplace_back(j, k, g);
+    }
+}
+
 double Cnqs::Network::eigValLowerBound() const {
     double mu = -1.0e-09;
 
@@ -49,26 +86,22 @@ double Cnqs::Network::eigValLowerBound() const {
 }
 
 std::string Cnqs::Network::description() const {
-    const int numEdge = edgeList_.size();
+    nlohmann::json jsonStruct;
 
-    std::string description;
-    description += "{\n";
-    description += "    \"num_rotor\": " + std::to_string(numRotor_) + ",\n";
-    description += "    \"edges\": [\n";
-    for (int i = 0; i < numEdge; ++i) {
-        char buffer[81];
-        std::sprintf(buffer, "{\"nodes\": [%d, %d], \"weight\": %.3e}",
-                     std::get<0>(edgeList_[i]), std::get<1>(edgeList_[i]),
-                     std::get<2>(edgeList_[i]));
-        if (i < numEdge - 1) {
-            description += "        " + std::string(buffer) + ",\n";
-        } else {
-            description += "        " + std::string(buffer) + "\n";
-        }
+    jsonStruct["num_rotor"] = numRotor_;
+    jsonStruct["edges"] = nlohmann::json::array();
+
+    for (const auto &edge : edgeList_) {
+        nlohmann::json edgeStruct;
+
+        edgeStruct["node1"] = std::get<0>(edge);
+        edgeStruct["node2"] = std::get<1>(edge);
+        edgeStruct["weight"] = std::get<2>(edge);
+
+        jsonStruct["edges"].push_back(edgeStruct);
     }
-    description += "    ]\n";
-    description += "}";
 
+    std::string description = jsonStruct.dump(4);
     return description;
 }
 
