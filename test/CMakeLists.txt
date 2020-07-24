@@ -26,13 +26,6 @@ macro(CNQS_add_test TESTNAME)
     set_target_properties(${TESTNAME} PROPERTIES FOLDER test)
 endmacro()
 
-CNQS_add_test(cnqs_vector_test CnqsVectorTest.cpp)
-CNQS_add_test(cnqs_basic_operator_test CnqsBasicOperatorTest.cpp)
-CNQS_add_test(cnqs_fourier_operator_test CnqsFourierOperatorTest.cpp)
-CNQS_add_test(cnqs_trivial_preconditioner_test CnqsTrivialPreconditionerTest.cpp)
-CNQS_add_test(cnqs_fourier_preconditioner_test CnqsFourierPreconditionerTest.cpp)
-CNQS_add_test(inv_power_iter_test InvPowerIterTest.cpp)
-
 CNQS_add_test(cnqs_network_test Cnqs_NetworkTest.cpp)
 CNQS_add_test(cnqs_basic_problem_test Cnqs_BasicProblemTest.cpp)
 CNQS_add_test(cnqs_fourier_problem_test Cnqs_FourierProblemTest.cpp)
