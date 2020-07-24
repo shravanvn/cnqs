@@ -164,38 +164,37 @@ Cnqs::BasicProblem::constructHamiltonian(
         int currentRowNonZeroCount = 1;
 
         for (int k = -2; k <= 2; ++k) {
-            if (k == 0) {
-                continue;
-            }
-
-            for (int d = 0; d < numRotor; ++d) {
-                // compute the global dimensional index of k-th neighbor along
-                // d-th dimension
-                std::vector<int> globalColumnIdDim(globalRowIdDim);
-                globalColumnIdDim[d] += k;
-                if (globalColumnIdDim[d] < 0) {
-                    globalColumnIdDim[d] += numGridPoint_;
-                } else if (globalColumnIdDim[d] >= numGridPoint_) {
-                    globalColumnIdDim[d] -= numGridPoint_;
-                }
-
-                // convert the global dimensional index to global linear index
-                int globalColumnIdLin = 0;
+            if (k != 0) {
                 for (int d = 0; d < numRotor; ++d) {
-                    globalColumnIdLin +=
-                        unfoldingFactors_[d] * globalColumnIdDim[d];
-                }
-                currentRowColumnIndices[currentRowNonZeroCount] =
-                    globalColumnIdLin;
+                    // compute the global dimensional index of k-th neighbor
+                    // along d-th dimension
+                    std::vector<int> globalColumnIdDim(globalRowIdDim);
+                    globalColumnIdDim[d] += k;
+                    if (globalColumnIdDim[d] < 0) {
+                        globalColumnIdDim[d] += numGridPoint_;
+                    } else if (globalColumnIdDim[d] >= numGridPoint_) {
+                        globalColumnIdDim[d] -= numGridPoint_;
+                    }
 
-                // compute the correct nonzero value of the matrix entry
-                if (std::abs(k) == 1) {
-                    currentRowValues[currentRowNonZeroCount] = 16.0 * fact;
-                } else if (std::abs(k) == 2) {
-                    currentRowValues[currentRowNonZeroCount] = -fact;
-                }
+                    // convert the global dimensional index to global linear
+                    // index
+                    int globalColumnIdLin = 0;
+                    for (int d = 0; d < numRotor; ++d) {
+                        globalColumnIdLin +=
+                            unfoldingFactors_[d] * globalColumnIdDim[d];
+                    }
+                    currentRowColumnIndices[currentRowNonZeroCount] =
+                        globalColumnIdLin;
 
-                ++currentRowNonZeroCount;
+                    // compute the correct nonzero value of the matrix entry
+                    if (std::abs(k) == 1) {
+                        currentRowValues[currentRowNonZeroCount] = 16.0 * fact;
+                    } else if (std::abs(k) == 2) {
+                        currentRowValues[currentRowNonZeroCount] = -fact;
+                    }
+
+                    ++currentRowNonZeroCount;
+                }
             }
         }
 
@@ -357,10 +356,11 @@ double Cnqs::BasicProblem::runInversePowerIteration(
 std::string Cnqs::BasicProblem::description() const {
     std::string description;
     description += "{\n";
+    description += "    \"name\": \"basic_problem\",\n";
     description +=
-        "    \"network\": " + padString(network_->description()) + ",\n";
+        "    \"num_grid_point\": " + std::to_string(numGridPoint_) + ",\n";
     description +=
-        "    \"num_grid_point\": " + std::to_string(numGridPoint_) + "\n";
+        "    \"network\": " + padString(network_->description()) + "\n";
     description += "}";
 
     return description;
