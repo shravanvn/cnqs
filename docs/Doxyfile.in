@@ -11,8 +11,6 @@ RECURSIVE              = YES
 
 GENERATE_HTML          = YES
 HTML_TIMESTAMP         = YES
-DISABLE_INDEX          = YES
-GENERATE_TREEVIEW      = YES
 USE_MATHJAX            = YES
 
 GENERATE_LATEX         = NO
