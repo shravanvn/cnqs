@@ -11,6 +11,7 @@ add_library(cnqs CnqsVector.cpp
                  Cnqs_Network.cpp
                  Cnqs_Problem.cpp
                  Cnqs_BasicProblem.cpp
+                 Cnqs_FourierProblem.cpp
                  Utils.cpp)
 
 target_include_directories(cnqs PUBLIC ${PROJECT_SOURCE_DIR}/include
