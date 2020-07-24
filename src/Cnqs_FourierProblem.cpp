@@ -220,8 +220,7 @@ Cnqs::FourierProblem::constructPreconditioner(
         globalRowIdDim[0] = globalRowIdLin;
         for (int d = 0; d < numRotor; ++d) {
             if (d < numRotor - 1) {
-                globalRowIdDim[d + 1] =
-                    globalRowIdDim[d] / (2 * maxFreq_ + 1) - maxFreq_;
+                globalRowIdDim[d + 1] = globalRowIdDim[d] / (2 * maxFreq_ + 1);
             }
             globalRowIdDim[d] %= 2 * maxFreq_ + 1;
         }
@@ -233,10 +232,10 @@ Cnqs::FourierProblem::constructPreconditioner(
         currentRowColumnIndices[0] = globalRowIdLin;
         currentRowValues[0] = 0.0;
         for (int d = 0; d < numRotor; ++d) {
-            currentRowValues[0] += std::pow(globalRowIdDim[d], 2.0);
+            currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
         currentRowValues[0] =
-            std::sqrt(0.5 / (currentRowValues[0] - eigValLowerBound));
+            std::sqrt(1.0 / (0.5 * currentRowValues[0] - eigValLowerBound));
 
         preconditioner->insertGlobalValues(
             globalRowIdLin, currentRowColumnIndices, currentRowValues);
