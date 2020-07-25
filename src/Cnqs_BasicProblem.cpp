@@ -13,7 +13,6 @@
 #include <Teuchos_TimeMonitor.hpp>
 
 #include "Cnqs_ShiftedOperator.hpp"
-#include "Cnqs_Utils.hpp"
 
 Cnqs::BasicProblem::BasicProblem(
     const std::shared_ptr<const Cnqs::Network> &network, int numGridPoint,
@@ -353,15 +352,12 @@ double Cnqs::BasicProblem::runInversePowerIteration(
     return lambda[0];
 }
 
-std::string Cnqs::BasicProblem::description() const {
-    std::string description;
-    description += "{\n";
-    description += "    \"name\": \"basic_problem\",\n";
-    description +=
-        "    \"num_grid_point\": " + std::to_string(numGridPoint_) + ",\n";
-    description +=
-        "    \"network\": " + Cnqs::padString(network_->description()) + "\n";
-    description += "}";
+nlohmann::json Cnqs::BasicProblem::description() const {
+    nlohmann::json description;
+
+    description["name"] = "basic_problem";
+    description["network"] = network_->description();
+    description["num_grid_point"] = numGridPoint_;
 
     return description;
 }

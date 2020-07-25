@@ -1,7 +1,5 @@
 #include "Cnqs_Network.hpp"
 
-#include "nlohmann/json.hpp"
-
 #include <fstream>
 #include <stdexcept>
 
@@ -42,16 +40,16 @@ Cnqs::Network::Network(
 }
 
 Cnqs::Network::Network(const std::string &networkFileName) {
-    nlohmann::json jsonStruct;
+    nlohmann::json description;
 
     {
         std::ifstream networkFile(networkFileName);
-        networkFile >> jsonStruct;
+        networkFile >> description;
     }
 
-    const auto &edgeList = jsonStruct["edges"];
+    const auto &edgeList = description["edges"];
 
-    numRotor_ = jsonStruct["num_rotor"];
+    numRotor_ = description["num_rotor"];
     edgeList_.reserve(edgeList.size());
 
     for (const auto &edge : edgeList) {
@@ -85,27 +83,21 @@ double Cnqs::Network::eigValLowerBound() const {
     return mu;
 }
 
-std::string Cnqs::Network::description() const {
-    nlohmann::json jsonStruct;
+nlohmann::json Cnqs::Network::description() const {
+    nlohmann::json description;
 
-    jsonStruct["num_rotor"] = numRotor_;
-    jsonStruct["edges"] = nlohmann::json::array();
+    description["num_rotor"] = numRotor_;
+    description["edges"] = nlohmann::json::array();
 
     for (const auto &edge : edgeList_) {
-        nlohmann::json edgeStruct;
+        nlohmann::json edgeJson;
 
-        edgeStruct["node1"] = std::get<0>(edge);
-        edgeStruct["node2"] = std::get<1>(edge);
-        edgeStruct["weight"] = std::get<2>(edge);
+        edgeJson["node1"] = std::get<0>(edge);
+        edgeJson["node2"] = std::get<1>(edge);
+        edgeJson["weight"] = std::get<2>(edge);
 
-        jsonStruct["edges"].push_back(edgeStruct);
+        description["edges"].push_back(edgeJson);
     }
 
-    std::string description = jsonStruct.dump(4);
     return description;
-}
-
-std::ostream &operator<<(std::ostream &os, const Cnqs::Network &network) {
-    os << network.description();
-    return os;
 }

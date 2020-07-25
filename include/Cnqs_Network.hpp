@@ -6,6 +6,8 @@
 #include <tuple>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 namespace Cnqs {
 
 /**
@@ -80,7 +82,19 @@ public:
      *
      * @return Description of the network.
      */
-    std::string description() const;
+    nlohmann::json description() const;
+
+    /**
+     * @brief Print Network object to output streams
+     *
+     * @param [in,out] os Output stream
+     * @param [in] network Quanturm rotor network object
+     * @return Output stream
+     */
+    friend std::ostream &operator<<(std::ostream &os, const Network &network) {
+        os << network.description().dump(4);
+        return os;
+    }
 
 private:
     int numRotor_;
@@ -88,14 +102,5 @@ private:
 };
 
 } // namespace Cnqs
-
-/**
- * @brief Write quantum rotor network to output streams
- *
- * @param [in,out] os Output stream.
- * @param [in] network Quantum rotor network.
- * @return Output stream.
- */
-std::ostream &operator<<(std::ostream &os, const Cnqs::Network &network);
 
 #endif

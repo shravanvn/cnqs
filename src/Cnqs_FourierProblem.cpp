@@ -13,7 +13,6 @@
 #include <Teuchos_TimeMonitor.hpp>
 
 #include "Cnqs_ShiftedOperator.hpp"
-#include "Cnqs_Utils.hpp"
 
 Cnqs::FourierProblem::FourierProblem(
     const std::shared_ptr<const Cnqs::Network> &network, int maxFreq,
@@ -386,14 +385,12 @@ double Cnqs::FourierProblem::runInversePowerIteration(
     return lambda[0];
 }
 
-std::string Cnqs::FourierProblem::description() const {
-    std::string description;
-    description += "{\n";
-    description += "    \"name\": \"fourier_problem\",\n";
-    description += "    \"max_freq\": " + std::to_string(maxFreq_) + ",\n";
-    description +=
-        "    \"network\": " + Cnqs::padString(network_->description()) + "\n";
-    description += "}";
+nlohmann::json Cnqs::FourierProblem::description() const {
+    nlohmann::json description;
+
+    description["name"] = "fourier_problem";
+    description["network"] = network_->description();
+    description["max_freq"] = maxFreq_;
 
     return description;
 }

@@ -1,11 +1,10 @@
 cmake_minimum_required(VERSION 3.3.2 FATAL_ERROR)
 project(CNQS LANGUAGES CXX VERSION 0.1.0)
 
+find_package(nlohmann_json REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
 find_package(Trilinos REQUIRED)
-
-add_subdirectory(extern/json)
 
 add_subdirectory(src)
 
@@ -18,7 +17,7 @@ if(CNQS_ENABLE_TESTS)
     add_subdirectory(test)
 endif()
 
-add_subdirectory(example)
+add_subdirectory(app)
 
 if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
     option(CNQS_ENABLE_DOCS "Build the package documentation" ON)

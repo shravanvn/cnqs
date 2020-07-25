@@ -6,6 +6,8 @@
 #include <tuple>
 #include <vector>
 
+#include <nlohmann/json.hpp>
+
 #include "Cnqs_Network.hpp"
 
 namespace Cnqs {
@@ -85,11 +87,9 @@ public:
      *
      * @return Description of the problem.
      */
-    virtual std::string description() const = 0;
+    virtual nlohmann::json description() const = 0;
 };
 
 } // namespace Cnqs
-
-std::ostream &operator<<(std::ostream &os, const Cnqs::Problem &problem);
 
 #endif

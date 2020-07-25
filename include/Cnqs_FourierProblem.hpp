@@ -10,6 +10,7 @@
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Map.hpp>
 #include <Tpetra_MultiVector.hpp>
+#include <nlohmann/json.hpp>
 
 #include "Cnqs_Network.hpp"
 #include "Cnqs_Problem.hpp"
@@ -115,7 +116,21 @@ public:
                                     int numCgIter, double tolCgIter,
                                     const std::string &fileName) const;
 
-    std::string description() const;
+    nlohmann::json description() const;
+
+    /**
+     * @brief Print FourierProblem object to output streams
+     *
+     * @param [in,out] os Output stream
+     * @param [in] problem Quantum rotor network Hamiltonian eigenproblem
+     * discretized in Fourier domain
+     * @return Output stream
+     */
+    friend std::ostream &operator<<(std::ostream &os,
+                                    const FourierProblem &problem) {
+        os << problem.description().dump(4);
+        return os;
+    }
 
 private:
     Teuchos::RCP<const Tpetra::Map<int, int>>
