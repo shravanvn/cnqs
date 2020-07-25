@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.3.2 FATAL_ERROR)
-project(CNQS LANGUAGES CXX VERSION 0.1.0)
+project(CNQS LANGUAGES CXX VERSION 0.2.0)
 
 find_package(nlohmann_json REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(MPI REQUIRED)
-find_package(Trilinos REQUIRED)
+find_package(Trilinos REQUIRED COMPONENTS Teuchos Tpetra Belos)
 
 add_subdirectory(src)
 
