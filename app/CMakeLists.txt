@@ -7,3 +7,4 @@ CNQS_add_app(basic_problem BasicProblem.cpp)
 CNQS_add_app(fourier_problem FourierProblem.cpp)
 
 configure_file(network_square.json network_square.json COPYONLY)
+configure_file(network_cube.json network_cube.json COPYONLY)
