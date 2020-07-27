@@ -262,8 +262,10 @@ double Cnqs::BasicProblem::runInversePowerIteration(
         }
 
         // construct shifted Hamiltonian
-        auto A = Teuchos::rcp(
-            new Cnqs::ShiftedOperator(H, network_->eigValLowerBound()));
+        using node_type = Tpetra::Operator<double, int, int>::node_type;
+        auto A =
+            Teuchos::rcp(new Cnqs::ShiftedOperator<double, int, int, node_type>(
+                H, network_->eigValLowerBound()));
 
         // create solver parameters
         auto params = Teuchos::rcp(new Teuchos::ParameterList());

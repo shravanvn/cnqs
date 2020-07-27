@@ -8,28 +8,24 @@
 
 namespace Cnqs {
 
-class ShiftedOperator : public Tpetra::Operator<> {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class ShiftedOperator
+    : public Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node> {
 public:
-    typedef Tpetra::Operator<>::scalar_type scalar_type;
-    typedef Tpetra::Operator<>::local_ordinal_type local_ordinal_type;
-    typedef Tpetra::Operator<>::global_ordinal_type global_ordinal_type;
-    typedef Tpetra::Operator<>::node_type node_type;
-    typedef Tpetra::MultiVector<scalar_type, local_ordinal_type,
-                                global_ordinal_type, node_type>
-        MV;
-    typedef Tpetra::Map<local_ordinal_type, global_ordinal_type, node_type>
-        map_type;
+    typedef Scalar scalar_type;
+    typedef LocalOrdinal local_ordinal_type;
+    typedef GlobalOrdinal global_ordinal_type;
+    typedef Node node_type;
+    typedef Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node> MV;
+    typedef Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node> map_type;
 
 private:
-    typedef Tpetra::Import<local_ordinal_type, global_ordinal_type, node_type>
-        import_type;
+    typedef Tpetra::Import<LocalOrdinal, GlobalOrdinal, Node> import_type;
 
 public:
-    ShiftedOperator(
-        const Teuchos::RCP<const Tpetra::Operator<
-            scalar_type, local_ordinal_type, global_ordinal_type, node_type>>
-            &A,
-        scalar_type mu)
+    ShiftedOperator(const Teuchos::RCP<const Tpetra::Operator<
+                        Scalar, LocalOrdinal, GlobalOrdinal, Node>> &A,
+                    Scalar mu)
         : A_(A), mu_(mu) {}
 
     virtual ~ShiftedOperator() {}
@@ -42,21 +38,20 @@ public:
         return A_->getRangeMap();
     }
 
-    void
-    apply(const MV &X, MV &Y, Teuchos::ETransp mode = Teuchos::NO_TRANS,
-          scalar_type alpha = Teuchos::ScalarTraits<scalar_type>::one(),
-          scalar_type beta = Teuchos::ScalarTraits<scalar_type>::zero()) const {
+    void apply(const MV &X, MV &Y, Teuchos::ETransp mode = Teuchos::NO_TRANS,
+               Scalar alpha = Teuchos::ScalarTraits<Scalar>::one(),
+               Scalar beta = Teuchos::ScalarTraits<Scalar>::zero()) const {
         // Y = alpha * A^mode * X + beta * Y
         A_->apply(X, Y, mode, alpha, beta);
         // Y = Y - mu * X
-        Y.update(-mu_, X, Teuchos::ScalarTraits<scalar_type>::one());
+        Y.update(-mu_, X, Teuchos::ScalarTraits<Scalar>::one());
     }
 
 private:
-    Teuchos::RCP<const Tpetra::Operator<scalar_type, local_ordinal_type,
-                                        global_ordinal_type, node_type>>
+    Teuchos::RCP<
+        const Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
         A_;
-    scalar_type mu_;
+    Scalar mu_;
 };
 
 } // namespace Cnqs
