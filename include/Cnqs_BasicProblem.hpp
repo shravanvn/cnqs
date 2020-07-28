@@ -1,19 +1,29 @@
 #ifndef CNQS_BASICPROBLEM_HPP
 #define CNQS_BASICPROBLEM_HPP
 
-#include <memory>
-#include <string>
-
+#include <BelosLinearProblem.hpp>
+#include <BelosPseudoBlockCGSolMgr.hpp>
+#include <BelosTpetraAdapter.hpp>
+#include <MatrixMarket_Tpetra.hpp>
 #include <Teuchos_Comm.hpp>
 #include <Teuchos_RCP.hpp>
 #include <Teuchos_Time.hpp>
+#include <Teuchos_TimeMonitor.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Map.hpp>
 #include <Tpetra_MultiVector.hpp>
+#include <cmath>
+#include <iostream>
+#include <memory>
 #include <nlohmann/json.hpp>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "Cnqs_Network.hpp"
 #include "Cnqs_Problem.hpp"
+#include "Cnqs_ShiftedOperator.hpp"
 
 namespace Cnqs {
 
@@ -45,7 +55,8 @@ namespace Cnqs {
  * @note This class is built on top of Trilinos to support distributed
  * computing.
  */
-class BasicProblem : public Problem {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class BasicProblem : public Problem<Scalar, GlobalOrdinal> {
 public:
     /**
      * @brief Construct a BasicProblem given network and discretization
@@ -55,12 +66,14 @@ public:
      * @param [in] numGridPoint Number of grid points per dimension, \f$n\f$.
      * @param [in] comm Communicator.
      */
-    BasicProblem(const std::shared_ptr<const Cnqs::Network> &network,
-                 int numGridPoint,
-                 const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
+    BasicProblem(
+        const std::shared_ptr<const Network<Scalar, GlobalOrdinal>> &network,
+        GlobalOrdinal numGridPoint,
+        const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
-    double runInversePowerIteration(int numPowerIter, double tolPowerIter,
-                                    int numCgIter, double tolCgIter,
+    Scalar runInversePowerIteration(GlobalOrdinal numPowerIter,
+                                    Scalar tolPowerIter,
+                                    GlobalOrdinal numCgIter, Scalar tolCgIter,
                                     const std::string &fileName) const;
 
     nlohmann::json description() const;
@@ -73,31 +86,40 @@ public:
      * discretized on finite difference grid
      * @return Output stream
      */
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const BasicProblem &problem) {
+    friend std::ostream &operator<<(
+        std::ostream &os,
+        const BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>
+            &problem) {
         os << problem.description().dump(4);
         return os;
     }
 
 private:
-    Teuchos::RCP<const Tpetra::Map<int, int>>
+    Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
     constructMap(const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<Tpetra::MultiVector<double, int, int>>
-    constructInitialState(const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
-                          const Teuchos::RCP<Teuchos::Time> &timer) const;
+    Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+    constructInitialState(
+        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+            &map,
+        const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<const Tpetra::CrsMatrix<double, int, int>>
-    constructHamiltonian(const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
-                         const Teuchos::RCP<Teuchos::Time> &timer) const;
+    Teuchos::RCP<
+        const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+    constructHamiltonian(
+        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+            &map,
+        const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    std::shared_ptr<const Cnqs::Network> network_;
-    int numGridPoint_;
-    std::vector<int> unfoldingFactors_;
-    std::vector<double> theta_;
+    std::shared_ptr<const Network<Scalar, GlobalOrdinal>> network_;
+    GlobalOrdinal numGridPoint_;
+    std::vector<GlobalOrdinal> unfoldingFactors_;
+    std::vector<Scalar> theta_;
     Teuchos::RCP<const Teuchos::Comm<int>> comm_;
 };
 
-} // namespace Cnqs
+#include "Cnqs_BasicProblem.tpp"
+
+}  // namespace Cnqs
 
 #endif

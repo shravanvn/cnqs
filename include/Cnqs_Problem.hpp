@@ -2,11 +2,10 @@
 #define CNQS_PROBLEM_HPP
 
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include <nlohmann/json.hpp>
 
 #include "Cnqs_Network.hpp"
 
@@ -32,6 +31,7 @@ namespace Cnqs {
  *
  * Its concrete subclasses implement various ways to discretize the Hamiltonian.
  */
+template <class Scalar, class Index>
 class Problem {
 public:
     /**
@@ -77,10 +77,9 @@ public:
      * to the empty string `""`, then the eigenstate is not saved.
      * @return Estimated smallest eigenvalue of the Hamiltonian.
      */
-    virtual double
-    runInversePowerIteration(int maxPowerIter, double tolPowerIter,
-                             int maxCgIter, double tolCgIter,
-                             const std::string &fileName) const = 0;
+    virtual Scalar runInversePowerIteration(
+        Index maxPowerIter, Scalar tolPowerIter, Index maxCgIter,
+        Scalar tolCgIter, const std::string &fileName) const = 0;
 
     /**
      * @brief Describe the eigenvalue minimization problem
@@ -90,6 +89,6 @@ public:
     virtual nlohmann::json description() const = 0;
 };
 
-} // namespace Cnqs
+}  // namespace Cnqs
 
 #endif

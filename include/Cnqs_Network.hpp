@@ -1,12 +1,13 @@
 #ifndef CNQS_NETWORK_HPP
 #define CNQS_NETWORK_HPP
 
+#include <fstream>
 #include <iostream>
+#include <nlohmann/json.hpp>
+#include <stdexcept>
 #include <string>
 #include <tuple>
 #include <vector>
-
-#include <nlohmann/json.hpp>
 
 namespace Cnqs {
 
@@ -20,6 +21,7 @@ namespace Cnqs {
  * associated weight \f$g_{jk} \in \mathbb{R}\f$ describing the strength of
  * interaction between rotors \f$j, k \in \mathcal{V}\f$.
  */
+template <class Scalar, class Index>
 class Network {
 public:
     /**
@@ -30,8 +32,8 @@ public:
      * as \f$(j, k, w_{jk})\f$ where \f$0 \leq j, k \leq d - 1\f$ are the edge
      * nodes and \f$g_{jk} \in \mathbb{R}\f$ is the edge weight.
      */
-    Network(int numRotor,
-            const std::vector<std::tuple<int, int, double>> &edgeList);
+    Network(Index numRotor,
+            const std::vector<std::tuple<Index, Index, Scalar>> &edgeList);
 
     /**
      * @brief Construct a new Network object from JSON formatted file
@@ -45,14 +47,14 @@ public:
      *
      * @return Number of rotors \f$d\f$.
      */
-    const int &numRotor() const { return numRotor_; }
+    const Index &numRotor() const { return numRotor_; }
 
     /**
      * @brief Edge specifications of the network
      *
      * @return Edge list; each element of the list is \f$(j, k, g_{jk})\f$.
      */
-    const std::vector<std::tuple<int, int, double>> &edgeList() const {
+    const std::vector<std::tuple<Index, Index, Scalar>> &edgeList() const {
         return edgeList_;
     }
 
@@ -75,7 +77,7 @@ public:
      *
      * @return Lower bound for eigenvalue of associated Hamiltonian.
      */
-    double eigValLowerBound() const;
+    Scalar eigValLowerBound() const;
 
     /**
      * @brief Describe the quantum rotor network in JSON format
@@ -97,10 +99,12 @@ public:
     }
 
 private:
-    int numRotor_;
-    std::vector<std::tuple<int, int, double>> edgeList_;
+    Index numRotor_;
+    std::vector<std::tuple<Index, Index, Scalar>> edgeList_;
 };
 
-} // namespace Cnqs
+#include "Cnqs_Network.tpp"
+
+}  // namespace Cnqs
 
 #endif

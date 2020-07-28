@@ -54,6 +54,6 @@ private:
     Scalar mu_;
 };
 
-} // namespace Cnqs
+}  // namespace Cnqs
 
 #endif

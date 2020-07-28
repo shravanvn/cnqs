@@ -1,6 +1,6 @@
 macro(CNQS_add_test TESTNAME)
     add_executable(${TESTNAME} ${ARGN})
-    target_link_libraries(${TESTNAME} cnqs::cnqs)
+    target_link_libraries(${TESTNAME} CNQS::cnqs)
     add_test(NAME ${TESTNAME} COMMAND ${TESTNAME})
     set_target_properties(${TESTNAME} PROPERTIES FOLDER test)
 endmacro()

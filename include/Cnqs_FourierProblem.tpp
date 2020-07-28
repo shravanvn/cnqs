@@ -1,55 +1,43 @@
-#include "Cnqs_FourierProblem.hpp"
-
-#include <cmath>
-#include <iostream>
-#include <stdexcept>
-#include <tuple>
-#include <vector>
-
-#include <BelosLinearProblem.hpp>
-#include <BelosPseudoBlockCGSolMgr.hpp>
-#include <BelosTpetraAdapter.hpp>
-#include <MatrixMarket_Tpetra.hpp>
-#include <Teuchos_TimeMonitor.hpp>
-
-#include "Cnqs_ShiftedOperator.hpp"
-
-Cnqs::FourierProblem::FourierProblem(
-    const std::shared_ptr<const Cnqs::Network> &network, int maxFreq,
-    const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
-    : network_(network), maxFreq_(maxFreq),
-      unfoldingFactors_(std::vector<int>(network->numRotor() + 1)),
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::FourierProblem(
+    const std::shared_ptr<const Network<Scalar, GlobalOrdinal>> &network,
+    GlobalOrdinal maxFreq, const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
+    : network_(network),
+      maxFreq_(maxFreq),
+      unfoldingFactors_(std::vector<GlobalOrdinal>(network->numRotor() + 1)),
       comm_(comm) {
     TEUCHOS_TEST_FOR_EXCEPTION(maxFreq_ < 1, std::domain_error,
                                "==Cnqs::FourierProblem::FourierProblem== Need "
                                "maximum frequency of at least one");
 
-    const int numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = network_->numRotor();
     unfoldingFactors_[0] = 1;
-    for (int d = 0; d < numRotor; ++d) {
+    for (GlobalOrdinal d = 0; d < numRotor; ++d) {
         unfoldingFactors_[d + 1] = (2 * maxFreq_ + 1) * unfoldingFactors_[d];
     }
 }
 
-Teuchos::RCP<const Tpetra::Map<int, int>> Cnqs::FourierProblem::constructMap(
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    const int numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = network_->numRotor();
 
     const int rank = comm_->getRank();
     const int size = comm_->getSize();
 
-    const int globalIndexBase = 0;
-    const int globalNumElem = unfoldingFactors_[numRotor];
+    const GlobalOrdinal globalIndexBase = 0;
+    const GlobalOrdinal globalNumElem = unfoldingFactors_[numRotor];
 
-    int localNumElem = (globalNumElem + size - 1) / size;
+    LocalOrdinal localNumElem = (globalNumElem + size - 1) / size;
     if (rank == size - 1) {
         localNumElem = globalNumElem - rank * localNumElem;
     }
 
-    auto map = Teuchos::rcp(new Tpetra::Map<int, int>(
+    auto map = Teuchos::rcp(new Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>(
         globalNumElem, localNumElem, globalIndexBase, comm_));
     TEUCHOS_TEST_FOR_EXCEPTION(
         !map->isContiguous(), std::logic_error,
@@ -59,31 +47,36 @@ Teuchos::RCP<const Tpetra::Map<int, int>> Cnqs::FourierProblem::constructMap(
     return map.getConst();
 }
 
-Teuchos::RCP<Tpetra::MultiVector<double, int, int>>
-Cnqs::FourierProblem::constructInitialState(
-    const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
-    const Teuchos::RCP<Teuchos::Time> &timer) const {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    constructInitialState(
+        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+            &map,
+        const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    const int numRotor = network_->numRotor();
-    auto state =
-        Teuchos::rcp(new Tpetra::MultiVector<double, int, int>(map, 1));
-    const double value = std::pow(4.0 * std::atan(1.0), numRotor);
+    const GlobalOrdinal numRotor = network_->numRotor();
+    auto state = Teuchos::rcp(
+        new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(map,
+                                                                           1));
+    const Scalar value = std::pow(4.0 * std::atan(1.0), numRotor);
 
     {
-        const int numLocalRows = map->getNodeNumElements();
+        const LocalOrdinal numLocalRows = map->getNodeNumElements();
 
         state->sync_host();
         auto x_2d = state->getLocalViewHost();
         state->modify_host();
 
-        for (int i = 0; i < numLocalRows; ++i) {
-            int linearIndex = map->getGlobalElement(i);
+        for (LocalOrdinal i = 0; i < numLocalRows; ++i) {
+            GlobalOrdinal linearIndex = map->getGlobalElement(i);
 
             bool flag = true;
-            for (int d = 0; d < numRotor; ++d) {
-                const int i_d = linearIndex % (2 * maxFreq_ + 1) - maxFreq_;
+            for (GlobalOrdinal d = 0; d < numRotor; ++d) {
+                const GlobalOrdinal i_d =
+                    linearIndex % (2 * maxFreq_ + 1) - maxFreq_;
                 if (std::abs(i_d) != 1) {
                     flag = false;
                     break;
@@ -94,48 +87,49 @@ Cnqs::FourierProblem::constructInitialState(
             x_2d(i, 0) = flag ? value : 0.0;
         }
 
-        using memory_space =
-            Tpetra::MultiVector<double, int, int>::device_type::memory_space;
-        state->sync<memory_space>();
+        state->sync_device();
     }
 
-    std::vector<double> stateNorm(1);
+    std::vector<Scalar> stateNorm(1);
     state->norm2(stateNorm);
 
-    std::vector<double> scaleFactor(1);
+    std::vector<Scalar> scaleFactor(1);
     scaleFactor[0] = 1.0 / stateNorm[0];
     state->scale(scaleFactor);
 
     return state;
 }
 
-Teuchos::RCP<const Tpetra::CrsMatrix<double, int, int>>
-Cnqs::FourierProblem::constructHamiltonian(
-    const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
+    const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+        &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
     // network parameters
-    const int numRotor = network_->numRotor();
-    const std::vector<std::tuple<int, int, double>> &edgeList =
-        network_->edgeList();
-    const int numEdge = edgeList.size();
+    const GlobalOrdinal numRotor = network_->numRotor();
+    const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Scalar>>
+        &edgeList = network_->edgeList();
+    const GlobalOrdinal numEdge = edgeList.size();
 
     // allocate memory for the Hamiltonian
-    const int numEntryPerRow = 2 * numEdge + 1;
-    auto hamiltonian = Teuchos::rcp(new Tpetra::CrsMatrix<double, int, int>(
-        map, numEntryPerRow, Tpetra::StaticProfile));
+    const GlobalOrdinal numEntryPerRow = 2 * numEdge + 1;
+    auto hamiltonian = Teuchos::rcp(
+        new Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+            map, numEntryPerRow, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
-    const int numLocalRows = map->getNodeNumElements();
-    for (int localRowId = 0; localRowId < numLocalRows; ++localRowId) {
-        const int globalRowIdLin = map->getGlobalElement(localRowId);
+    const LocalOrdinal numLocalRows = map->getNodeNumElements();
+    for (LocalOrdinal localRowId = 0; localRowId < numLocalRows; ++localRowId) {
+        const GlobalOrdinal globalRowIdLin = map->getGlobalElement(localRowId);
 
         // unwrap linear index i -> dimensional index (i_0, ..., i_{d - 1})
-        std::vector<int> globalRowIdDim(numRotor);
+        std::vector<GlobalOrdinal> globalRowIdDim(numRotor);
         globalRowIdDim[0] = globalRowIdLin;
-        for (int d = 0; d < numRotor; ++d) {
+        for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             if (d < numRotor - 1) {
                 globalRowIdDim[d + 1] = globalRowIdDim[d] / (2 * maxFreq_ + 1);
             }
@@ -143,26 +137,27 @@ Cnqs::FourierProblem::constructHamiltonian(
         }
 
         // collect column indices and values for current row
-        std::vector<int> currentRowColumnIndices(numEntryPerRow);
-        std::vector<double> currentRowValues(numEntryPerRow);
+        std::vector<GlobalOrdinal> currentRowColumnIndices(numEntryPerRow);
+        std::vector<Scalar> currentRowValues(numEntryPerRow);
 
         currentRowColumnIndices[0] = globalRowIdLin;
         currentRowValues[0] = 0.0;
-        for (int d = 0; d < numRotor; ++d) {
+        for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
         currentRowValues[0] *= 0.5;
 
-        int currentRowNonZeroCount = 1;
+        GlobalOrdinal currentRowNonZeroCount = 1;
 
-        for (int e = 0; e < numEdge; ++e) {
-            const int j = std::get<0>(edgeList[e]);
-            const int k = std::get<1>(edgeList[e]);
-            const double g = std::get<2>(edgeList[e]);
+        for (GlobalOrdinal e = 0; e < numEdge; ++e) {
+            const GlobalOrdinal j = std::get<0>(edgeList[e]);
+            const GlobalOrdinal k = std::get<1>(edgeList[e]);
+            const Scalar g = std::get<2>(edgeList[e]);
 
-            for (int f = -1; f <= 1; ++f) {
+            for (GlobalOrdinal f = -1; f <= 1; ++f) {
                 if (f != 0) {
-                    std::vector<int> globalColumnIdDim(globalRowIdDim);
+                    std::vector<GlobalOrdinal> globalColumnIdDim(
+                        globalRowIdDim);
                     globalColumnIdDim[j] += (f == -1) ? 1 : -1;
                     globalColumnIdDim[k] -= (f == -1) ? 1 : -1;
 
@@ -170,8 +165,8 @@ Cnqs::FourierProblem::constructHamiltonian(
                         (globalColumnIdDim[j] <= 2 * maxFreq_) &&
                         (globalColumnIdDim[k] >= 0) &&
                         (globalColumnIdDim[k] <= 2 * maxFreq_)) {
-                        int globalColumnIdLin = 0;
-                        for (int d = 0; d < numRotor; ++d) {
+                        GlobalOrdinal globalColumnIdLin = 0;
+                        for (GlobalOrdinal d = 0; d < numRotor; ++d) {
                             globalColumnIdLin +=
                                 unfoldingFactors_[d] * globalColumnIdDim[d];
                         }
@@ -194,30 +189,34 @@ Cnqs::FourierProblem::constructHamiltonian(
     return hamiltonian.getConst();
 }
 
-Teuchos::RCP<const Tpetra::CrsMatrix<double, int, int>>
-Cnqs::FourierProblem::constructPreconditioner(
-    const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
-    const Teuchos::RCP<Teuchos::Time> &timer) const {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    constructPreconditioner(
+        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+            &map,
+        const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
     // network parameters
-    const int numRotor = network_->numRotor();
-    const double eigValLowerBound = network_->eigValLowerBound();
+    const GlobalOrdinal numRotor = network_->numRotor();
+    const Scalar eigValLowerBound = network_->eigValLowerBound();
 
     // allocate memory for the preconditioner
     auto preconditioner = Teuchos::rcp(
-        new Tpetra::CrsMatrix<double, int, int>(map, 1, Tpetra::StaticProfile));
+        new Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+            map, 1, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
-    const int numLocalRows = map->getNodeNumElements();
-    for (int localRowId = 0; localRowId < numLocalRows; ++localRowId) {
-        const int globalRowIdLin = map->getGlobalElement(localRowId);
+    const LocalOrdinal numLocalRows = map->getNodeNumElements();
+    for (LocalOrdinal localRowId = 0; localRowId < numLocalRows; ++localRowId) {
+        const GlobalOrdinal globalRowIdLin = map->getGlobalElement(localRowId);
 
         // unwrap linear index i -> dimensional index (i_0, ..., i_{d - 1})
-        std::vector<int> globalRowIdDim(numRotor);
+        std::vector<GlobalOrdinal> globalRowIdDim(numRotor);
         globalRowIdDim[0] = globalRowIdLin;
-        for (int d = 0; d < numRotor; ++d) {
+        for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             if (d < numRotor - 1) {
                 globalRowIdDim[d + 1] = globalRowIdDim[d] / (2 * maxFreq_ + 1);
             }
@@ -225,12 +224,12 @@ Cnqs::FourierProblem::constructPreconditioner(
         }
 
         // collect column indices and values for current row
-        std::vector<int> currentRowColumnIndices(1);
-        std::vector<double> currentRowValues(1);
+        std::vector<GlobalOrdinal> currentRowColumnIndices(1);
+        std::vector<Scalar> currentRowValues(1);
 
         currentRowColumnIndices[0] = globalRowIdLin;
         currentRowValues[0] = 0.0;
-        for (int d = 0; d < numRotor; ++d) {
+        for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
         currentRowValues[0] =
@@ -244,9 +243,11 @@ Cnqs::FourierProblem::constructPreconditioner(
     return preconditioner.getConst();
 }
 
-double Cnqs::FourierProblem::runInversePowerIteration(
-    int maxPowerIter, double tolPowerIter, int maxCgIter, double tolCgIter,
-    const std::string &fileName) const {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+    runInversePowerIteration(GlobalOrdinal maxPowerIter, Scalar tolPowerIter,
+                             GlobalOrdinal maxCgIter, Scalar tolCgIter,
+                             const std::string &fileName) const {
     // create timers
     Teuchos::RCP<Teuchos::Time> mapTime =
         Teuchos::TimeMonitor::getNewCounter("CNQS: Map Construction Time");
@@ -268,14 +269,15 @@ double Cnqs::FourierProblem::runInversePowerIteration(
     auto H = constructHamiltonian(map, hamiltonianTime);
     auto M = constructPreconditioner(map, preconditionerTime);
 
-    std::vector<double> lambda(1);
+    std::vector<Scalar> lambda(1);
     {
         // create local timer
         Teuchos::TimeMonitor localTimer(*powerIterationTime);
 
         // compute initial guess for lambda
         auto y = Teuchos::rcp(
-            new Tpetra::MultiVector<double, int, int>(x->getMap(), 1));
+            new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+                x->getMap(), 1));
         H->apply(*x, *y);
         x->dot(*y, lambda);
 
@@ -295,9 +297,8 @@ double Cnqs::FourierProblem::runInversePowerIteration(
         }
 
         // construct shifted Hamiltonian
-        using node_type = Tpetra::Operator<double, int, int>::node_type;
-        auto A =
-            Teuchos::rcp(new Cnqs::ShiftedOperator<double, int, int, node_type>(
+        auto A = Teuchos::rcp(
+            new ShiftedOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
                 H, network_->eigValLowerBound()));
 
         // create solver parameters
@@ -305,24 +306,28 @@ double Cnqs::FourierProblem::runInversePowerIteration(
         params->set("Maximum Iterations", maxCgIter);
         params->set("Convergence Tolerance", tolCgIter);
 
-        for (int i = 1; i <= maxPowerIter; ++i) {
+        for (GlobalOrdinal i = 1; i <= maxPowerIter; ++i) {
             // create linear problem
             auto z = Teuchos::rcp(
-                new Tpetra::MultiVector<double, int, int>(x->getMap(), 1));
+                new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal,
+                                        Node>(x->getMap(), 1));
             auto problem = Teuchos::rcp(
-                new Belos::LinearProblem<double,
-                                         Tpetra::MultiVector<double, int, int>,
-                                         Tpetra::Operator<double, int, int>>(
-                    A, z, x.getConst()));
+                new Belos::LinearProblem<
+                    Scalar,
+                    Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal,
+                                        Node>,
+                    Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal,
+                                     Node>>(A, z, x.getConst()));
             problem->setLeftPrec(M);
             problem->setRightPrec(M);
             problem->setHermitian();
             problem->setProblem();
 
             // create CG solver
-            Belos::PseudoBlockCGSolMgr<double,
-                                       Tpetra::MultiVector<double, int, int>,
-                                       Tpetra::Operator<double, int, int>>
+            Belos::PseudoBlockCGSolMgr<
+                Scalar,
+                Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>,
+                Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
                 solver(problem, params);
 
             // solve
@@ -338,19 +343,19 @@ double Cnqs::FourierProblem::runInversePowerIteration(
             x = problem->getLHS();
 
             // normalize x = x / norm2(x)
-            std::vector<double> xNorm(1);
+            std::vector<Scalar> xNorm(1);
             x->norm2(xNorm);
 
-            std::vector<double> scaleFactor(1);
+            std::vector<Scalar> scaleFactor(1);
             scaleFactor[0] = 1.0 / xNorm[0];
             x->scale(scaleFactor);
 
             // compute new estimate for lambda
-            std::vector<double> lambdaNew(1);
+            std::vector<Scalar> lambdaNew(1);
 
             H->apply(*x, *y);
             x->dot(*y, lambdaNew);
-            const double dLambda = std::abs(lambda[0] - lambdaNew[0]);
+            const Scalar dLambda = std::abs(lambda[0] - lambdaNew[0]);
             lambda[0] = lambdaNew[0];
 
             if (comm_->getRank() == 0) {
@@ -376,7 +381,8 @@ double Cnqs::FourierProblem::runInversePowerIteration(
 
     // save estimated state
     if (fileName.compare("") != 0) {
-        Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double, int, int>>::
+        Tpetra::MatrixMarket::Writer<
+            Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>::
             writeDenseFile(fileName, *x, "low_eigen_state",
                            "Estimated lowest energy eigenstate of Hamiltonian");
     }
@@ -387,7 +393,9 @@ double Cnqs::FourierProblem::runInversePowerIteration(
     return lambda[0];
 }
 
-nlohmann::json Cnqs::FourierProblem::description() const {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+nlohmann::json
+FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::description() const {
     nlohmann::json description;
 
     description["name"] = "fourier_problem";

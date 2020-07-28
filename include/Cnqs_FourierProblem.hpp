@@ -1,19 +1,29 @@
 #ifndef CNQS_FOURIERPROBLEM_HPP
 #define CNQS_FOURIERPROBLEM_HPP
 
-#include <memory>
-#include <string>
-
+#include <BelosLinearProblem.hpp>
+#include <BelosPseudoBlockCGSolMgr.hpp>
+#include <BelosTpetraAdapter.hpp>
+#include <MatrixMarket_Tpetra.hpp>
 #include <Teuchos_Comm.hpp>
 #include <Teuchos_RCP.hpp>
 #include <Teuchos_Time.hpp>
+#include <Teuchos_TimeMonitor.hpp>
 #include <Tpetra_CrsMatrix.hpp>
 #include <Tpetra_Map.hpp>
 #include <Tpetra_MultiVector.hpp>
+#include <cmath>
+#include <iostream>
+#include <memory>
 #include <nlohmann/json.hpp>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <vector>
 
 #include "Cnqs_Network.hpp"
 #include "Cnqs_Problem.hpp"
+#include "Cnqs_ShiftedOperator.hpp"
 
 namespace Cnqs {
 
@@ -48,7 +58,8 @@ namespace Cnqs {
  * @note This class is built on top of Trilinos to support distributed
  * computing.
  */
-class FourierProblem : public Problem {
+template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+class FourierProblem : public Problem<Scalar, GlobalOrdinal> {
 public:
     /**
      * @brief Construct a FourierProblem given network and cutoff frequency
@@ -58,9 +69,10 @@ public:
      * @param [in] maxFreq Cutoff frequency, \f$\omega_\text{max}\f$.
      * @param [in] comm Communicator.
      */
-    FourierProblem(const std::shared_ptr<const Cnqs::Network> &network,
-                   int maxFreq,
-                   const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
+    FourierProblem(
+        const std::shared_ptr<const Network<Scalar, GlobalOrdinal>> &network,
+        GlobalOrdinal maxFreq,
+        const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
     /**
      * @brief Run inverse power iteration
@@ -112,8 +124,9 @@ public:
      * to the empty string `""`, then the eigenstate is not saved.
      * @return Estimated smallest eigenvalue of the Hamiltonian.
      */
-    double runInversePowerIteration(int numPowerIter, double tolPowerIter,
-                                    int numCgIter, double tolCgIter,
+    Scalar runInversePowerIteration(GlobalOrdinal numPowerIter,
+                                    Scalar tolPowerIter,
+                                    GlobalOrdinal numCgIter, Scalar tolCgIter,
                                     const std::string &fileName) const;
 
     nlohmann::json description() const;
@@ -133,28 +146,37 @@ public:
     }
 
 private:
-    Teuchos::RCP<const Tpetra::Map<int, int>>
+    Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
     constructMap(const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<Tpetra::MultiVector<double, int, int>>
-    constructInitialState(const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
-                          const Teuchos::RCP<Teuchos::Time> &timer) const;
-
-    Teuchos::RCP<const Tpetra::CrsMatrix<double, int, int>>
-    constructHamiltonian(const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
-                         const Teuchos::RCP<Teuchos::Time> &timer) const;
-
-    Teuchos::RCP<const Tpetra::CrsMatrix<double, int, int>>
-    constructPreconditioner(
-        const Teuchos::RCP<const Tpetra::Map<int, int>> &map,
+    Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+    constructInitialState(
+        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+            &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    std::shared_ptr<const Cnqs::Network> network_;
-    int maxFreq_;
-    std::vector<int> unfoldingFactors_;
+    Teuchos::RCP<
+        const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+    constructHamiltonian(
+        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+            &map,
+        const Teuchos::RCP<Teuchos::Time> &timer) const;
+
+    Teuchos::RCP<
+        const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+    constructPreconditioner(
+        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+            &map,
+        const Teuchos::RCP<Teuchos::Time> &timer) const;
+
+    std::shared_ptr<const Network<Scalar, GlobalOrdinal>> network_;
+    GlobalOrdinal maxFreq_;
+    std::vector<GlobalOrdinal> unfoldingFactors_;
     Teuchos::RCP<const Teuchos::Comm<int>> comm_;
 };
 
-} // namespace Cnqs
+#include "Cnqs_FourierProblem.tpp"
+
+}  // namespace Cnqs
 
 #endif

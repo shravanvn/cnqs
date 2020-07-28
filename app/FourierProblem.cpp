@@ -1,12 +1,12 @@
+#include <Teuchos_Comm.hpp>
+#include <Teuchos_RCP.hpp>
+#include <Tpetra_Core.hpp>
+#include <Tpetra_MultiVector.hpp>
 #include <cstdlib>
 #include <iostream>
 #include <memory>
 #include <stdexcept>
 #include <string>
-
-#include <Teuchos_Comm.hpp>
-#include <Teuchos_RCP.hpp>
-#include <Tpetra_Core.hpp>
 
 #include "Cnqs_FourierProblem.hpp"
 #include "Cnqs_Network.hpp"
@@ -26,6 +26,11 @@ void printHelp(const std::string &programName) {
 }
 
 int main(int argc, char **argv) {
+    using Scalar = Tpetra::MultiVector<>::scalar_type;
+    using LocalOrdinal = Tpetra::MultiVector<>::local_ordinal_type;
+    using GlobalOrdinal = Tpetra::MultiVector<>::global_ordinal_type;
+    using Node = Tpetra::MultiVector<>::node_type;
+
     Tpetra::ScopeGuard tpetraScope(&argc, &argv);
     {
         const auto comm = Tpetra::getDefaultComm();
@@ -45,12 +50,13 @@ int main(int argc, char **argv) {
         } else {
             // argc = 3, 7 or 8
 
-            auto network = std::make_shared<Cnqs::Network>(argv[1]);
-            int maxFreq = std::atoi(argv[2]);
-            int maxPowerIter = 100;
-            double tolPowerIter = 1.0e-06;
-            int maxCgIter = 1000;
-            double tolCgIter = 1.0e-06;
+            auto network =
+                std::make_shared<Cnqs::Network<Scalar, GlobalOrdinal>>(argv[1]);
+            GlobalOrdinal maxFreq = std::atoi(argv[2]);
+            GlobalOrdinal maxPowerIter = 100;
+            Scalar tolPowerIter = 1.0e-06;
+            GlobalOrdinal maxCgIter = 1000;
+            Scalar tolCgIter = 1.0e-06;
             std::string fileName("");
 
             if (argc > 3) {
@@ -78,7 +84,8 @@ int main(int argc, char **argv) {
             }
 
             // create Fourier problem
-            Cnqs::FourierProblem problem(network, maxFreq, comm);
+            Cnqs::FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>
+                problem(network, maxFreq, comm);
 
             // solve Fourier problem
             problem.runInversePowerIteration(maxPowerIter, tolPowerIter,

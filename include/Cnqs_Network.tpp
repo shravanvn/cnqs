@@ -1,10 +1,7 @@
-#include "Cnqs_Network.hpp"
-
-#include <fstream>
-#include <stdexcept>
-
-Cnqs::Network::Network(
-    int numRotor, const std::vector<std::tuple<int, int, double>> &edgeList)
+template <class Scalar, class Index>
+Network<Scalar, Index>::Network(
+    Index numRotor,
+    const std::vector<std::tuple<Index, Index, Scalar>> &edgeList)
     : numRotor_(numRotor), edgeList_(edgeList) {
     // validate inputs
     if (numRotor_ < 2) {
@@ -13,9 +10,9 @@ Cnqs::Network::Network(
     }
 
     for (auto &edge : edgeList_) {
-        int j = std::get<0>(edge);
-        int k = std::get<1>(edge);
-        double g = std::get<2>(edge);
+        Index j = std::get<0>(edge);
+        Index k = std::get<1>(edge);
+        Scalar g = std::get<2>(edge);
 
         if (j == k) {
             throw std::domain_error(
@@ -25,7 +22,7 @@ Cnqs::Network::Network(
 
         // switch order to ensure j < k
         if (j > k) {
-            int temp = j;
+            Index temp = j;
             j = k;
             k = temp;
 
@@ -39,7 +36,8 @@ Cnqs::Network::Network(
     }
 }
 
-Cnqs::Network::Network(const std::string &networkFileName) {
+template <class Scalar, class Index>
+Network<Scalar, Index>::Network(const std::string &networkFileName) {
     nlohmann::json description;
 
     {
@@ -53,13 +51,13 @@ Cnqs::Network::Network(const std::string &networkFileName) {
     edgeList_.reserve(edgeList.size());
 
     for (const auto &edge : edgeList) {
-        int j = edge["node1"];
-        int k = edge["node2"];
-        const double g = edge["weight"];
+        Index j = edge["node1"];
+        Index k = edge["node2"];
+        const Scalar g = edge["weight"];
 
         // switch order to ensure j < k
         if (j > k) {
-            const int temp = j;
+            const Index temp = j;
             j = k;
             k = temp;
         }
@@ -73,8 +71,9 @@ Cnqs::Network::Network(const std::string &networkFileName) {
     }
 }
 
-double Cnqs::Network::eigValLowerBound() const {
-    double mu = -1.0e-09;
+template <class Scalar, class Index>
+Scalar Network<Scalar, Index>::eigValLowerBound() const {
+    Scalar mu = -1.0e-09;
 
     for (const auto &edge : edgeList_) {
         mu -= std::abs(std::get<2>(edge));
@@ -83,7 +82,8 @@ double Cnqs::Network::eigValLowerBound() const {
     return mu;
 }
 
-nlohmann::json Cnqs::Network::description() const {
+template <class Scalar, class Index>
+nlohmann::json Network<Scalar, Index>::description() const {
     nlohmann::json description;
 
     description["num_rotor"] = numRotor_;

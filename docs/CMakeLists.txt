@@ -1,7 +1,7 @@
 find_package(Doxygen)
 
 if(DOXYGEN_FOUND)
-    get_target_property(CNQS_PUBLIC_HEADER_DIR cnqs::cnqs INTERFACE_INCLUDE_DIRECTORIES)
+    get_target_property(CNQS_PUBLIC_HEADER_DIR CNQS::cnqs INTERFACE_INCLUDE_DIRECTORIES)
     file(GLOB_RECURSE CNQS_PUBLIC_HEADERS ${CNQS_PUBLIC_HEADER_DIR}/*.hpp)
 
     configure_file(Doxyfile.in Doxyfile @ONLY)
