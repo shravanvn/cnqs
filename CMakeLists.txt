@@ -1,10 +1,16 @@
 cmake_minimum_required(VERSION 3.3.2 FATAL_ERROR)
 project(CNQS LANGUAGES CXX VERSION 0.2.0)
 
+set(CMAKE_PREFIX_PATH ${nlohmann_json_PREFIX}
+                      ${Trilinos_PREFIX}
+                      ${CMAKE_PREFIX_PATH})
+
 find_package(nlohmann_json REQUIRED)
-find_package(OpenMP REQUIRED)
-find_package(MPI REQUIRED)
 find_package(Trilinos REQUIRED COMPONENTS Teuchos Tpetra Belos)
+
+set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER})
+set(CMAKE_CXX_FLAGS ${Trilinos_CXX_COMPILER_FLAGS}
+                    ${CMAKE_CXX_FLAGS})
 
 add_library(cnqs INTERFACE)
 target_include_directories(cnqs INTERFACE ${PROJECT_SOURCE_DIR}/include
@@ -12,9 +18,7 @@ target_include_directories(cnqs INTERFACE ${PROJECT_SOURCE_DIR}/include
                                           ${Trilinos_TPL_INCLUDE_DIRS})
 target_link_libraries(cnqs INTERFACE nlohmann_json::nlohmann_json
                                      ${Trilinos_LIBRARIES}
-                                     ${Trilinos_TPL_LIBRARIES}
-                                     OpenMP::OpenMP_CXX
-                                     MPI::MPI_CXX)
+                                     ${Trilinos_TPL_LIBRARIES})
 target_compile_features(cnqs INTERFACE cxx_std_11)
 add_library(CNQS::cnqs ALIAS cnqs)
 
