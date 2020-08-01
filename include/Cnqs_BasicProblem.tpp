@@ -39,7 +39,7 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     const GlobalOrdinal globalIndexBase = 0;
     const GlobalOrdinal globalNumElem = unfoldingFactors_[numRotor];
 
-    LocalOrdinal localNumElem = (globalNumElem + size - 1) / size;
+    GlobalOrdinal localNumElem = (globalNumElem + size - 1) / size;
     if (rank == size - 1) {
         localNumElem = globalNumElem - rank * localNumElem;
     }
@@ -68,13 +68,13 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
                                                                            1));
 
     {
-        const LocalOrdinal numLocalRows = map->getNodeNumElements();
+        const GlobalOrdinal numLocalRows = map->getNodeNumElements();
 
         state->sync_host();
         auto x_2d = state->getLocalViewHost();
         state->modify_host();
 
-        for (LocalOrdinal i = 0; i < numLocalRows; ++i) {
+        for (GlobalOrdinal i = 0; i < numLocalRows; ++i) {
             GlobalOrdinal linearIndex = map->getGlobalElement(i);
 
             Scalar entry = 1.0;
@@ -125,8 +125,8 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
             map, numEntryPerRow, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
-    const LocalOrdinal numLocalRows = map->getNodeNumElements();
-    for (LocalOrdinal localRowId = 0; localRowId < numLocalRows; ++localRowId) {
+    const GlobalOrdinal numLocalRows = map->getNodeNumElements();
+    for (GlobalOrdinal localRowId = 0; localRowId < numLocalRows; ++localRowId) {
         const GlobalOrdinal globalRowIdLin = map->getGlobalElement(localRowId);
 
         // unwrap linear index i -> dimensional index (i_0, ..., i_{d - 1})
