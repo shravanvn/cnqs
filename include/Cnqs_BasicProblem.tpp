@@ -207,8 +207,8 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
 
 template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
 Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    runInversePowerIteration(GlobalOrdinal maxPowerIter, Scalar tolPowerIter,
-                             GlobalOrdinal maxCgIter, Scalar tolCgIter,
+    runInversePowerIteration(int maxPowerIter, Scalar tolPowerIter,
+                             int maxCgIter, Scalar tolCgIter,
                              const std::string &fileName) const {
     // create timers
     Teuchos::RCP<Teuchos::Time> mapTime =
@@ -269,7 +269,7 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         params->set("Maximum Iterations", maxCgIter);
         params->set("Convergence Tolerance", tolCgIter);
 
-        for (GlobalOrdinal i = 1; i <= maxPowerIter; ++i) {
+        for (int i = 1; i <= maxPowerIter; ++i) {
             // create linear problem
             auto z = Teuchos::rcp(
                 new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal,

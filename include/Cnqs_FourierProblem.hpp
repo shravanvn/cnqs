@@ -124,9 +124,9 @@ public:
      * to the empty string `""`, then the eigenstate is not saved.
      * @return Estimated smallest eigenvalue of the Hamiltonian.
      */
-    Scalar runInversePowerIteration(GlobalOrdinal numPowerIter,
+    Scalar runInversePowerIteration(int numPowerIter,
                                     Scalar tolPowerIter,
-                                    GlobalOrdinal numCgIter, Scalar tolCgIter,
+                                    int numCgIter, Scalar tolCgIter,
                                     const std::string &fileName) const;
 
     nlohmann::json description() const;

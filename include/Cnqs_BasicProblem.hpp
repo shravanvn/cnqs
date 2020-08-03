@@ -71,9 +71,9 @@ public:
         GlobalOrdinal numGridPoint,
         const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
-    Scalar runInversePowerIteration(GlobalOrdinal numPowerIter,
+    Scalar runInversePowerIteration(int numPowerIter,
                                     Scalar tolPowerIter,
-                                    GlobalOrdinal numCgIter, Scalar tolCgIter,
+                                    int numCgIter, Scalar tolCgIter,
                                     const std::string &fileName) const;
 
     nlohmann::json description() const;

@@ -78,7 +78,7 @@ public:
      * @return Estimated smallest eigenvalue of the Hamiltonian.
      */
     virtual Scalar runInversePowerIteration(
-        Index maxPowerIter, Scalar tolPowerIter, Index maxCgIter,
+        int maxPowerIter, Scalar tolPowerIter, int maxCgIter,
         Scalar tolCgIter, const std::string &fileName) const = 0;
 
     /**
