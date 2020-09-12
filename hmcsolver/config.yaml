@@ -1,0 +1,32 @@
+# output
+tensorboard_path: './tensorboard/'
+
+# debug mode
+debug: False  # solves the quantum harmonic oscillator
+
+# Hamiltonian parameters (see https://arxiv.org/abs/cond-mat/0610530)
+U: 5.0
+J: 1.0
+
+# RBM parameters
+num_visible: 2
+num_hidden: 8
+
+# Gradient descent parmeters
+lr: 1.0e-02
+
+# SR parameters
+sr_reg: 1.0e-09
+
+# HMC parameters
+leapfrog_step: 0.01
+
+# Adam parameters (deprecated)
+beta_1: 0.9
+beta_2: 0.999
+epsilon: 1.0e-08
+
+# Metropolis parameters
+metropolis_steps: 40
+bump_size: 3.5
+warm_steps: 0

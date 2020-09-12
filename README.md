@@ -10,3 +10,8 @@ Fast solvers for computing continuous-variable neural quantum states.
 
 -   [nlohmann_json](https://github.com/nlohmann/json). Code has been tested with
     version 3.8.0.
+
+## HMC-Solver Dependencies
+
+-   [Conda](https://docs.conda.io/) environment specified in the `hmcsolver`
+    subdirectory.
