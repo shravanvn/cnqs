@@ -2,7 +2,7 @@
 
 Fast solvers for computing continuous-variable neural quantum states.
 
-## Dependencies
+## PDE-Solver Dependencies
 
 -   [Trilinos](https://github.com/Trilinos/Trilinos) with at least the following
     packages enabled: `Teuchos`, `Tpetra` and `Belos`, and built with MPI and
