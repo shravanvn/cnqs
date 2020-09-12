@@ -1,0 +1,605 @@
+\documentclass[12pt]{article}
+\usepackage[preset=utopianote]{phfnote}
+\usepackage[titletoc,title]{appendix}
+\usepackage{algorithm, amsmath, amsthm, amssymb, algpseudocode, bm, cancel, color, graphicx, moreverb, natbib, optidef}
+\definecolor{MyDarkBlue}{rgb}{0.15,0.15,0.45}
+\newcommand{\ket}[1]{\left|#1\right\rangle}
+
+\usepackage{tikz}
+
+
+\usetikzlibrary{cd,arrows,shapes, fit}
+\tikzstyle{tensor}=[rectangle,thick,draw=black,fill=blue!15,minimum size=4mm]
+\tikzstyle{rect}=[rectangle,thick,draw=black,fill=blue!15,minimum width=4mm, minimum height=20mm]
+
+%% comment out the following two lines and uncomment the two below that if you want the \PL and \PR to be shades of gray instead of red and yellow
+\tikzstyle{PL}=[circle,thick,draw=black,fill=red!15,minimum size=4mm]
+\tikzstyle{PR}=[circle,thick,draw=black,fill=yellow!15,minimum size=4mm]
+%\tikzstyle{mat}=[circle,thick,draw=black,fill=black!10,minimum size=4mm]
+%\tikzstyle{mat2}=[circle,thick,draw=black,fill=black!30,minimum size=4mm]
+
+\DeclareMathOperator*{\Hess}{Hess}
+\DeclareMathOperator*{\diag}{diag}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\vc}{vc}
+\DeclareMathOperator{\conv}{conv}
+\DeclareMathOperator{\Pa}{Pa}
+\DeclareMathOperator{\softplus}{softplus}
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\arctanh}{arctanh}
+\DeclareMathOperator{\sech}{sech}
+\DeclareMathOperator{\var}{var}
+\DeclareMathOperator{\cov}{cov}
+\DeclareMathOperator{\tr}{tr}
+\DeclareMathOperator{\id}{id}
+\DeclareMathOperator{\Prob}{Prob}
+\DeclareMathAlphabet{\pazocal}{OMS}{zplm}{m}{n}
+
+\theoremstyle{definition}% default
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{lem}[thm]{Lemma}
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem*{cor}{Corollary}
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+\newtheorem{conj}{Conjecture}[section]
+\newtheorem{exmp}{Example}[section]
+\theoremstyle{remark}
+\newtheorem*{remk}{Remark}
+\newtheorem*{note}{Note}
+\newtheorem{case}{Case}
+
+\algnewcommand\algorithmicforeach{\textbf{for each}}
+\algdef{S}[FOR]{ForEach}[1]{\algorithmicforeach\ #1\ \algorithmicdo}
+\newcommand\ddfrac[2]{\frac{\displaystyle #1}{\displaystyle #2}}
+\begin{document}
+\title{Continuous-Variable Neural Quantum States (cNQS)}
+
+\maketitle
+\tableofcontents
+\section{Quantum Rotor Model}
+Let $G = (V,E)$ be an undirected graph with $n:=|V|$ vertices and let $\mathbb{S}^d \subset \mathbb{R}^{d+1}$ ($d \geq 1$) denote the unit sphere immersed in Euclidean space with the standard rotationally invariant inner product $(\mathbb{R}^{d+1}, \langle \cdot, \cdot \rangle)$. Consider the Hilbert space of square-integrable functions
+\begin{align}
+	\pazocal{H} 
+		& := \bigotimes_{j\in[n]} L^2(\mathbb{S}^d) \enspace , \\
+		& = L^2(\pazocal{X}) \enspace ,
+\end{align}
+where $\pazocal{X} := (\mathbb{S}^d)^{n}$ denotes the classical configuration space of the system. A classical configuration is specified by  $\bm{x} = (x_1,\ldots,x_n) \in \pazocal{X} \subseteq \mathbb{R}^n \otimes \mathbb{R}^{d+1}$.
+
+Our problem can be formulated as finding the minimal eigenvalue and the associated eigenfunction of the operator\footnote{The discussion should generalize easily to other compact manifolds such as $SU(d)$.},
+\begin{equation}
+	\hat{H} := \frac{gJ}{2} \sum_{j \in V} \hat{L}_j^2 - J \sum_{\{ j , k \} \in E}  \langle \hat{x}_j , \hat{x}_k \rangle \enspace .
+\end{equation}
+The eigenvalue problem can be recast as the minimization of the Rayleigh quotient
+\begin{mini}|l|
+	{| \Psi \rangle \in \pazocal{H}}{R_{H}(| \Psi \rangle)}{}{}
+\end{mini}
+where the Rayleigh quotient of a self-adjoint operator $\hat{A}$ is defined as
+\begin{align}
+	R_A(| \Psi \rangle)
+		& := \frac{\langle \Psi | \hat{A} | \Psi \rangle}{\langle \Psi | \Psi \rangle} \enspace , \\
+		& = \frac{1}{\langle \Psi | \Psi \rangle}\int_{\pazocal{X}} {\rm d}\mu(\bm{x}) \langle \Psi | \bm{x} \rangle \langle \bm{x} | \hat{A} | \Psi \rangle \enspace , \\
+		& =: \frac{1}{\langle \Psi | \Psi \rangle} \int_{\pazocal{X}} {\rm d}\mu(\bm{x}) |\langle \bm{x} | \Psi \rangle|^2 A_{\rm loc}(\bm{x}) \enspace , \\
+		& = \mathbb{E}_{\Psi} [A_{\rm loc}(\bm{x})] \enspace ,
+\end{align}
+where $\mathbb{E}_\Psi$ denotes the classical expectation over the configuration space $\pazocal{X}$ with measure $\mu$,
+\begin{equation}
+	\mathbb{E}_{\Psi} \, f(\bm{x}) := \frac{1}{\langle \Psi | \Psi \rangle} \int_{\pazocal{X}} {\rm d}\mu(\bm{x}) |\langle \bm{x} | \Psi \rangle|^2 f(\bm{x}) \enspace .
+\end{equation}
+\begin{exmp}
+Consider the quantum rotor model corresponding to $d=1$. Changing coordinates from the ambient system $\bm{x} = (x_1,\ldots,x_n) \in \mathbb{R}^n \otimes \mathbb{R}^2$ to the implicit angular coordinates $\bm{\theta} := (\theta_1,\ldots,\theta_n) \in [0,2\pi)^n$ the Hamiltonian is given by
+\begin{equation}
+	\hat{H} = -\frac{gJ}{2} \sum_{j \in V} \frac{\partial^2}{\partial \theta_j^2} - J \sum_{\{ j , k \} \in E}  \cos(\theta_j - \theta_k) \enspace .
+\end{equation}
+In terms of the angular parametrization the local energy is given by,
+\begin{equation}
+	H_{\rm loc}(\bm{\theta}) := \frac{\langle \bm{\theta} | \hat{H} | \Psi \rangle}{\langle \bm{\theta} | \Psi \rangle} = -\frac{gJ}{2} \sum_{j \in V} \frac{1}{\Psi(\bm{\theta})}\frac{\partial^2\Psi(\bm{\theta})}{\partial \theta_j^2} - J \sum_{\{ j, k \} \in E}  \cos(\theta_j - \theta_k) \enspace .
+\end{equation}
+where the wavefunction $\Psi(\bm{\theta}) := \langle \bm{\theta} | \Psi \rangle$. 
+%For the purposes of variational Monte Carlo it will prove useful to express local energy in terms of $\log \Psi$,
+%\begin{align}
+%	H_{\rm loc}(\bm{\theta})
+%		& = -\frac{gJ}{2}\sum_{j \in V}\left[\frac{\partial^2 \log \Psi}{\partial \theta_j^2} + \left(\frac{\partial \log \Psi}{\partial \theta_j}\right)^2\right] - J \sum_{\{ j, k \} \in E}  \cos(\theta_j - \theta_k)
+%\end{align}
+%The local energy in the ambient system can be obtained using the chain rule as follows,
+%\begin{align}
+%	H_{\rm loc}(x) 
+%	& := \frac{\langle \bm{x} | \hat{H} | \Psi \rangle}{\langle \bm{x} | \Psi \rangle} \enspace , \\
+%	& = -\frac{gJ}{2} \frac{1}{\Psi(\bm{x})}\sum_{j \in V}\left[\left \langle \Hess_{x_j}\big(\Psi (\bm{x})\big), \frac{\partial x_j}{\partial \theta_j} \otimes \frac{\partial x_j}{\partial \theta_j} \right\rangle + \left \langle \frac{\partial \Psi(\bm{x})}{\partial x_j}, \frac{\partial^2 x_j}{\partial \theta_j^2} \right\rangle \right] - J \sum_{\{ j, k \} \in E}  \langle x_j , x_k \rangle \enspace .
+%\end{align}
+\end{exmp}
+
+The above discussion suggests that we should define a parametrized family of probability densities $p(\bm{x})$ over the classical configuration space $\bm{x}\in\pazocal{X} = (\mathbb{S}^d)^n$. A natural candidate is to generalize the restricted Boltzmann machine (RBM) from the discrete set $\mathbb{S}^0 = \{-1, +1 \}$ to the manifold $\mathbb{S}^d$ ($d \geq 1$).
+\section{Autoregressive model}
+In this section we consider a considerably simpler ansatz which takes advantage of the positivity of the ground state. This simplicity comes at the expense of ignoring spatial symmetry since it depends on an arbitrary permutation of the sites.
+
+Assume for simplicity that $\Psi(\bm{x}) \geq 0$ so $\Psi(\bm{x}) = \sqrt{p(\bm{x})}$ for some probability distribution over $\pazocal{X}$. This is the case relevant to ground state determination of the rotor model. Consider the autoregressive assumption
+\begin{equation}
+	p(\bm{x}) = \prod_{i=1}^n p_i(x_i \, | \, x_{i-1}, \ldots, x_1) \enspace ,
+\end{equation}
+so this is a particular example of Neural Autoregressive Quantum States (NAQs),
+\begin{equation}
+	\Psi(\bm{x}) = \prod_{i=1}^n \psi_i(x_i \, | \, x_{i-1}, \ldots, x_1) \enspace ,
+\end{equation}
+in which we have chosen the conditional wavefunctions as follows $\psi_i(x_i \, | \, \bm{x}_{<i}) = \sqrt{p_i(x_i \, | \, \bm{x}_{<i})}$. For the purposes of illustration consider first the Euclidean space $\pazocal{X} = \mathbb{R}^n$. Then an appropriate choice of distribution is to take
+\begin{equation}
+	p_i(x_i \, | \, \bm{x}_{<i}) = \frac{1}{\sqrt{2\pi \sigma^2}} \exp\left[\frac{(x_i - v_i(\bm{x}_i))^2}{2\sigma^2}\right] \enspace , \quad \quad \psi_i(x_i \, | \, \bm{x}_{<i}) = \sqrt{p_i(x_i \, | \, \bm{x}_{<i})} \enspace ,
+\end{equation}
+where $v_i(\bm{x}_{<i})$ denotes the $i$th output node of the the neural network (where the autoregressive assumption has been imposed) and $\sigma > 0$ is an adjustable hyper-parameter.
+
+The rotor model is equally simple. For illustration we just present the $d=1$ case. Just take
+\begin{equation}
+	p_i(\theta_i \, | \, \bm{\theta}_{<i}) = \frac{\exp\left[ \kappa (\theta_i - v_i(\bm{\theta}_{<i})) \right]}{2\pi I_0(\kappa)} \enspace , \quad \quad \psi_i(\theta_i \, | \, \bm{\theta}_{<i}) = \sqrt{p_i(\theta_i \, | \, \bm{\theta}_{<i})} \enspace ,
+\end{equation}
+where $\kappa > 0$ is again an adjustable hyper-parameter.
+
+%\section{Permutation invariant model}
+%Consider a permutation invariant wavefunction
+%\begin{equation}
+%	\Psi(x_1,\ldots, x_n) = \Psi (x_{\sigma(1)}, \ldots, x_{\sigma(n)})
+%\end{equation}
+%where $\sigma \in S_n$ is an arbitrary permutation. Consider the ansatz
+%\begin{equation}
+%	\Psi(x_1,\ldots, x_n) = \frac{v(x_1,\ldots, x_n)}{Z} \enspace ,
+%\end{equation}
+%where $v(\bm{x})$ is the single output node of a permutationally-invariant neural network. In particular let $\bm{1}_n$ denote the $n$-dimensional vector of ones. Then
+%\begin{equation}
+%v =  \sigma_L \circ A_L \circ \cdots \circ \sigma_1 A_1
+%\end{equation}
+%where for $1 \leq l < L$ the affine transformation $A_l$ is given by
+%\begin{equation}
+%	A_l z = w_l (\bm{1}_n \bm{1}_n^\top) z + b_l
+%\end{equation}
+%where $w_l \in \mathbb{C}$ and $b_l \in \mathbb{C}^n$ and
+%\begin{equation}
+%	A_L z = w_L \bm{1}^\top z + b_L
+%\end{equation}
+%where $w_L,b_L \in \mathbb{C}$.
+
+\section{Spherical Boltzmann Machine}
+Let $v \in \mathbb{R}^m$, $A \in \mathbb{R}^{m \times n}$ and $B \in \mathbb{R}^{m \times p}$. Then $v \odot A$ is a matrix with components $(v \odot A)_{ij} = v_i A_{ij}$ and $ A \odot B$ is a rank-3 tensor with components $(A\odot B)_{ijk} = A_{ij} B_{ik}$.
+\subsection{Fully connected case}
+\begin{defn}
+Let $d, n, H \geq 1$ and define the following subsets of linear space,
+\begin{equation}
+	\pazocal{X} := (\mathbb{S}^d)^n \subseteq \mathbb{R}^n \otimes \mathbb{R}^{d+1} \enspace , \quad \quad \pazocal{Z} := (\mathbb{S}^d)^H \subseteq \mathbb{R}^H \otimes \mathbb{R}^{d+1} \enspace ,
+\end{equation}
+where $\otimes$ denotes the outer product. Define the Hilbert-Schmidt inner product on the associated state spaces for all $(\bm{x},\bm{x}') \in \pazocal{X} \times \pazocal{X}$ and $(\bm{z},\bm{z}') \in \pazocal{Z} \times \pazocal{Z}$ as follows
+\begin{align}
+	\langle \bm{x} , \bm{x}' \rangle
+		& := \tr(\bm{x}^\top \bm{x}') = \sum_{j \in [n]} \langle x_j, x'_j \rangle \enspace , \\
+	\langle \bm{z} , \bm{z}' \rangle
+		& := \tr(\bm{z}^\top \bm{z}') = \sum_{i \in [H]} \langle z_i, z'_i \rangle \enspace .
+\end{align}
+\end{defn}
+\begin{defn}
+The $O(d+1)$ restricted Boltzmann machine with $n$ visible and $H$ hidden units is a graphical model defined on the compact manifold $\pazocal{X}\times\pazocal{Z}$ such that the probability density of a joint configuration $(x_1,\ldots, x_{n},z_1,\ldots,z_H) \in \pazocal{X}\times \pazocal{Z}$ is given by
+\begin{equation}
+	p(\bm{x},\bm{z}) = \frac{1}{Z} \exp \left(-E(\bm{x},\bm{z})\right) \enspace , \quad \quad Z := \int_{\pazocal{X}\times \pazocal{Z}} {\rm d}\mu(\bm{x}) \, {\rm d}\mu(\bm{z}) \exp\left(-E(\bm{x},\bm{z})\right) \enspace ,
+\end{equation}
+where the energy $E(\bm{x},\bm{z})$ of a joint configuration is given by
+\begin{align}
+	E(\bm{x},\bm{z})
+		& := - \left\langle \bm{z}, w \bm{x} \right\rangle - \left\langle \bm{b}, \bm{z} \right\rangle - \left\langle \bm{c}, \bm{x} \right \rangle\enspace ,
+\end{align}
+where the parameter space is $w \in \mathbb{R}^{H \times n}$, $\bm{b} \in \mathbb{R}^{H}\otimes \mathbb{R}^{d+1}$, $\bm{c} \in \mathbb{R}^n \otimes \mathbb{R}^{d+1}$.
+\end{defn}
+\subsubsection{Conditional probabilities}
+\begin{lem}\label{prop:conditional}
+For each $(i,j) \in [H] \times [n]$ let $\bm{w}_{i\bm{:}}$ and $\bm{w}_{\bm{:}j}$ denote the $i$th row and $j$th column of the coefficient matrix $w \in \mathbb{R}^{H \times n}$. Moreover let $\tilde{x}_i := b_i + \bm{w}_{i\bm{:}} \bm{x}$ and $\tilde{z}_j := c_j + \bm{z}^\top \bm{w}_{\bm{:}j}$ denote the pre-activations of the visible and hidden units.
+The conditional probability density of the hidden and visible layers factorizes in terms of the per-unit conditional probabilities as follows,
+\begin{equation}
+	p(\bm{z} \, | \bm{x}) = \prod_{i\in[H]} p(z_i \, | \, \bm{x}) \enspace , \quad \quad 	p(\bm{x} \, | \bm{z}) = \prod_{j\in[n]} p(x_j \, | \, \bm{z}) \enspace ,
+\end{equation}
+where (for $d=1$):
+\begin{equation}
+	p(z_i \, | \, \bm{x}) := \frac{\exp (\langle z_i, \tilde{x}_i \rangle )}{2 \pi I_0 (\Vert \tilde{x}_i \Vert )} \enspace , \quad \quad p(x_j \, | \, \bm{z}) := \frac{\exp ( \langle x_j, \tilde{z}_j \rangle )}{2 \pi I_0 ( \Vert \tilde{z}_j \Vert )} \enspace ,
+\end{equation}
+and the marginal likelihood is given by
+\begin{equation}
+p(\bm{x}) = \frac{1}{Z} \exp\left(\left\langle \bm{c}, \bm{x} \right\rangle \right) \prod_{i\in[H]} 2\pi I_0\left(\left\Vert \tilde{x}_i \right\Vert\right) \enspace ,
+\end{equation}
+%and for $d=2$:
+%\begin{equation}
+%	p(z_i \, | \, \bm{x}) := \frac{\left\Vert b_i + \bm{w}_{i\bm{:}}\bm{x} \right\Vert \exp\left(\left\langle z_i, b_i+\bm{w}_{i\bm{:}} \bm{x} \right\rangle \right)}{4\pi \sinh\left(\left\Vert b_i + \bm{w}_{i\bm{:}} \bm{x} \right\Vert\right)} \enspace , \quad \quad p(x_j \, | \, \bm{z}) := \frac{\left\Vert c_j + \bm{z}^\top\bm{w}_{\bm{:}j} \right\Vert \exp\left(\left\langle x_j, c_j + \bm{z}^\top\bm{w}_{\bm{:}j} \right\rangle \right)}{4\pi \sinh\left(\left\Vert c_j + \bm{z}^\top\bm{w}_{\bm{:}j} \right\Vert\right)} \enspace ,
+%\end{equation}
+%\begin{align}
+%	p(\bm{x})
+%		& = \frac{1}{Z} \exp\left(\left\langle \bm{c}, \bm{x} \right\rangle \right) \prod_{i\in[H]} \frac{4\pi\sinh\left(\left\Vert b_i + \bm{w}_{i\bm{:}} \bm{x} \right\Vert\right)}{\left\Vert b_i + \bm{w}_{i\bm{:}}\bm{x} \right\Vert} \enspace .
+%\end{align}
+where $I_\alpha(x)$ denotes the modified Bessel function of the first kind.
+\end{lem}
+
+\begin{remk}
+If we let $(r_i, \chi_i)$ and $(s_j, \zeta_j)$ be the polar representation of $\tilde{x}_i$ and $\tilde{z}_j$ then the conditional probability densities are given by von Mises distribution
+\begin{equation}
+	p(\varphi_i \, | \, \bm{\theta}) = \frac{\exp \left(r_i \cos(\varphi_i - \chi_i) \right)}{2\pi I_0(r_i)} \enspace , \quad \quad p(\theta_j \, | \, \bm{\varphi}) = \frac{\exp \left(s_j \cos(\theta_j - \zeta_j) \right)}{2\pi I_0(s_j)} \enspace .
+\end{equation}
+\end{remk}
+
+\subsubsection{Variational derivatives}
+The probability density of a visible configuration $\bm{x} \in \pazocal{X}$ is given by $p(\bm{x}) = f(\bm{x}) / Z$ where the un-normalized log-density is given by
+\begin{equation}
+	\log f(\bm{x}) = \sum_{j\in[n]} \langle c_j, x_j \rangle + \sum_{i \in[H]} \log I_0(r_i) + H \log(2\pi) \enspace .
+\end{equation}
+Let $g(x) := I_1(x) / I_0(x)$. The components of the variational derivatives of the un-normalized log-density are given by
+\begin{align}
+	\frac{\partial \log f(\bm{x})}{\partial c_j}
+		& = x_j \enspace , \\
+	\frac{\partial\log f(\bm{x})}{\partial b_i}
+		& = g(r_i ) \frac{\tilde{x}_i}{r_i} \enspace , \\
+	\frac{\partial\log f(\bm{x})}{\partial w_{ij}}
+		& = g(r_i ) \frac{\langle \tilde{x}_i, x_j \rangle}{r_i} \enspace .
+\end{align}
+In vectorized form:
+\begin{align}
+	\frac{\partial \log f(\bm{x})}{\partial \bm{c}}
+		& = \bm{x} \enspace , \\
+	\frac{\partial\log f(\bm{x})}{\partial \bm{b}}
+		& = \big(g(\bm{r}) \oslash \bm{r} \big) \odot \tilde{\bm{x}} \enspace , \\
+	\frac{\partial\log f(\bm{x})}{\partial w}
+		& = \big(g(\bm{r}) \oslash \bm{r} \big)  \odot \tilde{\bm{x}} \bm{x}^\top \enspace .
+\end{align}
+%where
+%\begin{align}
+%\frac{\partial r_i}{\partial b_i}
+%		& = \frac{\tilde{x}_i}{\bm{x}}{r_i} \implies \frac{\partial \bm{r}}{\partial \bm{b}} = \tilde{\bm{x}} \oslash \bm{r}\enspace , \\
+%	\frac{\partial r_i}{\partial w_{ij}}
+%		& = \frac{\langle \tilde{x}_i, x_j \rangle}{r_i} \implies \frac{\partial \bm{r}}{\partial w} = \tilde{\bm{x}} \bm{x}^\top \oslash \bm{r} \enspace .
+%\end{align}
+%\begin{align}
+%	\frac{\partial r_i}{\partial \theta_j}
+%		& = \frac{w_{ij}}{r_i}\left[\Vert b_i \Vert \sin(\beta_i-\theta_j) + \sum_{k\in[n]} w_{ik} \sin(\theta_k - \theta_j)\right] \enspace , \\
+%	\frac{\partial^2 r_i}{\partial \theta_j^2}
+%		& = -\frac{1}{r_i} \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 - w_{ij}\frac{\partial r_i}{\partial w_{ij}} + \frac{(w_{ij})^2}{r_i} \enspace .
+%\end{align}
+%
+%Let $g(x) := I_1(x) / I_0(x)$. Then it follows from Lemma \ref{lem:deriv} that
+
+\subsubsection{Angular spin gradients}
+Start by expressing the angular derivatives in terms of the cartesian derivatives using the multivariate chain rule:
+\begin{align}
+	\frac{1}{f(\bm{\theta})}\frac{\partial^2 f(\bm{\theta})}{\partial \theta_j^2}
+		& = \frac{1}{f(\bm{x})}\left[\left \langle \Hess_{x_j}\big(f (\bm{x})\big), \frac{\partial x_j}{\partial \theta_j} \otimes \frac{\partial x_j}{\partial \theta_j} \right\rangle + \left \langle \frac{\partial f(\bm{x})}{\partial x_j}, \frac{\partial^2 x_j}{\partial \theta_j^2} \right\rangle \right] \enspace , \\
+		& = \left \langle \frac{1}{f(\bm{x})}\Hess_{x_j}\big(f (\bm{x})\big), x_j^\perp \otimes x_j^\perp \right\rangle - \left \langle \frac{1}{f(\bm{x})}\frac{\partial f(\bm{x})}{\partial x_j}, x_j \right\rangle \enspace .
+\end{align}
+Since the probability density $p(\bm{x}) = f(\bm{x})/Z$ is a generalized linear model we have,
+\begin{align}
+	\frac{1}{f(\bm{x})} \frac{\partial f(\bm{x})}{\partial x_j}
+		& = \mathbb{E} \big[ \tilde{z}_j \, \big| \, \bm{x} \big] \enspace , \\
+	\frac{1}{f(\bm{x})}\Hess_{x_j}\big(f(\bm{x})\big)
+		& = \mathbb{E} \big[ \tilde{z}_j \otimes \tilde{z}_j \, \big| \, \bm{x} \big] \enspace .
+\end{align}
+Thus,
+\begin{align}
+\sum_{j\in V}\frac{1}{f(\bm{\theta})}\frac{\partial^2 f(\bm{\theta})}{\partial \theta_j^2} 
+	& = \sum_{j\in V}\big\langle \mathbb{E}[\tilde{z}_j \otimes \tilde{z}_j \, | \, \bm{x}], x_j^\perp \otimes x_j^\perp \big\rangle - \big\langle x_j, \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] \big\rangle \enspace , \\
+	& = \sum_{j\in V}\big\langle x_j^\perp, x_j^\perp \big\rangle_{\mathbb{E}[\tilde{z}_j \otimes \tilde{z}_j \, | \, \bm{x}]} - \big\langle x_j, \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] \big\rangle \enspace , \\
+	& = \big\langle \bm{x}^\perp \odot \bm{x}^\perp, \mathbb{E}[ \tilde{\bm{z}} \odot \tilde{\bm{z}} \, | \, \bm{x} ] \big\rangle - \big\langle \bm{x}, \mathbb{E}[\tilde{\bm{z}} \, | \, \bm{x} ]\big\rangle \enspace .
+\end{align}
+Let $\bar{\bm{z}} := \mathbb{E}[\bm{z} \, | \, \bm{x}] = \big(g(\bm{r}) \oslash \bm{r} \big) \odot \tilde{\bm{x}}$. Then $\mathbb{E}[\tilde{z}_j \, | \, \bm{x}] = c_j + \sum_{i \in [H]} w_{ij} \bar{z}_i$ or in vectorized form,
+\begin{equation}
+	\mathbb{E}[\tilde{\bm{z}} \, | \, \bm{x} ] = \bm{c} + w^\top \bar{\bm{z}}
+\end{equation}
+Similarly,
+\begin{equation}
+	\mathbb{E}[\tilde{z}_j \otimes \tilde{z}_j \, | \, \bm{x}] 
+		= \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] \otimes \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] + \sum_{i \in [H]} w_{ij}^2 \big( \mathbb{E} [z_i \otimes z_i \, | \, \bm{x} ] - \bar{z}_i \otimes \bar{z}_i \big)
+\end{equation}
+or in vectorized form
+\begin{equation}
+	\mathbb{E}[\tilde{\bm{z}} \odot \tilde{\bm{z}} \, | \, \bm{x}] 
+		= \mathbb{E}[\tilde{\bm{z}} \, | \, \bm{x}] \odot \mathbb{E}[\tilde{\bm{z}} \, | \, \bm{x}] + (w^2)^\top \bullet \big( \mathbb{E} [\bm{z} \odot \bm{z} \, | \, \bm{x} ] - \bar{\bm{z}} \odot \bar{\bm{\bm{z}}} \big) \enspace ,
+\end{equation}
+where $w^2$ denotes elementwise multiplication of $w$ with itself and $\bullet$ denotes tensor contraction over the adjacent indices.
+\subsubsection{Metropolis Sampling}
+Each time a metropolis update $x_j \gets x'_j$ of the visible spin occurs for some visible unit $j \in [n]$, then $r_i$ is updated for all $i\in[H]$ according to the following rule:
+\begin{align}
+	\tilde{x}_i
+		& \gets \tilde{x}_i + w_{ij}(x'_j-x_j) \enspace , \\
+	r_i
+		& \gets \Vert \tilde{x}_i \Vert \enspace , \\
+%	\chi_i
+%		& \gets \angle(\tilde{x}_i) \enspace .
+\end{align}
+The update rule for the effective variables can be expressed in vectorized form as:
+\begin{equation}
+	\tilde{\bm{x}} \gets \tilde{\bm{x}} + \bm{w}_{\bm{:}j}(x'_j - x_j) \enspace .
+\end{equation}
+
+\subsection{Convolutional case}
+\begin{defn}
+Suppose that the set of vertices $V$ has a lattice structure and let $\pazocal{F}$ denote a set of lattice translations. Given $C \geq 1$ channels and a subset of valid locations $\pazocal{K} \subseteq V$ define the following subsets of linear space,
+\begin{equation}
+	\pazocal{X} := (\mathbb{S}^d)^n \subseteq \mathbb{R}^{n}\otimes \mathbb{R}^{d+1} \enspace , \quad \quad \pazocal{Z} := (\mathbb{S}^d)^H \subseteq \mathbb{R}^{|\pazocal{K}|} \otimes \mathbb{R}^C \otimes \mathbb{R}^{d+1} \enspace ,
+\end{equation}
+where $H := C | \pazocal{K}|$ and $\otimes$ denotes the outer product. Define the Hilbert-Schmidt inner product on the associated states spaces for all $(\bm{x},\bm{x}') \in \pazocal{X} \times \pazocal{X}$ and $(\bm{z},\bm{z}') \in \pazocal{Z} \times \pazocal{Z}$ as follows
+\begin{align}
+	\langle \bm{x} , \bm{x}' \rangle
+		& := \tr(\bm{x}^\top \bm{x}') = \sum_{j \in [n]} \langle x_j, x'_j \rangle \enspace , \\
+	\langle \bm{z} , \bm{z}' \rangle
+		& := \sum_{\alpha \in \pazocal{K}} \tr(z_\alpha^\top z_\alpha') = \sum_{\alpha \in \pazocal{K}} \sum_{k \in [C]} \langle z_\alpha^k, (z'_\alpha)^k \rangle = \sum_{k \in [C]} \langle \bm{z}^k, (\bm{z}')^k \rangle \enspace ,
+\end{align}
+where we have defined the fiber corresponding to channel $k \in [C]$ as $\bm{z}^k \in \mathbb{R}^{|\pazocal{K}|} \otimes \mathbb{R}^{d+1}$ and the fiber corresponding to position $\alpha \in \pazocal{K}$ as $z_\alpha \in \mathbb{R}^C \otimes \mathbb{R}^{d+1}$.
+\end{defn}
+
+\begin{defn}
+The convolution $w\ast: \pazocal{X} \to \pazocal{Z}$ is defined such that $\bm{x} \mapsto w \ast \bm{x}$ where for all $\alpha \in \pazocal{K}$:
+\begin{equation}
+	(w \ast \bm{x})_\alpha = \sum_{\beta \in \pazocal{F}} w_\beta \otimes x_{\alpha + \beta} \enspace ,
+\end{equation}
+and $w_\beta \in \mathbb{R}^C$ for all $\beta \in \pazocal{F}$.
+\end{defn}
+
+Since $w \ast : \pazocal{X} \to \pazocal{Z}$ is linear operator between Hilbert spaces there exists an adjoint map $\tilde{w}\ast : \pazocal{Z} \to \pazocal{X}$ defined such that for all $(\bm{x},\bm{z}) \in \pazocal{X} \times \pazocal{Z}$:
+\begin{equation}
+	\langle \bm{z}, w \ast \bm{x} \rangle = \langle \tilde{w}\ast \bm{z}, \bm{x} \rangle \enspace .
+\end{equation}
+In particular,
+\begin{align}
+	\langle \bm{z}, w \ast \bm{x} \rangle
+		& = \sum_{k \in [C]} \left\langle \bm{z}^k, w^k \ast \bm{x} \right\rangle \enspace , \\
+		& = \sum_{k \in [C]} \left\langle \tilde{w}^k \ast \bm{z}^k, \bm{x} \right\rangle \enspace , \\
+		& = \left\langle \sum_{k \in [C]} \tilde{w}^k \ast \bm{z}^k, \bm{x} \right\rangle \enspace , \\
+		& =: \langle \tilde{w}\ast \bm{z}, x \rangle \enspace ,
+\end{align}
+where we have defined
+\begin{align}
+	(w^k \ast \bm{x})_\alpha
+		& := \sum_{\beta \in \pazocal{F}} w_\beta^k x_{\alpha + \beta} \enspace , \\
+	(\tilde{w}^k \ast \bm{z}^k)_j
+		& := \sum_{\beta \in \pazocal{F}} \tilde{w}_\beta^k z^k_{j + \beta} \enspace .
+\end{align}
+
+\begin{defn}
+The $O(d+1)$ convolutional restricted Boltzmann machine with $n$ visible and $H$ hidden units is a graphical model defined on the compact manifold $\pazocal{X}\times\pazocal{Z}$ such that the probability density of a joint configuration $(x_1,\ldots, x_{n},z_1,\ldots,z_H) \in \pazocal{X}\times \pazocal{Z}$ is given by
+\begin{equation}
+	p(\bm{x},\bm{z}) = \frac{1}{Z} \exp \left(-E(\bm{x},\bm{z})\right) \enspace , \quad \quad Z := \int_{\pazocal{X}\times \pazocal{Z}} {\rm d}\mu(\bm{x}) \, {\rm d}\mu(\bm{z}) \exp\left(-E(\bm{x},\bm{z})\right) \enspace ,
+\end{equation}
+where the energy $E(\bm{x},\bm{z})$ of a joint configuration is given by
+\begin{align}
+	E(\bm{x},\bm{z})
+		& := -\langle \bm{z}, w\ast \bm{x} \rangle - \sum_{\alpha \in \pazocal{K}} \langle b, z_\alpha \rangle - \sum_{j\in[n]}\langle x_j, c \rangle \enspace ,
+\end{align}
+and the parameter space is $c \in \mathbb{R}^{d+1}$, $b \in \mathbb{R}^C \otimes \mathbb{R}^{d+1}$ and $w_\beta \in \mathbb{R}^C$ for all $\beta \in \pazocal{F}$.
+\end{defn}
+
+\begin{remk}
+The interaction term is given explicitly by
+\begin{align}
+	\sum_{\alpha \in \pazocal{K}} \tr \left( z_\alpha^\top  (w \ast \bm{x})_\alpha \right)
+		= \sum_{\alpha \in \pazocal{K}}\tr\left( z_\alpha^\top \sum_{\beta \in \pazocal{F}}w_\beta x_{\alpha + \beta}^\top \right)
+		= \sum_{\alpha \in \pazocal{K}} \sum_{k \in [C]} \sum_{\beta \in \pazocal{F}} w_\beta^k \left\langle z_\alpha^k, x_{\alpha + \beta} \right\rangle \enspace .
+\end{align}
+\end{remk}
+
+\begin{exmp}
+Suppose that $V$ is a $D$-dimensional hypercubic lattice of side length $L$ with padding $Z$ and that the filters have side length $F$ and stride $S$. Then the number of hidden units is given by $(L')^D$ where
+\begin{equation}
+	L'
+		= \left\lfloor \frac{L - F + 2Z}{S} \right\rfloor + 1 \enspace .
+\end{equation}
+In the special case when $Z = 0$ and $S=1$ we have $L' = L - F + 1$.
+\end{exmp}
+\subsubsection{Conditional probabilities}
+\begin{lem}\label{prop:conv_conditional}
+For each $(\alpha , k) \in \pazocal{K} \times [C] \equiv [H]$ and for each $j \in [n]$ let
+\begin{equation}
+\tilde{x}_\alpha^k := b^k + (w^k \ast \bm{x})_\alpha \enspace , \quad \quad \tilde{z}_j := c + (\tilde{w} \ast \bm{z})_j \enspace ,
+\end{equation}
+denote the pre-activations of the visible and hidden units, respectively. The corresponding vectorized forms are
+\begin{equation}
+	\tilde{\bm{x}} := \bm{b} + w\ast \bm{x} \enspace , \quad \quad \tilde{\bm{z}} := \bm{c} + \tilde{w} \ast \bm{z} \enspace ,
+\end{equation}
+where $\bm{b} \in \mathbb{R}^{|\pazocal{K}|} \otimes \mathbb{R}^C \otimes \mathbb{R}^{d+1}$ is constant along the $\mathbb{R}^{|\pazocal{K}|}$ fiber and $\bm{c} \in \mathbb{R}^n \otimes \mathbb{R}^{d+1}$ is constant along the $\mathbb{R}^n$ fiber.
+The conditional probability density of the hidden layer factorizes in terms of the per-unit conditional probabilities as follows,
+\begin{equation}
+	p(\bm{z} \, | \bm{x}) = \prod_{(\alpha, k) \in [H]} p(z_\alpha^k \, | \, \bm{x}) \enspace , \quad \quad p(\bm{x} \, | \bm{z}) = \prod_{j \in [n]} p(x_j \, | \, \bm{z}) \enspace ,
+\end{equation}
+\begin{equation}
+	p(z_\alpha^k \, | \, \bm{x}) = \frac{\exp\left(\left\langle z_\alpha^k, \tilde{x}_\alpha^k  \right\rangle \right)}{2 \pi I_0\left(\left\Vert \tilde{x}_\alpha^k  \right\Vert\right)} \enspace , \quad \quad p(x_j \, | \, \bm{z}) = \frac{\exp\left(\left\langle x_j, \tilde{z}_j  \right\rangle \right)}{2 \pi I_0\left(\left\Vert \tilde{z}_j \right\Vert\right)} \enspace ,
+\end{equation}
+and marginal likelihood is given by
+\begin{equation}
+p(\bm{x}) = \frac{1}{Z} e^{n \left\langle c, \bar{x} \right\rangle } \prod_{(\alpha, k) \in [H]} 2\pi I_0\big(\big\Vert \tilde{x}_\alpha^k \big\Vert\big) \enspace .
+\end{equation}
+\end{lem}
+\begin{remk}
+If we let $(r_\alpha^k, \chi_\alpha^k)$ and $(s_j, \zeta_j)$ be the polar representation of $\tilde{x}_\alpha^k$ and $\tilde{z}_j$ then the conditional probability densities are given by von Mises distribution,
+\begin{equation}
+	p(\varphi_\alpha^k \, | \, \bm{\theta}) = \frac{\exp \left(r_\alpha^k \cos(\varphi_\alpha^k - \chi_\alpha^k) \right)}{2\pi I_0(r_\alpha^k)} \enspace , \quad \quad p(\theta_j \, | \, \bm{\varphi}) = \frac{\exp \left(s_j \cos(\theta_j - \zeta_j) \right)}{2\pi I_0(s_j)} \enspace .
+\end{equation}
+\end{remk}
+
+\subsubsection{Variational derivatives}
+The probability density of a visible configuration $\bm{x} \in \pazocal{X}$ is given by $p(\bm{x}) = f(\bm{x}) / Z$ where the un-normalized log-density is given by
+\begin{equation}
+	\log f(\bm{x}) = n \langle c,  \bar{x}\rangle + \sum_{(\alpha,k) \in [H]} \log I_0\big(r_\alpha^k\big) + H \log(2\pi) \enspace .
+\end{equation}
+The components of the variational derivatives of the un-normalized log-density are given by
+\begin{align}
+	\frac{\partial \log f(\bm{x})}{\partial c}
+		& = n \bar{x} \enspace , \\
+	\frac{\partial \log f(\bm{x})}{\partial b^k}
+		& = \sum_{\alpha \in \pazocal{K}}g(r_\alpha^k) \frac{\tilde{x}_\alpha^k}{r_\alpha^k} \enspace , \\
+	\frac{\partial \log f(\bm{x})}{\partial w_\beta^k}
+		& = \sum_{\alpha \in \pazocal{K}} g(r_\alpha^k) \frac{\langle \tilde{x}_\alpha^k , x_{\alpha + \beta} \rangle}{r_\alpha^k} \enspace .
+\end{align}
+Let $i :=(\alpha, k)$ be a multi-index and observe that
+\begin{equation}
+	\mathbb{E}[ z_\alpha^k \, | \, \bm{x}] = g(r_\alpha^k)\frac{\tilde{x}_\alpha^k}{r_\alpha^k} \enspace .
+\end{equation}
+Then we obtain the vectorized expression $\mathbb{E}[\bm{z} \, | \, \bm{x}] = \big(g(\bm{r}) \oslash \bm{r} \big) \odot \tilde{\bm{x}}$. Thus
+\begin{equation}
+	\frac{\partial \log f(\bm{x})}{\partial \bm{b}} = \tr\big[\big(g(\bm{r}) \oslash \bm{r} \big) \odot \tilde{\bm{x}}\big] \enspace .
+\end{equation}
+
+\subsection{Angular spin gradients}
+Recall that,
+\begin{align}
+\sum_{j\in V}\frac{1}{f(\bm{\theta})}\frac{\partial^2 f(\bm{\theta})}{\partial \theta_j^2} 
+	& = \big\langle \bm{x}^\perp \odot \bm{x}^\perp, \mathbb{E}[ \tilde{\bm{z}} \odot \tilde{\bm{z}} \, | \, \bm{x} ] \big\rangle - \big\langle \bm{x}, \mathbb{E}[\tilde{\bm{z}} \, | \, \bm{x} ]\big\rangle \enspace .
+\end{align}
+Letting $\bar{\bm{z}} := \mathbb{E}[\bm{z} \, | \, \bm{x}]$ we obtain,
+\begin{align}
+	\mathbb{E}[\tilde{z}_j \, | \, \bm{x}] 
+		& = c + \sum_{k\in[C], \beta \in \pazocal{F}} \tilde{w}_\beta^k \bar{z}_{j+\beta}^k \enspace , \\
+		& = c + \sum_{k\in[C]} (\tilde{w}^k \ast \bar{z}^k)_j \enspace , \\
+		& = c + (\tilde{w} \ast \bar{\bm{z}})_j
+\end{align}
+or in vectorized form
+\begin{equation}
+	\mathbb{E}[\tilde{\bm{z}} | \, \bm{x}] = \bm{c} + \tilde{w} \ast \bar{\bm{z}} \enspace .
+\end{equation}
+Now
+\begin{align}
+	\mathbb{E}[\tilde{z}_j \otimes \tilde{z}_j \, | \, \bm{x}]
+		& := \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] \otimes \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] + \sum_{k\in[C], \beta \in \pazocal{F}} (\tilde{w}_\beta^k)^2 \big(\mathbb{E}[z_{j+\beta}^k \odot z_{j+\beta}^k \, | \, \bm{x}] - \bar{z}_{j+\beta}^k \odot \bar{z}_{j+\beta}^k\big) \enspace , \\
+		& := \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] \otimes \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] + \sum_{k\in[C]} \left[(\tilde{w}^k)^2 \ast \big(\mathbb{E}[\bm{z}^k \odot \bm{z}^k \, | \, \bm{x}] - \bar{\bm{z}}^k \odot \bar{\bm{z}}^k\big)\right]_j \enspace , \\
+		& := \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] \otimes \mathbb{E}[\tilde{z}_j \, | \, \bm{x}] + \left[\tilde{w}^2 \ast \big(\mathbb{E}[\bm{z} \odot \bm{z} \, | \, \bm{x}] - \bar{\bm{z}} \odot \bar{\bm{z}}\big)\right]_j \enspace .
+\end{align}
+Thus we conclude,
+\begin{equation}
+	\mathbb{E}[\tilde{\bm{z}} \odot \tilde{\bm{z}} \, | \, \bm{x}] = \mathbb{E}[\tilde{\bm{z}} | \, \bm{x}] \odot \mathbb{E}[\tilde{\bm{z}} | \, \bm{x}] + \tilde{w}^2 \ast \big(\mathbb{E}[\bm{z} \odot \bm{z} \, | \, \bm{x}] - \bar{\bm{z}} \odot \bar{\bm{z}}\big) \enspace .
+\end{equation}
+\section{Appendix}
+\subsection{Integral identities}
+Recall that
+\begin{align}
+ \int_{\mathbb{S}^2} {\rm d}\mu(z) \, e^{\langle z, v \rangle} 
+ 	& = \int_0^\pi {\rm d}\theta \sin \theta \int_0^{2\pi} {\rm d}\phi e^{\Vert v \Vert \cos\theta} \enspace , \\
+ 	& = \frac{4\pi\sinh(\Vert v \Vert)}{\Vert v \Vert} \enspace ,
+ \end{align}
+So for the $O(3)$ RBM we have
+\begin{align}
+	p(\bm{z} \, | \, \bm{x}) 
+		& = \frac{	\displaystyle\prod_{i \in[H]} \exp\left(\left\langle z_i, b_i+\bm{w}_{i\bm{:}} \bm{x} \right\rangle \right)}{	\displaystyle\prod_{i\in[H]} \int_{\mathbb{S}^2} {\rm d}\mu(\tilde{z}_i) \exp\left(\left\langle \tilde{z}_i, b_i+\bm{w}_{i\bm{:}} \bm{x}\right\rangle \right)} \enspace , \\
+		& = \prod_{i\in[H]} \frac{\left\Vert b_i + \bm{w}_{i\bm{:}}\bm{x} \right\Vert \exp\left(\left\langle z_i, b_i+\bm{w}_{i\bm{:}} \bm{x} \right\rangle \right)}{4\pi\sinh\left(\left\Vert b_i + \bm{w}_{i\bm{:}} \bm{x} \right\Vert\right)} \enspace .
+\end{align}
+
+%\subsection{Hamiltonian Monte Carlo}
+%Consider the change of coordinates from $\bm{\theta} \in [0,2\pi)^n$ to $\tilde{\bm{\theta}} \in \mathbb{R}^n$ given by $\theta_j = \pi \tanh(\tilde{\theta}_j)$. Using the chain rule
+%\begin{align}
+%	\frac{\partial}{\partial \theta_j} 
+%		& = \frac{1}{\pi}\cosh^2(\tilde{\theta}_j) \frac{\partial}{\partial \tilde{\theta}_j} \enspace , \\
+%	\frac{\partial^2}{\partial \theta_j^2}
+%		& = \frac{2}{\pi^2} \cosh^3(\tilde{\theta}_j)\sinh(\tilde{\theta}_j)\frac{\partial}{\partial \tilde{\theta}_j} + \frac{1}{\pi^2}\cosh^4(\tilde{\theta}_j)\frac{\partial^2}{\partial \tilde{\theta}_j^2} \enspace .
+%\end{align}
+%It follows that
+%\begin{align}
+%	\frac{\partial \log f(\bm{x})}{\partial \tilde\theta_j}
+%		& = \pi \sech^2(\tilde{\theta}_j) \sin(\sigma_j - \theta_j) + \sum_{i\in[H]} g(r_i) \frac{\partial r_i}{\partial \tilde\theta_j} \enspace ,
+%\end{align}
+%where
+%\begin{align}
+%	\frac{\partial r_i}{\partial \tilde\theta_j}
+%		& = \pi \sech^2(\tilde\theta_j) \frac{w_{ij}}{r_i}\left[\sin(\beta_i-\theta_j) + \sum_{k\in[n]} w_{ik} \sin(\theta_k - \theta_j)\right] \enspace .
+%\end{align}
+
+
+
+%\begin{align}
+%\bm{v}_{t+1/2} 
+%	& = \bm{v}_t + \frac{1}{2}\epsilon \nabla \log f(\tilde{\bm{\theta}}_t) \enspace , \\
+%\tilde{\bm{\theta}}_{t+1}
+%	& = \tilde{\bm{\theta}}_t + \epsilon \bm{v}_{t+1/2} \enspace , \\
+%\bm{v}_{t+1}
+%	& = \bm{v}_t + \frac{1}{2} \epsilon \nabla \log f(\tilde{\bm{\theta}}_{t+1}) \enspace .
+%\end{align}
+
+\subsection{Harmonic oscillator}
+The local energy for the harmonic oscillator in natural units is
+\begin{equation}
+	H_{\rm loc}(x) = -\frac{1}{2}\left[\frac{\partial^2 \log \Psi(x)}{\partial x^2} + \left(\frac{\partial \log \Psi(x)}{\partial x}\right)^2\right] + \frac{1}{2}x^2 \enspace .
+\end{equation}
+Consider the variational ansatz $\Psi(x) = e^{- \theta x^2}$ and define
+\begin{equation}
+	O(x) := \frac{\partial}{\partial \theta} \log \Psi(x) \enspace .
+\end{equation} 
+Then
+\begin{equation}
+	H_{\rm loc}(x) = \theta + x^2 \left(\frac{1}{2} - 2 \theta^2\right) \enspace .
+\end{equation}
+Using $\langle x^2 \rangle = 1/(4\theta)$ and $\langle x^4 \rangle = 3/(16\theta^2)$ we obtain
+\begin{align}
+	\langle O \rangle
+		& = - \frac{1}{4\theta} \enspace , \\
+	\langle H_{\rm loc} \rangle
+		& = \frac{1}{2}\theta + \frac{1}{8\theta} \enspace , \\
+	\langle O H_{\rm loc} \rangle
+		& = \frac{1}{8} - \frac{3}{32\theta^2} , \\
+	\langle O^2 \rangle
+		& = \frac{3}{16\theta^2}
+\end{align}
+The expected local energy $\langle H_{\rm loc} \rangle$ is minimized at $\theta = 1/2$ as required. Now
+\begin{align}
+	\frac{\partial}{\partial \theta} \langle H_{\rm loc} \rangle
+		& = \frac{1}{2} - \frac{1}{8 \theta^2} \enspace , \\
+	\frac{\partial^2}{\partial \theta^2} \langle H_{\rm loc} \rangle
+		& = \frac{1}{4 \theta^3} \enspace .
+\end{align}
+Substituting gives the gradient and covariance for stochastic reconfiguration:
+\begin{align}
+	 \langle H_{\rm loc} O \rangle - \langle H_{\rm loc} \rangle \langle O \rangle 
+	 	& = \frac{1}{4} - \frac{1}{16 \theta^2} \enspace , \\
+	 \langle O^2 \rangle - \langle O \rangle^2
+	 	& = \frac{1}{8 \theta^2}
+\end{align}
+
+\subsubsection{Angular spin gradients (Alternate method)}
+Consider the fully connected $O(2)$ RBM. Start with the following identity linking the kinetic part of the local energy to the derivative of the un-normalized log density:
+\begin{equation}
+	\frac{1}{f(\bm{\theta})}\frac{\partial^2 f(\bm{\theta})}{\partial \theta_j^2}
+		= \frac{\partial^2 \log f(\bm{\theta})}{\partial \theta_j^2} + \left(\frac{\partial\log f(\bm{\theta})}{\partial \theta_j}\right)^2
+\end{equation}
+where each term is given by
+\begin{align}
+		\frac{\partial \log f(\bm{\theta})}{\partial \theta_j}
+		& = \langle c_j, x_j^\perp \rangle + \sum_{i\in[H]} g(r_i) \frac{\partial r_i}{\partial \theta_j} \enspace , \\
+		\frac{\partial^2 \log f(\bm{\theta})}{\partial \theta_j^2}
+		& = - \langle c_j, x_j \rangle + \sum_{i\in[H]} \left[g'(r_i) \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 + g(r_i) \frac{\partial^2 r_i}{\partial \theta_j^2}\right] \enspace , \\
+		& = - \langle c_j, x_j \rangle + \sum_{i\in[H]} \left[\left(g'(r_i) - \frac{g(r_i)}{r_i}\right) \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 - g(r_i) w_{ij}\frac{\partial r_i}{\partial w_{ij}} + \frac{g(r_i)}{r_i}(w_{ij})^2 \right] \enspace ,
+\end{align}
+and where
+\begin{align}
+	\frac{\partial r_i}{\partial x_j}
+		& = w_{ij}\frac{\tilde{x}_i}{r_i} \enspace , \\
+	\frac{\partial r_i}{\partial \theta_j}
+		& = \left\langle 	\frac{\partial r_i}{\partial x_j}, x_j^\perp \right\rangle \enspace , \\
+%	\frac{\partial r_i}{\partial \theta_j}
+%		& = \frac{w_{ij}}{r_i}\left[\Vert b_i \Vert \sin(\beta_i-\theta_j) + \sum_{k\in[n]} w_{ik} \sin(\theta_k - \theta_j)\right] \enspace , \\
+	\frac{\partial^2 r_i}{\partial \theta_j^2}
+		& = -\frac{1}{r_i} \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 - w_{ij}\frac{\partial r_i}{\partial w_{ij}} + \frac{(w_{ij})^2}{r_i} \enspace .
+\end{align}
+%\begin{align}
+%	\frac{\partial \log f(\bm{x})}{\partial \sigma_j}
+%		& = \sin(\theta_j-\sigma_j) \enspace , \\
+%	\frac{\partial \log f(\bm{x})}{\partial c_j}
+%		& = x_j \enspace , \\
+%	\frac{\partial\log f(\bm{x})}{\partial b_i}
+%		& = g(r_i ) \frac{\partial r_i}{\partial b_i} \enspace , \\
+%	\frac{\partial\log f(\bm{x})}{\partial \beta_i}
+%		& = g(r_i ) \frac{\partial r_i}{\partial \beta_i} \enspace , \\
+%	\frac{\partial\log f(\bm{x})}{\partial w_{ij}}
+%		& = g(r_i )\frac{\partial r_i}{\partial w_{ij}} \enspace , \\
+%	\frac{\partial \log f(\bm{x})}{\partial x_j}
+%		& = c_j + \sum_{i\in[H]} g(r_i) \frac{\partial r_i}{\partial x_j} \enspace , \\
+%	\frac{\partial \log f(\bm{x})}{\partial \theta_j}
+%		& = \Vert c_j \Vert \sin(\sigma_j - \theta_j) + \sum_{i\in[H]} g(r_i) \frac{\partial r_i}{\partial \theta_j} \enspace , \\
+%	\frac{\partial \log f(\bm{x})}{\partial \theta_j}
+%		& = \sin(\sigma_j - \theta_j) + \sum_{i\in[H]} g(r_i) \frac{\partial r_i}{\partial \theta_j} \enspace .
+%\end{align}
+%The second derivative of the un-normalized log-density with respect to the visible angle $\theta_j$ can be expressed in terms of first-order derivatives:
+%\begin{align}
+%\frac{\partial^2 \log f(\bm{x})}{\partial \theta_j^2}
+%		& = - \cos(\sigma_j - \theta_j) + \sum_{i\in[H]} \left[g'(r_i) \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 + g(r_i) \frac{\partial^2 r_i}{\partial \theta_j^2}\right] \enspace , \\
+%		& = - \cos(\sigma_j - \theta_j) + \sum_{i\in[H]} \left[\left(g'(r_i) - \frac{g(r_i)}{r_i}\right) \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 - g(r_i) w_{ij}\frac{\partial r_i}{\partial w_{ij}} + \frac{g(r_i)}{r_i}(w_{ij})^2 \right] \enspace .
+%\frac{\partial^2 \log f(\bm{x})}{\partial \theta_j^2}
+%		& = - \langle c_j, x_j \rangle + \sum_{i\in[H]} \left[g'(r_i) \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 + g(r_i) \frac{\partial^2 r_i}{\partial \theta_j^2}\right] \enspace , \\
+%		& = - \langle c_j, x_j \rangle + \sum_{i\in[H]} \left[\left(g'(r_i) - \frac{g(r_i)}{r_i}\right) \left(\frac{\partial r_i}{\partial \theta_j}\right)^2 - g(r_i) w_{ij}\frac{\partial r_i}{\partial w_{ij}} + \frac{g(r_i)}{r_i}(w_{ij})^2 \right] \enspace .
+%\end{align}
+
+
+
+\end{document}
