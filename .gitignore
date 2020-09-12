@@ -11,3 +11,19 @@ __pycache__/
 .ipynb_checkpoints/
 
 runs/
+
+*.aux
+*.bbl
+*.bcf
+*.blg
+*.dvi
+*.fdb_latexmk
+*.fls
+*.log
+*.nav
+*.out
+*.pdf
+*.run.xml
+*.snm
+*.synctex.gz
+*.toc
