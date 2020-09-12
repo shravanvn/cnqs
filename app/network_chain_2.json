@@ -1,0 +1,10 @@
+{
+    "num_rotor": 2,
+    "edges": [
+        {
+            "node1": 0,
+            "node2": 1,
+            "weight": 0.4
+        }
+    ]
+}

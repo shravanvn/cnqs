@@ -1,0 +1,25 @@
+{
+    "num_rotor": 5,
+    "edges": [
+        {
+            "node1": 0,
+            "node2": 1,
+            "weight": 0.4
+        },
+        {
+            "node1": 1,
+            "node2": 2,
+            "weight": 0.4
+        },
+        {
+            "node1": 2,
+            "node2": 3,
+            "weight": 0.4
+        },
+        {
+            "node1": 3,
+            "node2": 4,
+            "weight": 0.4
+        }
+    ]
+}
