@@ -4,6 +4,8 @@
 *~
 *.swp
 
+.vscode/
+
 do-configure
 build/
 
