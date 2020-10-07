@@ -6,26 +6,26 @@
 
 .vscode/
 
-do-configure
-build/
+pdesolver/do-configure
+pdesolver/build/
 
-__pycache__/
-.ipynb_checkpoints/
+hmcsolver/__pycache__/
+hmcsolver/.ipynb_checkpoints/
+hmcsolver/runs/
+hmcsolver/tensorboard/
 
-runs/
-
-*.aux
-*.bbl
-*.bcf
-*.blg
-*.dvi
-*.fdb_latexmk
-*.fls
-*.log
-*.nav
-*.out
-*.pdf
-*.run.xml
-*.snm
-*.synctex.gz
-*.toc
+notes/*.aux
+notes/*.bbl
+notes/*.bcf
+notes/*.blg
+notes/*.dvi
+notes/*.fdb_latexmk
+notes/*.fls
+notes/*.log
+notes/*.nav
+notes/*.out
+notes/*.pdf
+notes/*.run.xml
+notes/*.snm
+notes/*.synctex.gz
+notes/*.toc

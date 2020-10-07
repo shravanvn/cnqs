@@ -13,5 +13,5 @@ Fast solvers for computing continuous-variable neural quantum states.
 
 ## HMC-Solver Dependencies
 
--   [Conda](https://docs.conda.io/) environment specified in the `hmcsolver`
-    subdirectory.
+-   Required [Conda](https://docs.conda.io/) packages are listed in the
+    `hmcsolver` subdirectory.
