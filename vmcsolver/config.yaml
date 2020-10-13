@@ -1,17 +1,30 @@
 ---
 
-# output
-tensorboard_path: './tensorboard/'
+# output directory
+# tensorflow log is created inside <logdir_root>/[<logdir_prefix>_]<timestamp>/
+logdir_root: './tensorboard/'
+logdir_prefix: ''
 
-# debug mode
-debug: False  # solves the quantum harmonic oscillator
+# debug mode: solves the quantum harmonic oscillator
+# !!! Most likeliy won't work with recent changes
+debug: False
 
 # RBM parameters
 num_visible: 2
 num_hidden: 8
 
-# Network specification
-# 0 - 1
+# Hamiltonian is given by
+#
+#   H = -\frac{U}{2} \sum_{j = 1}^d \frac{\partial^2}{\partial \theta_j^2}
+#       - 2 \sum_{(j, k) \in E} G_{jk} \cos(\theta_j - \theta_k)
+#
+# In network specifications, edges are specified by the boundary nodes (j, k)
+# and interaction strength G_jk
+#
+# The following specification represents the graph:
+#
+#   0 - 1
+#
 U: 5.0
 edges:
 - j: 0
@@ -19,6 +32,7 @@ edges:
   G: 1.0
 
 # Gradient descent parmeters
+num_step: 1000
 lr: 1.0e-02
 
 # SR parameters

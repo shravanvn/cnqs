@@ -14,13 +14,20 @@ seed(1)
 
 
 def main():
+    # configuration
     parser = argparse.ArgumentParser()
     parser.add_argument('--config_path', default='./config.yaml')
     args = parser.parse_args()
     config = read_config(args.config_path)
-    now = datetime.now().replace(microsecond=0).isoformat()
-    tbdir = os.path.join(config['tensorboard_path'], now)
-    logger = Logger(tbdir)
+
+    # logging
+    logdir_suffix = datetime.now().replace(microsecond=0).isoformat()
+    if config['logdir_prefix'] != '':
+        logdir_name = config['logdir_prefix'] + '_' + logdir_suffix
+    else:
+        logdir_name = logdir_suffix
+    logdir = os.path.join(config['logdir_root'], logdir_name)
+    logger = Logger(logdir)
 
     if config['debug']:
         from nqs_sho import NQS, propose_update
@@ -32,7 +39,7 @@ def main():
     nqs = NQS(config=config)
 
     start = time.time()
-    for step in range(1, 1000):
+    for step in range(1, config['num_step'] + 1):
         averages, nqs = metropolis_sampler(step,
                                            local_energy,
                                            log_psi,
