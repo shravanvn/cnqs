@@ -1,4 +1,4 @@
-# HMCSolver
+# VMCSolver
 
 ## Installation
 

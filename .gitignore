@@ -9,10 +9,10 @@
 pdesolver/do-configure
 pdesolver/build/
 
-hmcsolver/__pycache__/
-hmcsolver/.ipynb_checkpoints/
-hmcsolver/runs/
-hmcsolver/tensorboard/
+vmcsolver/__pycache__/
+vmcsolver/.ipynb_checkpoints/
+vmcsolver/runs/
+vmcsolver/tensorboard/
 
 notes/*.aux
 notes/*.bbl
