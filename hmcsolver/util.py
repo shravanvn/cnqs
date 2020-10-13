@@ -48,7 +48,7 @@ def sech(angle):
 def read_config(config_path):
     with open(config_path, "r") as f:
         config_data = f.read()
-        params = yaml.load(config_data)
+        params = yaml.load(config_data, Loader=yaml.CLoader)
     return params
 
 
