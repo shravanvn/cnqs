@@ -1,16 +1,22 @@
+---
+
 # output
 tensorboard_path: './tensorboard/'
 
 # debug mode
 debug: False  # solves the quantum harmonic oscillator
 
-# Hamiltonian parameters (see https://arxiv.org/abs/cond-mat/0610530)
-U: 5.0
-J: 1.0
-
 # RBM parameters
 num_visible: 2
 num_hidden: 8
+
+# Network specification
+# 0 - 1
+U: 5.0
+edges:
+- j: 0
+  k: 1
+  G: 1.0
 
 # Gradient descent parmeters
 lr: 1.0e-02
