@@ -1,6 +1,6 @@
 # VMCSolver
 
-## Installation
+## How to Use?
 
 With the `conda` package manager (e.g. using Anaconda distribution), the
 following packages need to be installed

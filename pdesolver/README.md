@@ -1,6 +1,6 @@
 # cNQS PDE Solver
 
-## How to Build?
+## How to Use?
 
 This library uses the [CMake](http://www.cmake.org/) to support compilation.
 The basic build steps are outlined below:
