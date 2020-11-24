@@ -4,16 +4,13 @@
 *~
 *.swp
 
-.vscode/
-
 pdesolver/do-configure
 pdesolver/build/
 pdesolver/runs/
 
 vmcsolver/__pycache__/
-vmcsolver/.ipynb_checkpoints/
+vmcsolver/logs/
 vmcsolver/runs/
-vmcsolver/tensorboard/
 
 notes/*.aux
 notes/*.bbl

@@ -1,13 +1,7 @@
 ---
 
 # output directory
-# tensorflow log is created inside <logdir_root>/[<logdir_prefix>_]<timestamp>/
-logdir_root: './tensorboard/'
-logdir_prefix: ''
-
-# debug mode: solves the quantum harmonic oscillator
-# !!! Most likeliy won't work with recent changes
-debug: False
+logdir: './logs/'
 
 # RBM parameters
 num_visible: 2
@@ -15,8 +9,8 @@ num_hidden: 8
 
 # Hamiltonian is given by
 #
-#   H = -\frac{U}{2} \sum_{j = 1}^d \frac{\partial^2}{\partial \theta_j^2}
-#       - 2 \sum_{(j, k) \in E} G_{jk} \cos(\theta_j - \theta_k)
+#   H = - \frac{h}{2} \sum_{j = 1}^d \frac{\partial^2}{\partial \theta_j^2}
+#       + \sum_{(j, k) \in E} (1 -2 * \beta_{jk} \cos(\theta_j - \theta_k))
 #
 # In network specifications, edges are specified by the boundary nodes (j, k)
 # and interaction strength G_jk
@@ -25,28 +19,20 @@ num_hidden: 8
 #
 #   0 - 1
 #
-U: 5.0
+h: 5.0
 edges:
 - j: 0
   k: 1
-  G: 1.0
+  beta: 1.0
 
 # Gradient descent parmeters
-num_step: 1000
-lr: 1.0e-02
+num_step: 2500
+lr: 1.0e-03
 
 # SR parameters
 sr_reg: 1.0e-09
 
-# HMC parameters
-leapfrog_step: 0.01
-
-# Adam parameters (deprecated)
-beta_1: 0.9
-beta_2: 0.999
-epsilon: 1.0e-08
-
 # Metropolis parameters
-metropolis_steps: 40
+metropolis_steps: 500
 bump_size: 3.5
-warm_steps: 0
+warm_steps: 250

@@ -8,6 +8,12 @@ def average(x):
     return sum(x) / len(x)
 
 
+def standard_deviation(x):
+    x_av = average(x)
+    x_var = sum((t - x_av)**2 for t in x) / (len(x) - 1)
+    return np.sqrt(x_var)
+
+
 def g_func(x):
     return iv(1, x) / iv(0, x)
 

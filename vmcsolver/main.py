@@ -1,12 +1,12 @@
 import argparse
 import os
 
-import time
-from datetime import datetime
 from numpy.random import seed
 from sampler import metropolis_sampler
 from logger import Logger
 from util import read_config
+from nqs import NQS, propose_update
+from wavefunction import local_energy, log_psi, log_psi_vars
 
 from optimization import stoch_reconfig
 
@@ -21,25 +21,14 @@ def main():
     config = read_config(args.config_path)
 
     # logging
-    logdir_suffix = datetime.now().replace(microsecond=0).isoformat()
-    if config['logdir_prefix'] != '':
-        logdir_name = config['logdir_prefix'] + '_' + logdir_suffix
-    else:
-        logdir_name = logdir_suffix
-    logdir = os.path.join(config['logdir_root'], logdir_name)
-    logger = Logger(logdir)
-
-    if config['debug']:
-        from nqs_sho import NQS, propose_update
-        from wavefunction_sho import local_energy, log_psi, log_psi_vars
-    else:
-        from nqs import NQS, propose_update
-        from wavefunction import local_energy, log_psi, log_psi_vars
+    logger = Logger(config['logdir'])
+    logger.set_variables(['acceptance_rate', 'b_norm', 'c_norm', 'energy_avg', 'energy_std', 'grad_norm'])
+    logger.write_header()
 
     nqs = NQS(config=config)
 
-    start = time.time()
     for step in range(1, config['num_step'] + 1):
+        print('step = {:d}'.format(step))
         averages, nqs = metropolis_sampler(step,
                                            local_energy,
                                            log_psi,
@@ -51,8 +40,8 @@ def main():
 
         vars = stoch_reconfig(step, nqs, averages, config, logger)
         nqs = NQS(config=config, state=nqs.state, vars=vars)
-    end = time.time()
-    print('Calculation time', end - start)
+
+        logger.write_step(step)
 
 
 if __name__ == "__main__":

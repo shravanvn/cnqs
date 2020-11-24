@@ -5,15 +5,15 @@ from util import perp
 
 
 def local_energy(nqs, config):
-    U = config['U']
-    kinetic = -local_kinetic_energy(nqs)
+    h = config['h']
+    kinetic = local_kinetic_energy(nqs)
     potential = 0
     for edge in config['edges']:
         j = edge['j']
         k = edge['k']
-        G = edge['G']
-        potential -= G * np.dot(nqs.xs[j], nqs.xs[k])
-    return 2 * potential + (U / 2) * kinetic
+        beta = edge['beta']
+        potential += beta * (1.0 - 2.0 * np.dot(nqs.xs[j], nqs.xs[k]))
+    return -0.5 * h * kinetic + potential
 
 
 def local_kinetic_energy(nqs):

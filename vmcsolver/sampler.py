@@ -1,6 +1,6 @@
 import numpy as np
 
-from util import average
+from util import average, standard_deviation
 
 
 def metropolis_sampler(step,
@@ -34,10 +34,12 @@ def metropolis_sampler(step,
         else:
             history.append(last_nqs)
 
-    if logger:
-        logger.log_scalar('acceptance_rate', num_acceptances / config['metropolis_steps'], step)
-        print('acceptance_rate', num_acceptances / config['metropolis_steps'])
     start = config['warm_steps']
+
+    if logger:
+        logger.log_scalar('energy_std', std(operators[-1], history[start:]))
+        logger.log_scalar('acceptance_rate', num_acceptances / config['metropolis_steps'])
+
     return [mean(op, history[start:]) for op in operators], history[-1]
 
 
@@ -50,6 +52,10 @@ def accept(new_nqs, last_nqs, log_psi):
 
 def mean(op, history):
     return average([op(nqs) for nqs in history])
+
+
+def std(op, history):
+    return standard_deviation([op(nqs) for nqs in history])
 
 
 def sampling_functions(local_energy, log_psi_vars, config):
