@@ -20,7 +20,7 @@ class Logger(object):
         self.var_values[var] = value
 
     def write_header(self):
-        header = "step,timestamp"
+        header = "timestamp,step"
         for var in self.var_names:
             header += "," + var
         header += "\n"
@@ -30,7 +30,7 @@ class Logger(object):
         file_object.close()
 
     def write_step(self, step):
-        line = str(step) + "," + datetime.now().isoformat()
+        line = datetime.now().isoformat() + "," + str(step)
         for var in self.var_names:
             line += "," + "{:e}".format(self.var_values[var])
         line += "\n"

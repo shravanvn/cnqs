@@ -1,16 +1,15 @@
 import argparse
 import os
+import numpy as np
 
-from numpy.random import seed
-from sampler import metropolis_sampler
-from logger import Logger
 from util import read_config
+from logger import Logger
 from nqs import NQS, propose_update
+from sampler import metropolis_sampler
 from wavefunction import local_energy, log_psi, log_psi_vars
-
 from optimization import stoch_reconfig
 
-seed(1)
+np.random.seed(1)
 
 
 def main():
@@ -21,6 +20,8 @@ def main():
     config = read_config(args.config_path)
 
     # logging
+    os.makedirs(config['logdir'], exist_ok=True)
+
     logger = Logger(config['logdir'])
     logger.set_variables(['acceptance_rate', 'b_norm', 'c_norm', 'energy_avg', 'energy_std', 'grad_norm'])
     logger.write_header()
