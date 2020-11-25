@@ -39,8 +39,9 @@ namespace Cnqs {
  *
  * \f[
  *     \hat{H} \hat{\psi}(\omega) = \frac{1}{2} \| \omega \|^2
- *     \hat{\psi}(\omega) - \frac{1}{2} \sum_{(j, k) \in \mathcal{E}} g_{jk}
- *     [\hat{\psi}(\omega + e_j - e_k) + \hat{\psi}(\omega - e_j + e_k)]
+ *     \hat{\psi}(\omega) + \sum_{(j, k) \in \mathcal{E}} \beta_{jk}
+ *     [\hat{\psi}(\omega) - \hat{\psi}(\omega + e_j - e_k) - \hat{\psi}(\omega
+ *     - e_j + e_k)]
  * \f]
  *
  * where \f$e_j\f$ is the \f$j\f$-th standard basis of \f$\mathbb{R}^d\f$. We
@@ -102,8 +103,9 @@ public:
      * empoly a preconditioner defined as
      *
      * \f[
-     *     \hat{M} \hat{\psi}(\omega) = \sqrt{\left[\frac{1}{2} \| \omega \|^2
-     *     - \mu\right]} \;\; \hat{\psi}(\omega)
+     *     \hat{M} \hat{\psi}(\omega) = \sqrt{\frac{1}{2} \| \omega \|^2 +
+     *     \sum_{(j, k) \in \mathcal{E}} \beta_{jk} - \mu} \;\;
+     *     \hat{\psi}(\omega)
      * \f]
      *
      * and solve the linear system

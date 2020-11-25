@@ -20,10 +20,9 @@ namespace Cnqs {
  * \f$\mathcal{H}([0, 2\pi]^d)\f$
  *
  * \f[
- *     H \psi(\theta) = -\frac{1}{2} \sum_{j = 0}^{d - 1}
- *     \frac{\partial^2 \psi}{\partial \theta_j^2} (\theta) -
- *     \sum_{(j, k) \in \mathcal{E}} g_{jk} \cos(\theta_j - \theta_k)
- *     \psi(\theta)
+ *     H \psi(\theta) = -\frac{1}{2} \sum_{j = 0}^{d - 1} \frac{\partial^2
+ *     \psi}{\partial \theta_j^2} (\theta) + \sum_{(j, k) \in \mathcal{E}}
+ *     \beta_{jk} [1 - 2 \cos(\theta_j - \theta_k)] \psi(\theta)
  * \f]
  *
  * The objective is to obtain the minimum energy eigenstate of this Hamiltonian.

@@ -29,8 +29,8 @@ public:
      *
      * @param [in] numRotor Number of rotors \f$d\f$.
      * @param [in] edgeList Edges connecting the rotors. Each edge is specified
-     * as \f$(j, k, w_{jk})\f$ where \f$0 \leq j, k \leq d - 1\f$ are the edge
-     * nodes and \f$\beta_{jk} \in \mathbb{R}\f$ is the edge weight.
+     * as \f$(j, k, \beta_{jk})\f$ where \f$0 \leq j, k \leq d - 1\f$ are the
+     * edge nodes and \f$\beta_{jk} \in \mathbb{R}\f$ is the edge weight.
      */
     Network(Index numRotor,
             const std::vector<std::tuple<Index, Index, Scalar>> &edgeList);
@@ -66,10 +66,9 @@ public:
      * \f$\mathcal{H}^1([0, 2\pi]^d)\f$ as follows
      *
      * \f[
-     *     H \psi(\theta) = -\frac{1}{2} \sum_{j = 0}^{d - 1}
-     *     \frac{\partial^2 \psi}{\partial \theta_j^2} (\theta) -
-     *     \sum_{(j, k) \in \mathcal{E}} \beta_{jk} \cos(\theta_j - \theta_k)
-     *     \psi(\theta)
+     *     H \psi(\theta) = -\frac{1}{2} \sum_{j = 0}^{d - 1} \frac{\partial^2
+     *     \psi}{\partial \theta_j^2} (\theta) + \sum_{(j, k) \in \mathcal{E}}
+     *     \beta_{jk} [1 - 2 \cos(\theta_j - \theta_k)] \psi(\theta)
      * \f]
      *
      * This function returns a lower bound for the minimal eigenvalue of this
