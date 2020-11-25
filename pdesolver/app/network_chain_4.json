@@ -2,19 +2,19 @@
     "num_rotor": 4,
     "edges": [
         {
-            "node1": 0,
-            "node2": 1,
-            "weight": 0.4
+            "j": 0,
+            "k": 1,
+            "beta": 0.2
         },
         {
-            "node1": 1,
-            "node2": 2,
-            "weight": 0.4
+            "j": 1,
+            "k": 2,
+            "beta": 0.2
         },
         {
-            "node1": 2,
-            "node2": 3,
-            "weight": 0.4
+            "j": 2,
+            "k": 3,
+            "beta": 0.2
         }
     ]
 }

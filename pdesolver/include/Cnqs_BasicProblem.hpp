@@ -264,10 +264,11 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
         for (const auto &edge : edgeList) {
             const GlobalOrdinal j = std::get<0>(edge);
             const GlobalOrdinal k = std::get<1>(edge);
-            const Scalar g = std::get<2>(edge);
+            const Scalar beta = std::get<2>(edge);
 
-            currentRowValues[0] += -g * std::cos(theta_[globalRowIdDim[j]] -
-                                                 theta_[globalRowIdDim[k]]);
+            currentRowValues[0] +=
+                beta * (1.0 - 2.0 * std::cos(theta_[globalRowIdDim[j]] -
+                                             theta_[globalRowIdDim[k]]));
         }
 
         GlobalOrdinal currentRowNonZeroCount = 1;

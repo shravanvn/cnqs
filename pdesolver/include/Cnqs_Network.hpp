@@ -18,7 +18,7 @@ namespace Cnqs {
  * described by an undirected graph with vertices \f$\mathcal{V} = \{0, 1,
  * \ldots, d - 1\}\f$ and edges \f$\mathcal{E} \subseteq \{(j, k) \in
  * \mathcal{V} \times \mathcal{V}: j \neq k\}\f$. Each edge \f$(j, k)\f$ has an
- * associated weight \f$g_{jk} \in \mathbb{R}\f$ describing the strength of
+ * associated weight \f$\beta_{jk} \in \mathbb{R}\f$ describing the strength of
  * interaction between rotors \f$j, k \in \mathcal{V}\f$.
  */
 template <class Scalar, class Index>
@@ -30,7 +30,7 @@ public:
      * @param [in] numRotor Number of rotors \f$d\f$.
      * @param [in] edgeList Edges connecting the rotors. Each edge is specified
      * as \f$(j, k, w_{jk})\f$ where \f$0 \leq j, k \leq d - 1\f$ are the edge
-     * nodes and \f$g_{jk} \in \mathbb{R}\f$ is the edge weight.
+     * nodes and \f$\beta_{jk} \in \mathbb{R}\f$ is the edge weight.
      */
     Network(Index numRotor,
             const std::vector<std::tuple<Index, Index, Scalar>> &edgeList);
@@ -52,7 +52,7 @@ public:
     /**
      * @brief Edge specifications of the network
      *
-     * @return Edge list; each element of the list is \f$(j, k, g_{jk})\f$.
+     * @return Edge list; each element of the list is \f$(j, k, \beta_{jk})\f$.
      */
     const std::vector<std::tuple<Index, Index, Scalar>> &edgeList() const {
         return edgeList_;
@@ -68,7 +68,7 @@ public:
      * \f[
      *     H \psi(\theta) = -\frac{1}{2} \sum_{j = 0}^{d - 1}
      *     \frac{\partial^2 \psi}{\partial \theta_j^2} (\theta) -
-     *     \sum_{(j, k) \in \mathcal{E}} g_{jk} \cos(\theta_j - \theta_k)
+     *     \sum_{(j, k) \in \mathcal{E}} \beta_{jk} \cos(\theta_j - \theta_k)
      *     \psi(\theta)
      * \f]
      *
@@ -117,7 +117,7 @@ Network<Scalar, Index>::Network(
     for (auto &edge : edgeList_) {
         Index j = std::get<0>(edge);
         Index k = std::get<1>(edge);
-        Scalar g = std::get<2>(edge);
+        Scalar beta = std::get<2>(edge);
 
         if (j == k) {
             throw std::domain_error(
@@ -131,7 +131,7 @@ Network<Scalar, Index>::Network(
             j = k;
             k = temp;
 
-            edge = std::make_tuple(j, k, g);
+            edge = std::make_tuple(j, k, beta);
         }
 
         if (j < 0 || k >= numRotor_) {
@@ -156,9 +156,9 @@ Network<Scalar, Index>::Network(const std::string &networkFileName) {
     edgeList_.reserve(edgeList.size());
 
     for (const auto &edge : edgeList) {
-        Index j = edge["node1"];
-        Index k = edge["node2"];
-        const Scalar g = edge["weight"];
+        Index j = edge["j"];
+        Index k = edge["k"];
+        const Scalar beta = edge["beta"];
 
         // switch order to ensure j < k
         if (j > k) {
@@ -172,19 +172,19 @@ Network<Scalar, Index>::Network(const std::string &networkFileName) {
                 "==Cnqs::Problem::Problem== Edge specification is not valid");
         }
 
-        edgeList_.emplace_back(j, k, g);
+        edgeList_.emplace_back(j, k, beta);
     }
 }
 
 template <class Scalar, class Index>
 Scalar Network<Scalar, Index>::eigValLowerBound() const {
-    Scalar mu = -1.0e-09;
+    Scalar mu = 1.0e-09;
 
     for (const auto &edge : edgeList_) {
-        mu -= std::abs(std::get<2>(edge));
+        mu += std::abs(std::get<2>(edge));
     }
 
-    return mu;
+    return -3.0 * mu;
 }
 
 template <class Scalar, class Index>
@@ -197,9 +197,9 @@ nlohmann::json Network<Scalar, Index>::description() const {
     for (const auto &edge : edgeList_) {
         nlohmann::json edgeJson;
 
-        edgeJson["node1"] = std::get<0>(edge);
-        edgeJson["node2"] = std::get<1>(edge);
-        edgeJson["weight"] = std::get<2>(edge);
+        edgeJson["j"] = std::get<0>(edge);
+        edgeJson["k"] = std::get<1>(edge);
+        edgeJson["beta"] = std::get<2>(edge);
 
         description["edges"].push_back(edgeJson);
     }

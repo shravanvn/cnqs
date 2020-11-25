@@ -281,6 +281,12 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
         &edgeList = network_->edgeList();
     const GlobalOrdinal numEdge = edgeList.size();
 
+    Scalar betaSum = 0.0;
+    for (const auto &edge : edgeList) {
+        const Scalar beta = std::get<2>(edge);
+        betaSum += beta;
+    }
+
     // allocate memory for the Hamiltonian
     const GlobalOrdinal numEntryPerRow = 2 * numEdge + 1;
     auto hamiltonian = Teuchos::rcp(
@@ -313,13 +319,14 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
         currentRowValues[0] *= 0.5;
+        currentRowValues[0] += betaSum;
 
         GlobalOrdinal currentRowNonZeroCount = 1;
 
         for (GlobalOrdinal e = 0; e < numEdge; ++e) {
             const GlobalOrdinal j = std::get<0>(edgeList[e]);
             const GlobalOrdinal k = std::get<1>(edgeList[e]);
-            const Scalar g = std::get<2>(edgeList[e]);
+            const Scalar beta = std::get<2>(edgeList[e]);
 
             for (GlobalOrdinal f = -1; f <= 1; ++f) {
                 if (f != 0) {
@@ -340,7 +347,7 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
 
                         currentRowColumnIndices[currentRowNonZeroCount] =
                             globalColumnIdLin;
-                        currentRowValues[currentRowNonZeroCount] = -0.5 * g;
+                        currentRowValues[currentRowNonZeroCount] = -beta;
 
                         ++currentRowNonZeroCount;
                     }
@@ -369,6 +376,12 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // network parameters
     const GlobalOrdinal numRotor = network_->numRotor();
     const Scalar eigValLowerBound = network_->eigValLowerBound();
+
+    Scalar betaSum = 0.0;
+    for (const auto &edge : network_->edgeList()) {
+        const Scalar beta = std::get<2>(edge);
+        betaSum += beta;
+    }
 
     // allocate memory for the preconditioner
     auto preconditioner = Teuchos::rcp(
@@ -400,8 +413,8 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
-        currentRowValues[0] =
-            std::sqrt(1.0 / (0.5 * currentRowValues[0] - eigValLowerBound));
+        currentRowValues[0] = std::sqrt(
+            1.0 / (0.5 * currentRowValues[0] + betaSum - eigValLowerBound));
 
         preconditioner->insertGlobalValues(
             globalRowIdLin, currentRowColumnIndices, currentRowValues);

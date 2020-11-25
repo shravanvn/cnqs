@@ -2,9 +2,9 @@
     "num_rotor": 2,
     "edges": [
         {
-            "node1": 0,
-            "node2": 1,
-            "weight": 0.4
+            "j": 0,
+            "k": 1,
+            "beta": 0.2
         }
     ]
 }

@@ -11,5 +11,7 @@ configure_file(network_chain_3.json network_chain_3.json COPYONLY)
 configure_file(network_chain_4.json network_chain_4.json COPYONLY)
 configure_file(network_chain_5.json network_chain_5.json COPYONLY)
 configure_file(network_chain_6.json network_chain_6.json COPYONLY)
+configure_file(network_chain_7.json network_chain_7.json COPYONLY)
+
 configure_file(network_square.json network_square.json COPYONLY)
 configure_file(network_cube.json network_cube.json COPYONLY)
