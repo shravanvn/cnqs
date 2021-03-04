@@ -9,7 +9,8 @@ pdesolver/build/
 pdesolver/runs/
 
 vmcsolver/__pycache__/
-vmcsolver/logs/
+vmcsolver/*.csv
+vmcsolver/*.pdf
 vmcsolver/runs/
 
 notes/*.aux
