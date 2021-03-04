@@ -1,5 +1,4 @@
 import argparse
-import os
 import numpy as np
 
 from util import read_config
@@ -12,17 +11,12 @@ from optimization import stoch_reconfig
 np.random.seed(1)
 
 
-def main():
-    # configuration
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--config_path', default='./config.yaml')
-    args = parser.parse_args()
-    config = read_config(args.config_path)
+def main(run_dir):
+    # read configuration
+    config = read_config(run_dir + "/config.yaml")
 
     # logging
-    os.makedirs(config['logdir'], exist_ok=True)
-
-    logger = Logger(config['logdir'])
+    logger = Logger(run_dir)
     logger.set_variables(['acceptance_rate', 'b_norm', 'c_norm', 'energy_avg', 'energy_std', 'grad_norm'])
     logger.write_header()
 
@@ -38,7 +32,6 @@ def main():
                                            config=config,
                                            propose_update=propose_update,
                                            logger=logger)
-
         vars = stoch_reconfig(step, nqs, averages, config, logger)
         nqs = NQS(config=config, state=nqs.state, vars=vars)
 
@@ -46,4 +39,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # parse run directory from command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--run_dir', default='./')
+    args = parser.parse_args()
+
+    main(args.run_dir)

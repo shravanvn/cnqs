@@ -1,8 +1,5 @@
 ---
 
-# output directory
-logdir: './logs/'
-
 # RBM parameters
 num_visible: 2
 num_hidden: 8
@@ -26,7 +23,7 @@ edges:
   beta: 1.0
 
 # Gradient descent parmeters
-num_step: 2500
+num_step: 1000
 lr: 1.0e-03
 
 # SR parameters

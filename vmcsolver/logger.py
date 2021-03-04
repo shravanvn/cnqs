@@ -6,9 +6,9 @@ from datetime import datetime
 class Logger(object):
     """Logging in plaintext."""
 
-    def __init__(self, log_dir):
-        """Create a log file inside log_dir."""
-        self.file_name = log_dir + "/" + datetime.now().replace(microsecond=0).isoformat() + ".csv"
+    def __init__(self, run_dir):
+        """Create a log file inside run_dir."""
+        self.file_name = run_dir + "/output.csv"
         self.var_names = None
         self.var_values = None
 
