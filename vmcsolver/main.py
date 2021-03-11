@@ -1,5 +1,6 @@
 import argparse
 import numpy as np
+import time
 
 from util import read_config
 from logger import Logger
@@ -22,8 +23,8 @@ def main(run_dir):
 
     nqs = NQS(config=config)
 
+    tic = time.time()
     for step in range(1, config['num_step'] + 1):
-        print('step = {:d}'.format(step))
         averages, nqs = metropolis_sampler(step,
                                            local_energy,
                                            log_psi,
@@ -36,6 +37,19 @@ def main(run_dir):
         nqs = NQS(config=config, state=nqs.state, vars=vars)
 
         logger.write_step(step)
+
+        if step % config['logger_stdout_frequency'] == 0:
+            print("step = {:d}, ".format(step), end="")
+            logger.write_stdout(['energy_avg', 'energy_std', 'grad_norm'])
+
+    toc = time.time()
+
+    print("================================================================================")
+    print("Finished!")
+    print("--------------------------------------------------------------------------------")
+    print("elapsed_time = {:f} sec, ".format(toc - tic), end="")
+    logger.write_stdout(['energy_avg', 'energy_std', 'grad_norm'])
+    print("================================================================================")
 
 
 if __name__ == "__main__":

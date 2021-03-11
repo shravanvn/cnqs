@@ -7,10 +7,10 @@ num_hidden: 8
 # Hamiltonian is given by
 #
 #   H = - \frac{h}{2} \sum_{j = 1}^d \frac{\partial^2}{\partial \theta_j^2}
-#       + \sum_{(j, k) \in E} (1 -2 * \beta_{jk} \cos(\theta_j - \theta_k))
+#       + \sum_{(j, k) \in E} \beta_{jk} * (1 - 2 * \cos(\theta_j - \theta_k))
 #
 # In network specifications, edges are specified by the boundary nodes (j, k)
-# and interaction strength G_jk
+# and interaction strength \beta_jk
 #
 # The following specification represents the graph:
 #
@@ -33,3 +33,6 @@ sr_reg: 1.0e-09
 metropolis_steps: 500
 bump_size: 3.5
 warm_steps: 250
+
+# Output frequency
+logger_stdout_frequency: 10

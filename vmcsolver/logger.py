@@ -38,3 +38,13 @@ class Logger(object):
         file_object = open(self.file_name, "a")
         file_object.write(line)
         file_object.close()
+
+    def write_stdout(self, var_names):
+        line = ""
+        for i in range(len(var_names)):
+            if i == len(var_names) - 1:
+                line += "{:s} = {:e}".format(var_names[i], self.var_values[var_names[i]])
+            else:
+                line += "{:s} = {:e}, ".format(var_names[i], self.var_values[var_names[i]])
+
+        print(line)
