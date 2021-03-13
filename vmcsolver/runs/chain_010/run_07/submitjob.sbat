@@ -1,0 +1,22 @@
+#!/bin/bash
+
+#SBATCH --job-name="cnqs_chain_010_07"
+#SBATCH --output="runs/chain_010/run_07/%j.%N.out"
+
+#SBATCH --mail-type="BEGIN,END,TIME_LIMIT,FAIL"
+#SBATCH --mail-user="saibalde@umich.edu"
+
+#SBATCH --account=lsa1
+#SBATCH --partition=standard
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=2
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=5G
+#SBATCH --time=24:00:00
+
+#SBATCH --export=ALL
+
+module purge
+module load python3.8-anaconda/2020.07
+
+python main.py --run_dir ./runs/chain_010/run_07/
