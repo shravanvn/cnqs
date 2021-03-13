@@ -4,9 +4,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-def main(run_dir):
+def main(output_file, output_figure):
     # read output
-    df = pd.read_csv(run_dir + "/output.csv")
+    df = pd.read_csv(output_file)
 
     # generate plot
     fig, ax = plt.subplots(2, 3, figsize=(9.6, 4.8))
@@ -38,13 +38,17 @@ def main(run_dir):
     plt.tight_layout()
 
     # save plot
-    fig.savefig(run_dir + "/output.pdf")
+    fig.savefig(output_figure)
 
 
 if __name__ == "__main__":
     # parse run directory from command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--run_dir', default='./')
+    parser.add_argument('--output_file', default='output.csv')
+    parser.add_argument('--figure_name', default='')
     args = parser.parse_args()
 
-    main(args.run_dir)
+    if args.figure_name == '':
+        args.figure_name = args.output_file.replace(".csv", ".pdf")
+
+    main(args.output_file, args.figure_name)

@@ -1,9 +1,23 @@
 # VMCSolver
 
-## Environment Setup
+## Dependencies
 
-Assuming you are using the `conda` package manager (from Anaconda distribution,
-or its minimal version miniconda3), execute
+This VMC code depends on the following python packages:
+
+*   Core simulation:
+    *   numpy
+    *   scipy
+    *   pyyaml
+
+*   Plotting simulation outputs:
+    *   pandas
+    *   matplotlib
+
+*   Profile visualization:
+    *   snakeviz
+
+A basic method for setting up this environment is to use the [conda package
+manager](https://docs.conda.io/en/latest/) and run
 ```sh
 conda create -n cnqs python numpy scipy pyyaml matplotlib pandas snakeviz
 ```
@@ -16,29 +30,29 @@ conda activate cnqs
 
 To run variational Monte-Carlo simulation, execute inside the `cnqs` environment
 ```sh
-python main.py --run_dir /path/to/run/dir
+python main.py [--config_file /path/to/config.yaml] [--output_file /path/to/output.csv]
 ```
-where `/path/to/run/dir` contains the `config.yaml` file; This will generate an
-`output.csv` file in the same run directory that will record the average
-energy, energy standard deviation, gradient norms etc. per gradient descent
-step.
+where `config.yaml` specifies simulation parameters and various quantities of
+interest (e.g. average energy, gradient norm) are written to the `output.csv`
+file.
 
-Then, to plot the outputs, run
+To visualize the simulation outputs, run
 ```sh
-python plot.py --run_dir /path/to/run/dir
+python plot.py [--output_file /path/to/output.csv] [--figure_name /path/to/output.pdf]
 ```
-This will read the `output.csv` file in `/path/to/run/dir` and create
-timeseries plots for the output variables. The figure will be saved as
-`output.pdf` in the run directory.
+This will create an `output.pdf` containing timeseries plots of various
+quantities of interest. For convenience, if the `--figure_name
+/path/to/output.pdf` part is ommitted, then the generated figure will share the
+same base name as the output file.
 
 ## Profiling
 
-To profile the run, `cProfile` module can be used; inside the `cnqs` environment, run
+To profile the simulation, `cProfile` module can be used; inside the `cnqs`
+environment, run
 ```sh
-python -m cProfile -o /path/to/run/dir/cprofile.bin main.py --run_dir /path/to/run/dir
+python -m cProfile -o /path/to/cprofile.bin main.py [--config_file /path/to/config.yaml] [--output_file /path/to/output.csv]
 ```
-
-This profile can be visualized by
+The generated profile can be visualized by
 ```sh
-snakeviz /path/to/run/dir/cprofile.bin
+snakeviz /path/to/cprofile.bin
 ```

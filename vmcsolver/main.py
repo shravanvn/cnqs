@@ -12,12 +12,12 @@ from optimization import stoch_reconfig
 np.random.seed(1)
 
 
-def main(run_dir):
+def main(config_file, output_file):
     # read configuration
-    config = read_config(run_dir + "/config.yaml")
+    config = read_config(config_file)
 
     # logging
-    logger = Logger(run_dir)
+    logger = Logger(output_file)
     logger.set_variables(['acceptance_rate', 'b_norm', 'c_norm', 'energy_avg', 'energy_std', 'grad_norm'])
     logger.write_header()
 
@@ -55,7 +55,8 @@ def main(run_dir):
 if __name__ == "__main__":
     # parse run directory from command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--run_dir', default='./')
+    parser.add_argument('--config_file', default='config.yaml')
+    parser.add_argument('--output_file', default='output.csv')
     args = parser.parse_args()
 
-    main(args.run_dir)
+    main(args.config_file, args.output_file)
