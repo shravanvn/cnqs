@@ -1,0 +1,163 @@
+---
+
+# RBM parameters
+num_visible: 25
+num_hidden: 100
+
+# Hamiltonian is given by
+#
+#   H = - \frac{h}{2} \sum_{j = 1}^d \frac{\partial^2}{\partial \theta_j^2}
+#       + \sum_{(j, k) \in E} \beta_{jk} * (1 - 2 * \cos(\theta_j - \theta_k))
+#
+# In network specifications, edges are specified by the boundary nodes (j, k)
+# and interaction strength \beta_jk
+#
+# The following specification represents the graph:
+#
+#   20 - 21 - 22 - 23 - 24
+#    |    |    |    |    |
+#   15 - 16 - 17 - 18 - 19
+#    |    |    |    |    |
+#   10 - 11 - 12 - 13 - 14
+#    |    |    |    |    |
+#    5 -  6 -  7 -  8 -  9
+#    |    |    |    |    |
+#    0 -  1 -  2 -  3 -  4
+#
+h: 5.0
+edges:
+- j: 0
+  k: 1
+  beta: 1.000000e+00
+- j: 0
+  k: 5
+  beta: 1.000000e+00
+- j: 1
+  k: 2
+  beta: 1.000000e+00
+- j: 1
+  k: 6
+  beta: 1.000000e+00
+- j: 2
+  k: 3
+  beta: 1.000000e+00
+- j: 2
+  k: 7
+  beta: 1.000000e+00
+- j: 3
+  k: 4
+  beta: 1.000000e+00
+- j: 3
+  k: 8
+  beta: 1.000000e+00
+- j: 4
+  k: 9
+  beta: 1.000000e+00
+- j: 5
+  k: 6
+  beta: 1.000000e+00
+- j: 5
+  k: 10
+  beta: 1.000000e+00
+- j: 6
+  k: 7
+  beta: 1.000000e+00
+- j: 6
+  k: 11
+  beta: 1.000000e+00
+- j: 7
+  k: 8
+  beta: 1.000000e+00
+- j: 7
+  k: 12
+  beta: 1.000000e+00
+- j: 8
+  k: 9
+  beta: 1.000000e+00
+- j: 8
+  k: 13
+  beta: 1.000000e+00
+- j: 9
+  k: 14
+  beta: 1.000000e+00
+- j: 10
+  k: 11
+  beta: 1.000000e+00
+- j: 10
+  k: 15
+  beta: 1.000000e+00
+- j: 11
+  k: 12
+  beta: 1.000000e+00
+- j: 11
+  k: 16
+  beta: 1.000000e+00
+- j: 12
+  k: 13
+  beta: 1.000000e+00
+- j: 12
+  k: 17
+  beta: 1.000000e+00
+- j: 13
+  k: 14
+  beta: 1.000000e+00
+- j: 13
+  k: 18
+  beta: 1.000000e+00
+- j: 14
+  k: 19
+  beta: 1.000000e+00
+- j: 15
+  k: 16
+  beta: 1.000000e+00
+- j: 15
+  k: 20
+  beta: 1.000000e+00
+- j: 16
+  k: 17
+  beta: 1.000000e+00
+- j: 16
+  k: 21
+  beta: 1.000000e+00
+- j: 17
+  k: 18
+  beta: 1.000000e+00
+- j: 17
+  k: 22
+  beta: 1.000000e+00
+- j: 18
+  k: 19
+  beta: 1.000000e+00
+- j: 18
+  k: 23
+  beta: 1.000000e+00
+- j: 19
+  k: 24
+  beta: 1.000000e+00
+- j: 20
+  k: 21
+  beta: 1.000000e+00
+- j: 21
+  k: 22
+  beta: 1.000000e+00
+- j: 22
+  k: 23
+  beta: 1.000000e+00
+- j: 23
+  k: 24
+  beta: 1.000000e+00
+
+# Gradient descent parmeters
+num_step: 10000
+lr: 1.0e-03
+
+# SR parameters
+sr_reg: 1.0e-05
+
+# Metropolis parameters
+metropolis_steps: 2000
+bump_size: 3.5
+warm_steps: 1000
+
+# Output frequency
+logger_stdout_frequency: 100
