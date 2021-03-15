@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#SBATCH --job-name="cnqs_chain_010_10"
-#SBATCH --output="runs/chain_010/run_10/%j.%N.out"
+#SBATCH --job-name="cnqs_chain_010_run_10"
+#SBATCH --output="runs/chain_010/run_10/%j.out"
 
 #SBATCH --mail-type="BEGIN,END,TIME_LIMIT,FAIL"
 #SBATCH --mail-user="saibalde@umich.edu"
@@ -16,7 +16,25 @@
 
 #SBATCH --export=ALL
 
+TIMESTAMP=`date '+%Y-%m-%dT%H:%M:%S'`
+WORKDIR='runs/chain_010/run_10'
+
 module purge
 module load python3.8-anaconda/2020.07
 
-python main.py --run_dir ./runs/chain_010/run_10/
+echo 'Running on:'
+echo '==========='
+scontrol show hostnames ${SLURM_JOB_NODELIST}
+echo ''
+
+echo 'Program Output:'
+echo '==============='
+python main.py --config_file ${WORKDIR}/config.yaml --output_file ${WORKDIR}/${SLURM_JOB_ID}_output_${TIMESTAMP}.csv
+echo ''
+
+rm -f ${WORKDIR}/output.csv
+cd ${WORKDIR} && ln -s ${SLURM_JOB_ID}_output_${TIMESTAMP}.csv output.csv && cd -
+
+echo 'Program Statistics:'
+echo '==================='
+sstat -j ${SLURM_JOB_ID} --format='AveRSS,MaxRSS'
