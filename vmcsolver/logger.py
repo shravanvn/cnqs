@@ -47,4 +47,4 @@ class Logger(object):
             else:
                 line += "{:s} = {:e}, ".format(var_names[i], self.var_values[var_names[i]])
 
-        print(line)
+        print(line, flush=True)

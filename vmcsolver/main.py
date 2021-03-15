@@ -39,17 +39,17 @@ def main(config_file, output_file):
         logger.write_step(step)
 
         if step % config['logger_stdout_frequency'] == 0:
-            print("step = {:d}, ".format(step), end="")
+            print("step = {:d}, ".format(step), end="", flush=True)
             logger.write_stdout(['energy_avg', 'energy_std', 'grad_norm'])
 
     toc = time.time()
 
-    print("================================================================================")
-    print("Finished!")
-    print("--------------------------------------------------------------------------------")
-    print("elapsed_time = {:f} sec, ".format(toc - tic), end="")
+    print("================================================================================", flush=True)
+    print("Finished!", flush=True)
+    print("--------------------------------------------------------------------------------", flush=True)
+    print("elapsed_time = {:f} sec, ".format(toc - tic), end="", flush=True)
     logger.write_stdout(['energy_avg', 'energy_std', 'grad_norm'])
-    print("================================================================================")
+    print("================================================================================", flush=True)
 
 
 if __name__ == "__main__":
