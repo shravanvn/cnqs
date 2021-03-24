@@ -31,7 +31,7 @@ if(CNQS_ENABLE_TESTS)
     add_subdirectory(test)
 endif()
 
-# add_subdirectory(app)
+add_subdirectory(app)
 
 if(PROJECT_NAME STREQUAL CMAKE_PROJECT_NAME)
     option(CNQS_ENABLE_DOCS "Build the package documentation" ON)

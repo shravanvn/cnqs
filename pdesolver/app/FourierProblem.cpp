@@ -1,4 +1,5 @@
 #include <Teuchos_Comm.hpp>
+#include <Teuchos_CommandLineProcessor.hpp>
 #include <Teuchos_RCP.hpp>
 #include <Tpetra_Core.hpp>
 #include <Tpetra_MultiVector.hpp>
@@ -11,87 +12,73 @@
 #include "Cnqs_FourierProblem.hpp"
 #include "Cnqs_Network.hpp"
 
-void printHelp(const std::string &programName) {
-    std::cout << "USAGE:" << std::endl
-              << "    " << programName
-              << " <networkFileName> <maxFreq> [<maxPowerIter> "
-                 "<tolPowerIter> <maxCgIter> <tolCgIter> [<fileName>]]"
-              << std::endl;
-    std::cout << "DEFAULTS:" << std::endl
-              << "    maxPowerIter : 100" << std::endl
-              << "    tolPowerIter : 1.0e-06" << std::endl
-              << "    maxCgIter    : 1000" << std::endl
-              << "    tolCgIter    : 1.0e-06" << std::endl
-              << "    fileName     : \"\"" << std::endl;
-}
-
 int main(int argc, char **argv) {
     using Scalar = Tpetra::MultiVector<>::scalar_type;
     using LocalOrdinal = Tpetra::MultiVector<>::local_ordinal_type;
     using GlobalOrdinal = Tpetra::MultiVector<>::global_ordinal_type;
     using Node = Tpetra::MultiVector<>::node_type;
 
+    int exitCode = 1;
+
     Tpetra::ScopeGuard tpetraScope(&argc, &argv);
     {
-        const auto comm = Tpetra::getDefaultComm();
+        std::string networkFileName = "network.yaml";
+        Scalar laplacianFactor = 1.0;
+        GlobalOrdinal maxFreq = 16;
+        GlobalOrdinal maxPowerIter = 100;
+        Scalar tolPowerIter = 1.0e-06;
+        GlobalOrdinal maxCgIter = 1000;
+        Scalar tolCgIter = 1.0e-06;
+        std::string groundStateFileName = "";
 
-        // parse command line arguments
-        if ((argc == 2) && (std::string(argv[1]).compare("-h") == 0)) {
-            if (comm->getRank() == 0) {
-                printHelp(argv[0]);
-            }
-        } else if ((argc < 3) || (argc > 3 && argc < 7) || (argc > 8)) {
-            if (comm->getRank() == 0) {
-                std::cout << "ERROR: Incorrect number of command line arguments"
-                          << std::endl
-                          << "       Run \"" << argv[0] << " -h\" for help"
-                          << std::endl;
-            }
-        } else {
-            // argc = 3, 7 or 8
+        auto cmdParser = Teuchos::CommandLineProcessor(false, true, true);
+        cmdParser.setOption("network-file-name", &networkFileName,
+                            "File containing YAML description of rotor network",
+                            true);
+        cmdParser.setOption("laplacian-factor", &laplacianFactor,
+                            "Laplacial pre-factor");
+        cmdParser.setOption("max-frequency", &maxFreq,
+                            "Frequency cutoff in Fourier expansions", true);
+        cmdParser.setOption(
+            "max-power-iter", &maxPowerIter,
+            "Maximum number of steps in inverse power iteration");
+        cmdParser.setOption("tol-power-iter", &tolPowerIter,
+                            "Tolerance for inverse power iteration");
+        cmdParser.setOption(
+            "max-cg-iter", &maxCgIter,
+            "Maximum number of CG iterations per inverse power iteration step");
+        cmdParser.setOption("tol-cg-iter", &tolCgIter,
+                            "Tolerance of CG iteration");
+        cmdParser.setOption(
+            "ground-state-file-name", &groundStateFileName,
+            "Name of the file where ground state will be saved");
 
-            auto network =
-                std::make_shared<Cnqs::Network<Scalar, GlobalOrdinal>>(argv[1]);
-            GlobalOrdinal maxFreq = std::atoi(argv[2]);
-            GlobalOrdinal maxPowerIter = 100;
-            Scalar tolPowerIter = 1.0e-06;
-            GlobalOrdinal maxCgIter = 1000;
-            Scalar tolCgIter = 1.0e-06;
-            std::string fileName("");
+        const auto status = cmdParser.parse(argc, argv);
 
-            if (argc > 3) {
-                maxPowerIter = std::atoi(argv[3]);
-                tolPowerIter = std::atof(argv[4]);
-                maxCgIter = std::atoi(argv[5]);
-                tolCgIter = std::atof(argv[6]);
-            }
-
-            if (argc > 7) {
-                fileName = std::string(argv[7]);
-            }
-
-            // output full command for sanity check
-            if (comm->getRank() == 0) {
-                std::cout << "==main== Begin run configuration" << std::endl;
-                std::cout << "network: " << *network << std::endl;
-                std::cout << "max_freq: " << maxFreq << std::endl;
-                std::cout << "max_power_iter: " << maxPowerIter << std::endl;
-                std::cout << "tol_power_iter: " << tolPowerIter << std::endl;
-                std::cout << "max_cg_iter: " << maxCgIter << std::endl;
-                std::cout << "tol_cg_iter: " << tolCgIter << std::endl;
-                std::cout << "file_name: " << fileName << std::endl;
-                std::cout << "==main== End run configuration" << std::endl;
-            }
-
-            // create Fourier problem
+        if (status == Teuchos::CommandLineProcessor::EParseCommandLineReturn::
+                          PARSE_SUCCESSFUL) {
+            const auto comm = Tpetra::getDefaultComm();
+            const auto network =
+                std::make_shared<Cnqs::Network<Scalar, GlobalOrdinal>>(
+                    networkFileName);
             Cnqs::FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>
-                problem(network, maxFreq, comm);
-
-            // solve Fourier problem
+                problem(network, laplacianFactor, maxFreq, comm);
             problem.runInversePowerIteration(maxPowerIter, tolPowerIter,
-                                             maxCgIter, tolCgIter, fileName);
+                                             maxCgIter, tolCgIter,
+                                             groundStateFileName);
+
+            exitCode = 0;
+        } else if (status == Teuchos::CommandLineProcessor::
+                                 EParseCommandLineReturn::PARSE_HELP_PRINTED) {
+            exitCode = 0;
+        } else {
+            std::cerr << "ERROR: Could not parse command line options"
+                      << std::endl;
+            std::cerr << "Run " << argv[0]
+                      << " --help to get an overview of avaialble options"
+                      << std::endl;
         }
     }
 
-    return 0;
+    return exitCode;
 }

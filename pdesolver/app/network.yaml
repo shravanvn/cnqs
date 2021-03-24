@@ -1,0 +1,8 @@
+---
+
+num_rotor: 2
+
+edges:
+- j: 0
+  k: 1
+  beta: 1.0
