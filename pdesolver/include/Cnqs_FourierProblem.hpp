@@ -15,7 +15,6 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -28,160 +27,148 @@
 
 namespace Cnqs {
 
-/**
- * @brief Fourier-series based implementation of Problem
- *
- * Since the state \f$\psi \in \mathcal{H}^1([0, 2\pi]^d)\f$ is assumed to be
- * \f$2\pi\f$-periodic along each of the dimensions, it can be represented in
- * terms of a Fourier series, with the Fourier coefficients
- * \f$\hat{\psi}(\omega)\f$ defined for \f$\omega \in \mathbb{Z}^d\f$. The
- * Hamiltonian for these coefficients is given by
- *
- * \f[
- *     \hat{H} \hat{\psi}(\omega) = \frac{1}{2} \| \omega \|^2
- *     \hat{\psi}(\omega) + \sum_{(j, k) \in \mathcal{E}} \beta_{jk}
- *     [\hat{\psi}(\omega) - \hat{\psi}(\omega + e_j - e_k) - \hat{\psi}(\omega
- *     - e_j + e_k)]
- * \f]
- *
- * where \f$e_j\f$ is the \f$j\f$-th standard basis of \f$\mathbb{R}^d\f$. We
- * truncate this lattice by restricting \f$-\omega_\text{max} \leq \omega_j \leq
- * \omega_\text{max}\f$ (in other words, setting \f$\hat{\psi}(\omega) = 0\f$
- * for \f$\omega\f$ outside this limit). This leads to a \f$d\f$ dimensional
- * \f$(2 \omega_\text{max} + 1) \times \cdots \times (2 \omega_\text{max} +
- * 1)\f$ tensor with
- *
- * \f[
- *     v(i_0, \ldots, i_{d - 1}) = \hat{\psi}(i_0 - \omega_\text{max}, \ldots,
- *     i_{d - 1} - \omega_\text{max}), \quad 0 \leq i_k \leq 2
- *     \omega_\text{max}, \quad 0 \leq k \leq d - 1
- * \f]
- *
- * @note This class is built on top of Trilinos to support distributed
- * computing.
- */
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-class FourierProblem : public Problem<Scalar, GlobalOrdinal> {
+/// Fourier-series based implementation of Problem
+///
+/// Since the state \f$\psi \in \mathcal{H}^1([0, 2\pi]^d)\f$ is assumed to be
+/// \f$2\pi\f$-periodic along each of the dimensions, it can be represented in
+/// terms of a Fourier series, with the Fourier coefficients
+/// \f$\hat{\psi}(\omega)\f$ defined for \f$\omega \in \mathbb{Z}^d\f$. The
+/// Hamiltonian for these coefficients is given by
+///
+/// \f[
+///     \hat{H} \hat{\psi}(\omega) = \frac{1}{2} \| \omega \|^2
+///     \hat{\psi}(\omega) + \sum_{(j, k) \in \mathcal{E}} \beta_{jk}
+///     [\hat{\psi}(\omega) - \hat{\psi}(\omega + e_j - e_k) - \hat{\psi}(\omega
+///     - e_j + e_k)]
+/// \f]
+///
+/// where \f$e_j\f$ is the \f$j\f$-th standard basis of \f$\mathbb{R}^d\f$. We
+/// truncate this lattice by restricting \f$-\omega_\text{max} \leq \omega_j
+/// \leq \omega_\text{max}\f$ (in other words, setting \f$\hat{\psi}(\omega) =
+/// 0\f$ for \f$\omega\f$ outside this limit). This leads to a \f$d\f$
+/// dimensional \f$(2 \omega_\text{max} + 1) \times \cdots \times (2
+/// \omega_\text{max} + 1)\f$ tensor with
+///
+/// \f[
+///     v(i_0, \ldots, i_{d - 1}) = \hat{\psi}(i_0 - \omega_\text{max}, \ldots,
+///     i_{d - 1} - \omega_\text{max}), \quad 0 \leq i_k \leq 2
+///     \omega_\text{max}, \quad 0 \leq k \leq d - 1
+/// \f]
+///
+/// @note This class is built on top of Trilinos to support distributed
+/// computing.
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+class FourierProblem : public Problem<Real, GlobalOrdinal> {
 public:
-    /**
-     * @brief Construct a FourierProblem given network and cutoff frequency
-     *
-     * @param [in] network Quantum rotor network \f$(\mathcal{V},
-     * \mathcal{E})\f$, implemented in Network.
-     * @param [in] maxFreq Cutoff frequency, \f$\omega_\text{max}\f$.
-     * @param [in] comm Communicator.
-     */
+    /// Construct a FourierProblem given network and cutoff frequency
+    ///
+    /// @param [in] network Quantum rotor network \f$(\mathcal{V},
+    /// \mathcal{E})\f$, implemented in Network.
+    ///
+    /// @param [in] maxFreq Cutoff frequency, \f$\omega_\text{max}\f$.
+    ///
+    /// @param [in] comm Communicator.
     FourierProblem(
-        const std::shared_ptr<const Network<Scalar, GlobalOrdinal>> &network,
-        GlobalOrdinal maxFreq,
+        const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
+        Real laplacianFactor, GlobalOrdinal maxFreq,
         const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
-    /**
-     * @brief Run inverse power iteration
-     *
-     * Computing the lowest-energy eigenpair of the Hamiltonian \f$\hat{H}\f$
-     * can be achieved using inverse power iteration. Given a lower-bound
-     * \f$\mu\f$ of the eigenvalues of this operator, one starts at an arbitrary
-     * state \f$\hat{\psi}_0\f$ and iterates
-     *
-     * \f[
-     *     \hat{\psi}_{k + 1} = \frac{(\hat{H} - \mu I)^{-1} \hat{\psi}_k}{\|
-     *     (\hat{H} - \mu I)^{-1} \hat{\psi}_k \|}, \quad \lambda_{k + 1} =
-     *     \langle \hat{\psi}_{k + 1}, \hat{H} \hat{\psi}_{k + 1} \rangle
-     * \f]
-     *
-     * This iteration is stopped when
-     *
-     * -    Iteration counter \f$k\f$ reaches a maximal value
-     *      \f$k_\text{power}\f$
-     * -    The difference between the eigenvalue estimates drop below a
-     *      threshold: \f$| \lambda_{k + 1} - \lambda_k | < \tau_\text{power}\f$
-     *
-     * To solve the linear system in the power iteration, we employ the CG
-     * iterative solver with maxinum number of iterations \f$k_\text{CG}\f$ and
-     * tolerance \f$\tau_\text{CG}\f$. To accelerate the CG iterations, we
-     * empoly a preconditioner defined as
-     *
-     * \f[
-     *     \hat{M} \hat{\psi}(\omega) = \sqrt{\frac{1}{2} \| \omega \|^2 +
-     *     \sum_{(j, k) \in \mathcal{E}} \beta_{jk} - \mu} \;\;
-     *     \hat{\psi}(\omega)
-     * \f]
-     *
-     * and solve the linear system
-     *
-     * \f[
-     *     \hat{M}^{-1} (\hat{H} - \mu I) \hat{M}^{-1} \hat{M}
-     *     \hat{\phi}_{k + 1} = \hat{M}^{-1} \hat{\psi}_k
-     * \f]
-     *
-     * @param [in] maxPowerIter Maximum number of power iterations,
-     * \f$k_\text{power}\f$.
-     * @param [in] tolPowerIter Tolerance at which to stop power iteration,
-     * \f$\tau_\text{power}\f$.
-     * @param [in] maxCgIter Number of CG iterations to run per power iteration,
-     * \f$k_\text{CG}\f$.
-     * @param [in] tolCgIter Tolerance at which to stop CG iteration,
-     * \f$\tau_\text{CG}\f$.
-     * @param [in] fileName File where to store the estimated eigenstate. If set
-     * to the empty string `""`, then the eigenstate is not saved.
-     * @return Estimated smallest eigenvalue of the Hamiltonian.
-     */
-    Scalar runInversePowerIteration(int numPowerIter, Scalar tolPowerIter,
-                                    int numCgIter, Scalar tolCgIter,
-                                    const std::string &fileName) const;
-
-    nlohmann::json description() const;
-
-    /**
-     * @brief Print FourierProblem object to output streams
-     *
-     * @param [in,out] os Output stream
-     * @param [in] problem Quantum rotor network Hamiltonian eigenproblem
-     * discretized in Fourier domain
-     * @return Output stream
-     */
-    friend std::ostream &operator<<(std::ostream &os,
-                                    const FourierProblem &problem) {
-        os << problem.description().dump(4);
-        return os;
-    }
+    /// Run inverse power iteration
+    ///
+    /// Computing the lowest-energy eigenpair of the Hamiltonian \f$\hat{H}\f$
+    /// can be achieved using inverse power iteration. Given a lower-bound
+    /// \f$\mu\f$ of the eigenvalues of this operator, one starts at an
+    /// arbitrary state \f$\hat{\psi}_0\f$ and iterates
+    ///
+    /// \f[
+    ///     \hat{\psi}_{k + 1} = \frac{(\hat{H} - \mu I)^{-1} \hat{\psi}_k}{\|
+    ///     (\hat{H} - \mu I)^{-1} \hat{\psi}_k \|}, \quad \lambda_{k + 1} =
+    ///     \langle \hat{\psi}_{k + 1}, \hat{H} \hat{\psi}_{k + 1} \rangle
+    /// \f]
+    ///
+    /// This iteration is stopped when
+    ///
+    /// -    Iteration counter \f$k\f$ reaches a maximal value
+    ///      \f$k_\text{power}\f$
+    /// -    The difference between the eigenvalue estimates drop below a
+    ///      threshold: \f$| \lambda_{k + 1} - \lambda_k | <
+    ///      \tau_\text{power}\f$
+    ///
+    /// To solve the linear system in the power iteration, we employ the CG
+    /// iterative solver with maxinum number of iterations \f$k_\text{CG}\f$ and
+    /// tolerance \f$\tau_\text{CG}\f$. To accelerate the CG iterations, we
+    /// empoly a preconditioner defined as
+    ///
+    /// \f[
+    ///     \hat{M} \hat{\psi}(\omega) = \sqrt{\frac{1}{2} \| \omega \|^2 +
+    ///     \sum_{(j, k) \in \mathcal{E}} \beta_{jk} - \mu} \;\;
+    ///     \hat{\psi}(\omega)
+    /// \f]
+    ///
+    /// and solve the linear system
+    ///
+    /// \f[
+    ///     \hat{M}^{-1} (\hat{H} - \mu I) \hat{M}^{-1} \hat{M}
+    ///     \hat{\phi}_{k + 1} = \hat{M}^{-1} \hat{\psi}_k
+    /// \f]
+    ///
+    /// @param [in] maxPowerIter Maximum number of power iterations,
+    /// \f$k_\text{power}\f$.
+    ///
+    /// @param [in] tolPowerIter Tolerance at which to stop power iteration,
+    /// \f$\tau_\text{power}\f$.
+    ///
+    /// @param [in] maxCgIter Number of CG iterations to run per power
+    /// iteration, \f$k_\text{CG}\f$.
+    ///
+    /// @param [in] tolCgIter Tolerance at which to stop CG iteration,
+    /// \f$\tau_\text{CG}\f$.
+    ///
+    /// @param [in] fileName File where to store the estimated eigenstate. If
+    /// set to the empty string `""`, then the eigenstate is not saved.
+    ///
+    /// @return Estimated smallest eigenvalue of the Hamiltonian.
+    Real runInversePowerIteration(int numPowerIter, Real tolPowerIter,
+                                  int numCgIter, Real tolCgIter,
+                                  const std::string &fileName) const;
 
 private:
     Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
     constructMap(const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+    Teuchos::RCP<Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>>
     constructInitialState(
         const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
             &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     Teuchos::RCP<
-        const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+        const Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>
     constructHamiltonian(
         const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
             &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     Teuchos::RCP<
-        const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+        const Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>
     constructPreconditioner(
         const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
             &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    std::shared_ptr<const Network<Scalar, GlobalOrdinal>> network_;
+    std::shared_ptr<const Network<Real, GlobalOrdinal>> network_;
+    Real laplacianFactor_;
     GlobalOrdinal maxFreq_;
     std::vector<GlobalOrdinal> unfoldingFactors_;
     Teuchos::RCP<const Teuchos::Comm<int>> comm_;
 };
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::FourierProblem(
-    const std::shared_ptr<const Network<Scalar, GlobalOrdinal>> &network,
-    GlobalOrdinal maxFreq, const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::FourierProblem(
+    const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
+    Real laplacianFactor, GlobalOrdinal maxFreq, const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
     : network_(network),
+      laplacianFactor_(laplacianFactor),
       maxFreq_(maxFreq),
       unfoldingFactors_(std::vector<GlobalOrdinal>(network->numRotor() + 1)),
       comm_(comm) {
@@ -196,9 +183,9 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::FourierProblem(
     }
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
 Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
-FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
+FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
@@ -226,23 +213,22 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     return map.getConst();
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    constructInitialState(
-        const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
-            &map,
-        const Teuchos::RCP<Teuchos::Time> &timer) const {
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>>
+FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
+    const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
+        &map,
+    const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
     const GlobalOrdinal numRotor = network_->numRotor();
     auto state = Teuchos::rcp(
-        new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(map,
-                                                                           1));
+        new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>(map,
+                                                                         1));
     std::random_device device;
     std::mt19937 generator(device());
-    std::uniform_real_distribution<Scalar> distribution(-1.0, 1.0);
+    std::uniform_real_distribution<Real> distribution(-1.0, 1.0);
 
     {
         const GlobalOrdinal numLocalRows = map->getNodeNumElements();
@@ -258,19 +244,19 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         state->sync_device();
     }
 
-    std::vector<Scalar> stateNorm(1);
+    std::vector<Real> stateNorm(1);
     state->norm2(stateNorm);
 
-    std::vector<Scalar> scaleFactor(1);
+    std::vector<Real> scaleFactor(1);
     scaleFactor[0] = 1.0 / stateNorm[0];
     state->scale(scaleFactor);
 
     return state;
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<const Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>
+FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
     const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
         &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
@@ -279,20 +265,15 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
 
     // network parameters
     const GlobalOrdinal numRotor = network_->numRotor();
-    const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Scalar>>
+    const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Real>>
         &edgeList = network_->edgeList();
     const GlobalOrdinal numEdge = edgeList.size();
-
-    Scalar betaSum = 0.0;
-    for (const auto &edge : edgeList) {
-        const Scalar beta = std::get<2>(edge);
-        betaSum += beta;
-    }
+    const Real sumWeights = network_->sumWeights();
 
     // allocate memory for the Hamiltonian
     const GlobalOrdinal numEntryPerRow = 2 * numEdge + 1;
     auto hamiltonian = Teuchos::rcp(
-        new Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+        new Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>(
             map, numEntryPerRow, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
@@ -313,22 +294,22 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
 
         // collect column indices and values for current row
         std::vector<GlobalOrdinal> currentRowColumnIndices(numEntryPerRow);
-        std::vector<Scalar> currentRowValues(numEntryPerRow);
+        std::vector<Real> currentRowValues(numEntryPerRow);
 
         currentRowColumnIndices[0] = globalRowIdLin;
         currentRowValues[0] = 0.0;
         for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
-        currentRowValues[0] *= 0.5;
-        currentRowValues[0] += betaSum;
+        currentRowValues[0] *= 0.5 * laplacianFactor_;
+        currentRowValues[0] += sumWeights;
 
         GlobalOrdinal currentRowNonZeroCount = 1;
 
         for (GlobalOrdinal e = 0; e < numEdge; ++e) {
             const GlobalOrdinal j = std::get<0>(edgeList[e]);
             const GlobalOrdinal k = std::get<1>(edgeList[e]);
-            const Scalar beta = std::get<2>(edgeList[e]);
+            const Real beta = std::get<2>(edgeList[e]);
 
             for (GlobalOrdinal f = -1; f <= 1; ++f) {
                 if (f != 0) {
@@ -365,9 +346,9 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
     return hamiltonian.getConst();
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<const Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>
+FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::
     constructPreconditioner(
         const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
             &map,
@@ -377,17 +358,12 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
     // network parameters
     const GlobalOrdinal numRotor = network_->numRotor();
-    const Scalar eigValLowerBound = network_->eigValLowerBound();
-
-    Scalar betaSum = 0.0;
-    for (const auto &edge : network_->edgeList()) {
-        const Scalar beta = std::get<2>(edge);
-        betaSum += beta;
-    }
+    const Real sumWeights = network_->sumWeights();
+    const Real mu = -3 * network_->sumAbsWeights();
 
     // allocate memory for the preconditioner
     auto preconditioner = Teuchos::rcp(
-        new Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+        new Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>(
             map, 1, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
@@ -408,15 +384,15 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
         // collect column indices and values for current row
         std::vector<GlobalOrdinal> currentRowColumnIndices(1);
-        std::vector<Scalar> currentRowValues(1);
+        std::vector<Real> currentRowValues(1);
 
         currentRowColumnIndices[0] = globalRowIdLin;
         currentRowValues[0] = 0.0;
         for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
-        currentRowValues[0] = std::sqrt(
-            1.0 / (0.5 * currentRowValues[0] + betaSum - eigValLowerBound));
+        currentRowValues[0] =
+            1 / std::sqrt(currentRowValues[0] / 2 + sumWeights - mu);
 
         preconditioner->insertGlobalValues(
             globalRowIdLin, currentRowColumnIndices, currentRowValues);
@@ -426,10 +402,10 @@ FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     return preconditioner.getConst();
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    runInversePowerIteration(int maxPowerIter, Scalar tolPowerIter,
-                             int maxCgIter, Scalar tolCgIter,
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+Real FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::
+    runInversePowerIteration(int maxPowerIter, Real tolPowerIter, int maxCgIter,
+                             Real tolCgIter,
                              const std::string &fileName) const {
     // create timers
     Teuchos::RCP<Teuchos::Time> mapTime =
@@ -451,15 +427,16 @@ Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     auto x = constructInitialState(map, initialStateTime);
     auto H = constructHamiltonian(map, hamiltonianTime);
     auto M = constructPreconditioner(map, preconditionerTime);
+    auto mu = -3 * network_->sumAbsWeights();
 
-    std::vector<Scalar> lambda(1);
+    std::vector<Real> lambda(1);
     {
         // create local timer
         Teuchos::TimeMonitor localTimer(*powerIterationTime);
 
         // compute initial guess for lambda
         auto y = Teuchos::rcp(
-            new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+            new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>(
                 x->getMap(), 1));
         H->apply(*x, *y);
         x->dot(*y, lambda);
@@ -481,8 +458,8 @@ Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
         // construct shifted Hamiltonian
         auto A = Teuchos::rcp(
-            new ShiftedOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
-                H, network_->eigValLowerBound()));
+            new ShiftedOperator<Real, LocalOrdinal, GlobalOrdinal, Node>(
+                H, mu));
 
         // create solver parameters
         auto params = Teuchos::rcp(new Teuchos::ParameterList());
@@ -492,15 +469,15 @@ Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         for (int i = 1; i <= maxPowerIter; ++i) {
             // create linear problem
             auto z = Teuchos::rcp(
-                new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal,
+                new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal,
                                         Node>(x->getMap(), 1));
             auto problem = Teuchos::rcp(
                 new Belos::LinearProblem<
-                    Scalar,
-                    Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal,
+                    Real,
+                    Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal,
                                         Node>,
-                    Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal,
-                                     Node>>(A, z, x.getConst()));
+                    Tpetra::Operator<Real, LocalOrdinal, GlobalOrdinal, Node>>(
+                    A, z, x.getConst()));
             problem->setLeftPrec(M);
             problem->setRightPrec(M);
             problem->setHermitian();
@@ -508,9 +485,9 @@ Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
             // create CG solver
             Belos::PseudoBlockCGSolMgr<
-                Scalar,
-                Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>,
-                Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+                Real,
+                Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>,
+                Tpetra::Operator<Real, LocalOrdinal, GlobalOrdinal, Node>>
                 solver(problem, params);
 
             // solve
@@ -526,19 +503,19 @@ Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
             x = problem->getLHS();
 
             // normalize x = x / norm2(x)
-            std::vector<Scalar> xNorm(1);
+            std::vector<Real> xNorm(1);
             x->norm2(xNorm);
 
-            std::vector<Scalar> scaleFactor(1);
+            std::vector<Real> scaleFactor(1);
             scaleFactor[0] = 1.0 / xNorm[0];
             x->scale(scaleFactor);
 
             // compute new estimate for lambda
-            std::vector<Scalar> lambdaNew(1);
+            std::vector<Real> lambdaNew(1);
 
             H->apply(*x, *y);
             x->dot(*y, lambdaNew);
-            const Scalar dLambda = std::abs(lambda[0] - lambdaNew[0]);
+            const Real dLambda = std::abs(lambda[0] - lambdaNew[0]);
             lambda[0] = lambdaNew[0];
 
             if (comm_->getRank() == 0) {
@@ -565,7 +542,7 @@ Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // save estimated state
     if (fileName.compare("") != 0) {
         Tpetra::MatrixMarket::Writer<
-            Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>::
+            Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>::
             writeDenseFile(fileName, *x, "low_eigen_state",
                            "Estimated lowest energy eigenstate of Hamiltonian");
     }
@@ -574,18 +551,6 @@ Scalar FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     Teuchos::TimeMonitor::summarize();
 
     return lambda[0];
-}
-
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-nlohmann::json
-FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::description() const {
-    nlohmann::json description;
-
-    description["name"] = "fourier_problem";
-    description["network"] = network_->description();
-    description["max_freq"] = maxFreq_;
-
-    return description;
 }
 
 }  // namespace Cnqs

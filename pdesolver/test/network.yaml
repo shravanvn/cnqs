@@ -1,0 +1,17 @@
+---
+
+num_rotor: 4
+
+edges:
+- j: 0
+  k: 1
+  beta: 1.0
+- j: 1
+  k : 2
+  beta: -2.0
+- j: 2
+  k: 3
+  beta: 3.0
+- j: 3
+  k: 0
+  beta: 0.0

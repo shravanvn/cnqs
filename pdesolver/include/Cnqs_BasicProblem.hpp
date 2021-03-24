@@ -15,7 +15,6 @@
 #include <cmath>
 #include <iostream>
 #include <memory>
-#include <nlohmann/json.hpp>
 #include <random>
 #include <stdexcept>
 #include <string>
@@ -28,109 +27,105 @@
 
 namespace Cnqs {
 
-/**
- * @brief Basic finite-difference implementation of Problem
- *
- * The space \f$[0, 2\pi]^d\f$ is discretized uniformly with \f$n\f$ grid points
- * per dimension. Then any state \f$\psi \in \mathcal{H}^1([0, 2\pi]^d)\f$ that
- * is \f$2\pi\f$-periodic along each of the dimensions is discretized as a
- * \f$d\f$-dimensional \f$n \times \cdots \times n\f$ tensor \f$v\f$ with
- *
- * \f[
- *     v(i_0, \ldots, i_{d - 1}) \approx \psi(i_0 h, \ldots, i_{d - 1} h), \quad
- *     0 \leq i_k \leq n - 1, \quad 0 \leq k \leq d - 1, \quad
- *     h = \frac{2 \pi}{n}
- * \f]
- *
- * The derivative is approximated using a fourth-order five-point
- * center-difference stencil
- *
- * \f[
- *     f''(x) \approx \frac{-f(x - 2h) + 16 f(x - h) - 30 f(x) + 16 f(x + h)
- *     - f(x + 2h)}{h^2}
- * \f]
- *
- * Wrap-around is employed at the dimension edges to capture periodicy of the
- * state \f$\psi\f$ in the tensor \f$v\f$.
- *
- * @note This class is built on top of Trilinos to support distributed
- * computing.
- */
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-class BasicProblem : public Problem<Scalar, GlobalOrdinal> {
+// =============================================================================
+// Declarations
+// =============================================================================
+
+/// Basic finite-difference implementation of Problem
+///
+/// The space \f$[0, 2\pi]^d\f$ is discretized uniformly with \f$n\f$ grid
+/// points per dimension. Then any state \f$\psi \in \mathcal{H}^1([0,
+/// 2\pi]^d)\f$ that is \f$2\pi\f$-periodic along each of the dimensions is
+/// discretized as a \f$d\f$-dimensional \f$n \times \cdots \times n\f$ tensor
+/// \f$v\f$ with
+///
+/// \f[
+///     v(i_0, \ldots, i_{d - 1}) \approx \psi(i_0 h, \ldots, i_{d - 1} h),
+///     \quad 0 \leq i_k \leq n - 1, \quad 0 \leq k \leq d - 1, \quad h =
+///     \frac{2 \pi}{n}
+/// \f]
+///
+/// The derivative is approximated using a fourth-order five-point
+/// center-difference stencil
+///
+/// \f[
+///     f''(x) \approx \frac{-f(x - 2h) + 16 f(x - h) - 30 f(x) + 16 f(x + h)
+///     - f(x + 2h)}{h^2}
+/// \f]
+///
+/// Wrap-around is employed at the dimension edges to capture periodicy of the
+/// state \f$\psi\f$ in the tensor \f$v\f$.
+///
+/// @note This class is built on top of Trilinos to support distributed
+/// computing.
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+class BasicProblem : public Problem<Real, GlobalOrdinal> {
 public:
-    /**
-     * @brief Construct a BasicProblem given network and discretization
-     *
-     * @param [in] network Quantum rotor network \f$(\mathcal{V},
-     * \mathcal{E})\f$, implemented in Network.
-     * @param [in] numGridPoint Number of grid points per dimension, \f$n\f$.
-     * @param [in] comm Communicator.
-     */
+    /// @brief Construct a BasicProblem given network and discretization
+    ///
+    /// @param [in] network Quantum rotor network \f$(\mathcal{V},
+    /// \mathcal{E})\f$, implemented in Network.
+    ///
+    /// @param [in] laplacianFactor Prefactor \f$h\f$ of the Laplacian; must be
+    /// non-negative.
+    ///
+    /// @param [in] numGridPoint Number of grid points per dimension, \f$n\f$.
+    ///
+    /// @param [in] comm Communicator.
     BasicProblem(
-        const std::shared_ptr<const Network<Scalar, GlobalOrdinal>> &network,
-        GlobalOrdinal numGridPoint,
+        const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
+        Real laplaceFactor, GlobalOrdinal numGridPoint,
         const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
-    Scalar runInversePowerIteration(int numPowerIter, Scalar tolPowerIter,
-                                    int numCgIter, Scalar tolCgIter,
-                                    const std::string &fileName) const;
-
-    nlohmann::json description() const;
-
-    /**
-     * @brief Print BasicProblem object to output streams
-     *
-     * @param [in,out] os Output stream
-     * @param [in] problem Quantum rotor network Hamiltonian eigenproblem
-     * discretized on finite difference grid
-     * @return Output stream
-     */
-    friend std::ostream &operator<<(
-        std::ostream &os,
-        const BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>
-            &problem) {
-        os << problem.description().dump(4);
-        return os;
-    }
+    Real runInversePowerIteration(int numPowerIter, Real tolPowerIter,
+                                  int numCgIter, Real tolCgIter,
+                                  const std::string &fileName) const;
 
 private:
     Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
     constructMap(const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+    Teuchos::RCP<Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>>
     constructInitialState(
         const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
             &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     Teuchos::RCP<
-        const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+        const Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>
     constructHamiltonian(
         const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
             &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    std::shared_ptr<const Network<Scalar, GlobalOrdinal>> network_;
+    std::shared_ptr<const Network<Real, GlobalOrdinal>> network_;
+    Real laplaceFactor_;
     GlobalOrdinal numGridPoint_;
     std::vector<GlobalOrdinal> unfoldingFactors_;
-    std::vector<Scalar> theta_;
+    std::vector<Real> theta_;
     Teuchos::RCP<const Teuchos::Comm<int>> comm_;
 };
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BasicProblem(
-    const std::shared_ptr<const Network<Scalar, GlobalOrdinal>> &network,
-    GlobalOrdinal numGridPoint,
+// =============================================================================
+// Implementations
+// =============================================================================
+
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::BasicProblem(
+    const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
+    Real laplaceFactor, GlobalOrdinal numGridPoint,
     const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
     : network_(network),
+      laplaceFactor_(laplaceFactor),
       numGridPoint_(numGridPoint),
       unfoldingFactors_(std::vector<GlobalOrdinal>(network->numRotor() + 1)),
-      theta_(std::vector<Scalar>(numGridPoint)),
+      theta_(std::vector<Real>(numGridPoint)),
       comm_(comm) {
-    TEUCHOS_TEST_FOR_EXCEPTION(
-        numGridPoint_ < 5, std::domain_error,
-        "==Cnqs::BasicProblem::BasicProblem== Need at least 5 grid points");
+    TEUCHOS_TEST_FOR_EXCEPTION(numGridPoint_ < 5, std::domain_error,
+                               "Need at least 5 grid points");
+    TEUCHOS_TEST_FOR_EXCEPTION(laplaceFactor_ < static_cast<Real>(0),
+                               std::domain_error,
+                               "Laplacian pre-factor cannot be negative");
 
     const GlobalOrdinal numRotor = network_->numRotor();
     unfoldingFactors_[0] = 1;
@@ -138,15 +133,15 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::BasicProblem(
         unfoldingFactors_[d + 1] = numGridPoint_ * unfoldingFactors_[d];
     }
 
-    Scalar dTheta = 8.0 * std::atan(1.0) / numGridPoint_;
+    Real dTheta = 8.0 * std::atan(1.0) / numGridPoint_;
     for (GlobalOrdinal n = 0; n < numGridPoint_; ++n) {
         theta_[n] = n * dTheta;
     }
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
 Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
-BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
+BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
@@ -173,9 +168,9 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     return map.getConst();
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>>
+BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
     const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
         &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
@@ -184,12 +179,12 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
 
     const GlobalOrdinal numRotor = network_->numRotor();
     auto state = Teuchos::rcp(
-        new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(map,
-                                                                           1));
+        new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>(map,
+                                                                         1));
 
     std::random_device device;
     std::mt19937 generator(device());
-    std::uniform_real_distribution<Scalar> distribution(-1.0, 1.0);
+    std::uniform_real_distribution<Real> distribution(-1.0, 1.0);
 
     {
         const GlobalOrdinal numLocalRows = map->getNodeNumElements();
@@ -205,19 +200,19 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
         state->sync_device();
     }
 
-    std::vector<Scalar> stateNorm(1);
+    std::vector<Real> stateNorm(1);
     state->norm2(stateNorm);
 
-    std::vector<Scalar> scaleFactor(1);
+    std::vector<Real> scaleFactor(1);
     scaleFactor[0] = 1.0 / stateNorm[0];
     state->scale(scaleFactor);
 
     return state;
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Teuchos::RCP<const Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
-BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+Teuchos::RCP<const Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>
+BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
     const Teuchos::RCP<const Tpetra::Map<LocalOrdinal, GlobalOrdinal, Node>>
         &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
@@ -226,17 +221,17 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
 
     // network parameters
     const GlobalOrdinal numRotor = network_->numRotor();
-    const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Scalar>>
+    const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Real>>
         &edgeList = network_->edgeList();
 
     // finite difference discretization parameters
-    const Scalar h = theta_[1] - theta_[0];
-    const Scalar fact = -0.5 / (12.0 * h * h);
+    const Real h = theta_[1] - theta_[0];
+    const Real fact = -0.5 * laplaceFactor_ / (12.0 * h * h);
 
     // allocate memory for the Hamiltonian
     const GlobalOrdinal numEntryPerRow = 4 * numRotor + 1;
     auto hamiltonian = Teuchos::rcp(
-        new Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+        new Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>(
             map, numEntryPerRow, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
@@ -257,14 +252,14 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
 
         // collect column indices and values for current row
         std::vector<GlobalOrdinal> currentRowColumnIndices(numEntryPerRow);
-        std::vector<Scalar> currentRowValues(numEntryPerRow);
+        std::vector<Real> currentRowValues(numEntryPerRow);
 
         currentRowColumnIndices[0] = globalRowIdLin;
         currentRowValues[0] = -30.0 * fact * numRotor;
         for (const auto &edge : edgeList) {
             const GlobalOrdinal j = std::get<0>(edge);
             const GlobalOrdinal k = std::get<1>(edge);
-            const Scalar beta = std::get<2>(edge);
+            const Real beta = std::get<2>(edge);
 
             currentRowValues[0] +=
                 beta * (1.0 - 2.0 * std::cos(theta_[globalRowIdDim[j]] -
@@ -322,11 +317,13 @@ BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
     return hamiltonian.getConst();
 }
 
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
-    runInversePowerIteration(int maxPowerIter, Scalar tolPowerIter,
-                             int maxCgIter, Scalar tolCgIter,
-                             const std::string &fileName) const {
+template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
+Real BasicProblem<Real, LocalOrdinal, GlobalOrdinal,
+                  Node>::runInversePowerIteration(int maxPowerIter,
+                                                  Real tolPowerIter,
+                                                  int maxCgIter, Real tolCgIter,
+                                                  const std::string &fileName)
+    const {
     // create timers
     Teuchos::RCP<Teuchos::Time> mapTime =
         Teuchos::TimeMonitor::getNewCounter("CNQS: Map Construction Time");
@@ -349,14 +346,17 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // construct Hamiltonian
     auto H = constructHamiltonian(map, hamiltonianTime);
 
-    std::vector<Scalar> lambda(1);
+    // get lower bound for eigenvalues
+    const Real mu = -3 * network_->sumAbsWeights();
+
+    std::vector<Real> lambda(1);
     {
         // create local timer
         Teuchos::TimeMonitor localTimer(*powerIterationTime);
 
         // compute initial guess for lambda
         auto y = Teuchos::rcp(
-            new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
+            new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>(
                 x->getMap(), 1));
         H->apply(*x, *y);
         x->dot(*y, lambda);
@@ -378,8 +378,8 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
 
         // construct shifted Hamiltonian
         auto A = Teuchos::rcp(
-            new ShiftedOperator<Scalar, LocalOrdinal, GlobalOrdinal, Node>(
-                H, network_->eigValLowerBound()));
+            new ShiftedOperator<Real, LocalOrdinal, GlobalOrdinal, Node>(H,
+                                                                         mu));
 
         // create solver parameters
         auto params = Teuchos::rcp(new Teuchos::ParameterList());
@@ -389,23 +389,23 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
         for (int i = 1; i <= maxPowerIter; ++i) {
             // create linear problem
             auto z = Teuchos::rcp(
-                new Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal,
+                new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal,
                                         Node>(x->getMap(), 1));
             auto problem = Teuchos::rcp(
                 new Belos::LinearProblem<
-                    Scalar,
-                    Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal,
+                    Real,
+                    Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal,
                                         Node>,
-                    Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal,
-                                     Node>>(A, z, x.getConst()));
+                    Tpetra::Operator<Real, LocalOrdinal, GlobalOrdinal, Node>>(
+                    A, z, x.getConst()));
             problem->setHermitian();
             problem->setProblem();
 
             // create CG solver
             Belos::PseudoBlockCGSolMgr<
-                Scalar,
-                Tpetra::MultiVector<Scalar, LocalOrdinal, GlobalOrdinal, Node>,
-                Tpetra::Operator<Scalar, LocalOrdinal, GlobalOrdinal, Node>>
+                Real,
+                Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>,
+                Tpetra::Operator<Real, LocalOrdinal, GlobalOrdinal, Node>>
                 solver(problem, params);
 
             // solve
@@ -420,19 +420,19 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
             x = problem->getLHS();
 
             // normalize x = x / norm2(x)
-            std::vector<Scalar> xNorm(1);
+            std::vector<Real> xNorm(1);
             x->norm2(xNorm);
 
-            std::vector<Scalar> scaleFactor(1);
+            std::vector<Real> scaleFactor(1);
             scaleFactor[0] = 1.0 / xNorm[0];
             x->scale(scaleFactor);
 
             // compute new estimate for lambda
-            std::vector<Scalar> lambdaNew(1);
+            std::vector<Real> lambdaNew(1);
 
             H->apply(*x, *y);
             x->dot(*y, lambdaNew);
-            const Scalar dLambda = std::abs(lambda[0] - lambdaNew[0]);
+            const Real dLambda = std::abs(lambda[0] - lambdaNew[0]);
             lambda[0] = lambdaNew[0];
 
             if (comm_->getRank() == 0) {
@@ -449,7 +449,7 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
             }
         }
 
-        const Scalar h = theta_[1] - theta_[0];
+        const Real h = theta_[1] - theta_[0];
         x->scale(1.0 / (h * h));
 
         if (comm_->getRank() == 0) {
@@ -462,7 +462,7 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     // save estimated state
     if (fileName.compare("") != 0) {
         Tpetra::MatrixMarket::Writer<
-            Tpetra::CrsMatrix<Scalar, LocalOrdinal, GlobalOrdinal, Node>>::
+            Tpetra::CrsMatrix<Real, LocalOrdinal, GlobalOrdinal, Node>>::
             writeDenseFile(fileName, *x, "low_eigen_state",
                            "Estimated lowest energy eigenstate of Hamiltonian");
     }
@@ -471,18 +471,6 @@ Scalar BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::
     Teuchos::TimeMonitor::summarize();
 
     return lambda[0];
-}
-
-template <class Scalar, class LocalOrdinal, class GlobalOrdinal, class Node>
-nlohmann::json
-BasicProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>::description() const {
-    nlohmann::json description;
-
-    description["name"] = "basic_problem";
-    description["network"] = network_->description();
-    description["num_grid_point"] = numGridPoint_;
-
-    return description;
 }
 
 }  // namespace Cnqs

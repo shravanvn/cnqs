@@ -5,7 +5,7 @@ macro(CNQS_add_test TESTNAME)
     set_target_properties(${TESTNAME} PROPERTIES FOLDER test)
 endmacro()
 
-configure_file(network.json network.json COPYONLY)
+configure_file(network.yaml network.yaml COPYONLY)
 
 CNQS_add_test(cnqs_network_test Cnqs_NetworkTest.cpp)
 CNQS_add_test(cnqs_basic_problem_test Cnqs_BasicProblemTest.cpp)
