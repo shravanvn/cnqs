@@ -40,3 +40,9 @@ endif()
 if(CNQS_ENABLE_DOCS)
     add_subdirectory(docs)
 endif()
+
+configure_file(runs/lattice_2x2/submitjob.sbat runs/lattice_2x2/submitjob.sbat COPYONLY)
+configure_file(runs/lattice_2x2/network.yaml   runs/lattice_2x2/network.yaml   COPYONLY)
+
+configure_file(runs/complete_4/submitjob.sbat runs/complete_4/submitjob.sbat COPYONLY)
+configure_file(runs/complete_4/network.yaml   runs/complete_4/network.yaml   COPYONLY)
