@@ -9,10 +9,10 @@
 #SBATCH --account=lsa1
 #SBATCH --partition=standard
 #SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --ntasks-per-node=4
 #SBATCH --cpus-per-task=1
 #SBATCH --mem-per-cpu=5G
-#SBATCH --time=24:00:00
+#SBATCH --time=1:00:00
 
 #SBATCH --export=ALL
 
@@ -26,53 +26,36 @@ echo '==========='
 scontrol show hostnames ${SLURM_JOB_NODELIST}
 echo ''
 
-echo 'Start Time:'
-echo '==========='
-date +%Y-%m-%dT%H:%M:%S
-echo ''
+for ((MAX_FREQ = 4; MAX_FREQ <= 32; MAX_FREQ = MAX_FREQ + 4)); do
+    echo 'Start Time:'
+    echo '==========='
+    date +%Y-%m-%dT%H:%M:%S
+    echo ''
 
-echo 'Program Output:'
-echo '==============='
-OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK} OMP_PROC_BIND=spread OMP_PLACES=threads \
-    mpiexec ../../app/fourier_problem \
-    --network-file-name="network.yaml" \
-    --laplacian-factor=5.0 \
-    --max-frequency=31 \
-    --max-power-iter=1000 \
-    --tol-power-iter=1.0e-06 \
-    --max-cg-iter=1000 \
-    --tol-cg-iter=1.0e-06 \
-    --ground-state-file-name=""
-echo ''
+    echo 'Maximum Frequency:'
+    echo '=================='
+    echo ${MAX_FREQ}
+    echo ''
 
-echo 'End Time:'
-echo '==========='
-date +%Y-%m-%dT%H:%M:%S
-echo ''
+    echo 'Program Output:'
+    echo '==============='
+    OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK} OMP_PROC_BIND=spread OMP_PLACES=threads \
+        mpiexec ../../app/fourier_problem \
+        --network-file-name="network.yaml" \
+        --laplacian-factor=5.0 \
+        --max-frequency=${MAX_FREQ} \
+        --max-power-iter=1000 \
+        --tol-power-iter=1.0e-06 \
+        --max-cg-iter=1000 \
+        --tol-cg-iter=1.0e-06 \
+        --ground-state-file-name=ground-state-${MAX_FREQ}.mm | tee output-${MAX_FREQ}.out
+    echo ''
 
-echo 'Start Time:'
-echo '==========='
-date +%Y-%m-%dT%H:%M:%S
-echo ''
-
-echo 'Program Output:'
-echo '==============='
-OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK} OMP_PROC_BIND=spread OMP_PLACES=threads \
-    mpiexec ../../app/fourier_problem \
-    --network-file-name="network.yaml" \
-    --laplacian-factor=5.0 \
-    --max-frequency=32 \
-    --max-power-iter=1000 \
-    --tol-power-iter=1.0e-06 \
-    --max-cg-iter=1000 \
-    --tol-cg-iter=1.0e-06 \
-    --ground-state-file-name="ground_state.mm"
-echo ''
-
-echo 'End Time:'
-echo '==========='
-date +%Y-%m-%dT%H:%M:%S
-echo ''
+    echo 'End Time:'
+    echo '==========='
+    date +%Y-%m-%dT%H:%M:%S
+    echo ''
+done
 
 echo 'Program Statistics:'
 echo '==================='
