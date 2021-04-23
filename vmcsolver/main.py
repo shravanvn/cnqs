@@ -18,11 +18,20 @@ def main(config_file, output_file):
 
     # logging
     logger = Logger(output_file)
-    logger.set_variables(['acceptance_rate', 'b_norm', 'c_norm', 'energy_avg', 'energy_std', 'grad_norm'])
+    logger.set_variables(['acceptance_rate', 'b_norm',
+                         'c_norm', 'energy_avg', 'energy_std', 'grad_norm'])
     logger.write_header()
 
+    stdout_vars = ['energy_avg', 'energy_std', 'grad_norm']
+    print('=======================================================', flush=True)
+    print('{:>13s}'.format('step'), end='', flush=True)
+    logger.write_header_to_stdout(stdout_vars)
+    print('-------------------------------------------------------', flush=True)
+
+    # initialize neural quantum state
     nqs = NQS(config=config)
 
+    # main loop
     tic = time.time()
     for step in range(1, config['num_step'] + 1):
         averages, nqs = metropolis_sampler(step,
@@ -39,17 +48,14 @@ def main(config_file, output_file):
         logger.write_step(step)
 
         if step % config['logger_stdout_frequency'] == 0:
-            print("step = {:d}, ".format(step), end="", flush=True)
-            logger.write_stdout(['energy_avg', 'energy_std', 'grad_norm'])
+            print('{:13d}'.format(step), end='', flush=True)
+            logger.write_step_to_stdout(stdout_vars)
 
     toc = time.time()
 
-    print("================================================================================", flush=True)
-    print("Finished!", flush=True)
-    print("--------------------------------------------------------------------------------", flush=True)
-    print("elapsed_time = {:f} sec, ".format(toc - tic), end="", flush=True)
-    logger.write_stdout(['energy_avg', 'energy_std', 'grad_norm'])
-    print("================================================================================", flush=True)
+    print('-------------------------------------------------------', flush=True)
+    print('elapsed_time = {:f} sec'.format(toc - tic), flush=True)
+    print('=======================================================', flush=True)
 
 
 if __name__ == "__main__":

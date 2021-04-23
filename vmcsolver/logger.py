@@ -8,7 +8,7 @@ class Logger(object):
 
     def __init__(self, output_file):
         """Create a log file with given name."""
-        self.file_name = output_file 
+        self.file_name = output_file
         self.var_names = None
         self.var_values = None
 
@@ -39,12 +39,14 @@ class Logger(object):
         file_object.write(line)
         file_object.close()
 
-    def write_stdout(self, var_names):
+    def write_header_to_stdout(self, var_names):
         line = ""
         for i in range(len(var_names)):
-            if i == len(var_names) - 1:
-                line += "{:s} = {:e}".format(var_names[i], self.var_values[var_names[i]])
-            else:
-                line += "{:s} = {:e}, ".format(var_names[i], self.var_values[var_names[i]])
+            line += " {:>13s}".format(var_names[i])
+        print(line, flush=True)
 
+    def write_step_to_stdout(self, var_names):
+        line = ""
+        for i in range(len(var_names)):
+            line += " {:13e}".format(self.var_values[var_names[i]])
         print(line, flush=True)
