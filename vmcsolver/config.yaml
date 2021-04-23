@@ -1,38 +1,22 @@
 ---
 
-# RBM parameters
-num_visible: 2
-num_hidden: 8
+hamiltonian: hamiltonian.yaml
 
-# Hamiltonian is given by
-#
-#   H = - \frac{h}{2} \sum_{j = 1}^d \frac{\partial^2}{\partial \theta_j^2}
-#       + \sum_{(j, k) \in E} \beta_{jk} * (1 - 2 * \cos(\theta_j - \theta_k))
-#
-# In network specifications, edges are specified by the boundary nodes (j, k)
-# and interaction strength \beta_jk
-#
-# The following specification represents the graph:
-#
-#   0 - 1
-#
-h: 5.0
-edges:
-- j: 0
-  k: 1
-  beta: 1.0
+rbm:
+  num_hidden: 8
 
-# Gradient descent parmeters
-num_step: 1000
-lr: 1.0e-03
+gradient_descent:
+  num_steps: 1000
+  lr: 1.0e-03
 
-# SR parameters
-sr_reg: 1.0e-09
+stoch_reconfig:
+  sr_reg: 1.0e-09
 
-# Metropolis parameters
-metropolis_steps: 500
-bump_size: 3.5
-warm_steps: 250
+metropolis:
+  num_steps: 500
+  warm_steps: 250
+  cherry_pick: 1
+  bump_size: 3.5
 
-# Output frequency
-logger_stdout_frequency: 10
+logging:
+  stdout_frequency: 10

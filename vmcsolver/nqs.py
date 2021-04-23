@@ -8,18 +8,22 @@ from util import cartesian, g_func, angle, unroll, center
 
 class NQS:
     """Stores variational parameters and effective variables for lazy computation."""
+
     def __init__(self, config=None, state=None, vars=None):
         # variational parameters
-        n, H = config['num_visible'], config['num_hidden']
+        n, H = config['hamiltonian']['num_rotor'], config['rbm']['num_hidden']
         if vars is not None:
             self.vars = vars
         else:
-            var_list = [uniform(-1, 1, (n, 2)), uniform(-1, 1, (H, 2)), normal(0.0, 1.0, (H, n))]
-            self.vars = np.concatenate([np.reshape(var, -1) for var in var_list])
+            var_list = [uniform(-1, 1, (n, 2)), uniform(-1,
+                                                        1, (H, 2)), normal(0.0, 1.0, (H, n))]
+            self.vars = np.concatenate(
+                [np.reshape(var, -1) for var in var_list])
 
         self.cs = np.reshape(self.vars[:2 * n], (n, 2))
         self.bs = np.reshape(self.vars[2 * n:2 * (n + H)], (H, 2))
-        self.weights = np.reshape(self.vars[2 * (n + H): 2 * (n + H) + n * H], (H, n))
+        self.weights = np.reshape(
+            self.vars[2 * (n + H): 2 * (n + H) + n * H], (H, n))
 
         # visible state
         if state is not None:
@@ -30,7 +34,8 @@ class NQS:
         self.xs = cartesian(self.state)
 
         # effective variable stuff
-        self.xs_act = self.bs + np.tensordot(self.weights, self.xs, axes=[1, 0])
+        self.xs_act = self.bs + \
+            np.tensordot(self.weights, self.xs, axes=[1, 0])
         self.r_norms = np.array([np.linalg.norm(q) for q in self.xs_act])
         self.g_r_norms = g_func(self.r_norms)
         self.g_over_r_norms = self.g_r_norms / self.r_norms
@@ -51,10 +56,11 @@ class NQS:
 
 def propose_update(nqs, config):
     site = np.random.randint(len(nqs.state))
-    bump_size = config['bump_size']
+    bump_size = config['metropolis']['bump_size']
     theta_euclid = nqs.state[site]
     bump = np.random.uniform(-bump_size, bump_size)
     theta_euclid_new = unroll(center(angle(theta_euclid) + bump))
     new_nqs = deepcopy(nqs)
-    new_nqs.update_state(new_val=theta_euclid_new, site=site)  # lazy calculation
+    new_nqs.update_state(new_val=theta_euclid_new,
+                         site=site)  # lazy calculation
     return new_nqs

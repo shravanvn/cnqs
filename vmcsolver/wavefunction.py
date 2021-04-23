@@ -5,10 +5,10 @@ from util import perp
 
 
 def local_energy(nqs, config):
-    h = config['h']
+    h = config['hamiltonian']['h']
     kinetic = local_kinetic_energy(nqs)
     potential = 0
-    for edge in config['edges']:
+    for edge in config['hamiltonian']['edges']:
         j = edge['j']
         k = edge['k']
         beta = edge['beta']
@@ -29,7 +29,8 @@ def local_kinetic_energy(nqs):
     zs_zs_bar = shift + us_us * scale[:, None, None]
     zs_cov = zs_zs_bar - zs_bar_2
 
-    metric = zs_act_bar_2 + np.tensordot(np.square(nqs.weights), zs_cov, axes=[0, 0])
+    metric = zs_act_bar_2 + \
+        np.tensordot(np.square(nqs.weights), zs_cov, axes=[0, 0])
     xs_perp = perp(nqs.xs)
     xs_perp_2 = xs_perp[:, None, :] * xs_perp[:, :, None]
     return np.sum(xs_perp_2 * metric) - np.sum(nqs.xs * zs_act_bar)
@@ -74,6 +75,3 @@ def log_psi_bs(nqs):
 def log_psi_weights(nqs):
     """Returns gradient of logarithm of wavefunction with respect to weights."""
     return nqs.g_over_r_norms[:, None] * np.matmul(nqs.xs_act, nqs.xs.T)
-
-
-

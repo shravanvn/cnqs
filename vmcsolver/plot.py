@@ -44,11 +44,13 @@ def main(output_file, output_figure):
 if __name__ == "__main__":
     # parse run directory from command line arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output_file', default='output.csv')
-    parser.add_argument('--figure_name', default='')
+    parser.add_argument(
+        '--output_prefix',
+        default=None,
+        help="Prefix of the *_output.csv file",
+        type=str
+    )
     args = parser.parse_args()
 
-    if args.figure_name == '':
-        args.figure_name = args.output_file.replace(".csv", ".pdf")
-
-    main(args.output_file, args.figure_name)
+    main(args.output_prefix + "_output.csv",
+         args.output_prefix + "_output.pdf")

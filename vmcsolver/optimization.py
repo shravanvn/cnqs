@@ -15,8 +15,10 @@ def gradients(step, averages, logger=None):
 
 def stoch_reconfig(step, nqs, averages, config, logger=None):
     grads, fisher = gradients(step, averages, logger)
-    fisher_reg = fisher + config['sr_reg'] * np.eye(len(nqs.vars))
-    vars_new = nqs.vars - config['lr'] * np.linalg.solve(fisher_reg, grads)
+    fisher_reg = fisher + \
+        config['stoch_reconfig']['sr_reg'] * np.eye(len(nqs.vars))
+    vars_new = nqs.vars - \
+        config['gradient_descent']['lr'] * np.linalg.solve(fisher_reg, grads)
 
     if logger:
         logger.log_scalar('b_norm', np.sqrt(np.sum(nqs.bs**2)))

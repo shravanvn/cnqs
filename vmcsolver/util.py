@@ -56,5 +56,3 @@ def read_config(config_path):
         config_data = f.read()
         params = yaml.load(config_data, Loader=yaml.CLoader)
     return params
-
-

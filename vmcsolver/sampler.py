@@ -22,25 +22,28 @@ def metropolis_sampler(step,
     """
 
     num_acceptances = 0
-    history = [nqs_init]
+    history = []
     operators = sampling_functions(local_energy, log_psi_vars, config)
 
-    for t in range(config['metropolis_steps']):
-        last_nqs = history[-1]
+    start = config['metropolis']['warm_steps']
+    stop = config['metropolis']['num_steps']
+    step = config['metropolis']['cherry_pick']
+
+    last_nqs = nqs_init
+    for t in range(stop):
         new_nqs = propose_update(last_nqs, config)
         if accept(new_nqs, last_nqs, log_psi):
-            history.append(new_nqs)
+            last_nqs = new_nqs
             num_acceptances += 1
-        else:
+
+        if t >= start and (t - start) % step == 0:
             history.append(last_nqs)
 
-    start = config['warm_steps']
-
     if logger:
-        logger.log_scalar('energy_std', std(operators[-1], history[start:]))
-        logger.log_scalar('acceptance_rate', num_acceptances / config['metropolis_steps'])
+        logger.log_scalar('energy_std', std(operators[-1], history))
+        logger.log_scalar('acceptance_rate', num_acceptances / stop)
 
-    return [mean(op, history[start:]) for op in operators], history[-1]
+    return [mean(op, history) for op in operators], last_nqs
 
 
 def accept(new_nqs, last_nqs, log_psi):
