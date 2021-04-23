@@ -12,7 +12,7 @@ def local_energy(nqs, config):
         j = edge['j']
         k = edge['k']
         beta = edge['beta']
-        potential += beta * (1.0 - 2.0 * np.dot(nqs.xs[j], nqs.xs[k]))
+        potential += 2.0 * beta * (1.0 - np.dot(nqs.xs[j], nqs.xs[k]))
     return -0.5 * h * kinetic + potential
 
 
