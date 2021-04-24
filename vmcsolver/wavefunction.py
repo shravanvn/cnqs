@@ -5,7 +5,7 @@ from util import perp
 
 
 def local_energy(nqs, config):
-    h = config['hamiltonian']['h']
+    h = config['hamiltonian']['vertex_weight']
     kinetic = local_kinetic_energy(nqs)
     potential = 0
     for edge in config['hamiltonian']['edges']:

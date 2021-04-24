@@ -15,7 +15,7 @@
 
 num_rotor: 2
 
-h: 5.0
+vertex_weight: 5.0
 
 edges:
 - j: 0
