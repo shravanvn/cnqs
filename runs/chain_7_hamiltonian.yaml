@@ -1,0 +1,25 @@
+---
+
+num_rotor: 7
+
+vertex_weight: 5.0
+
+edges:
+- j: 0
+  k: 1
+  beta: 1.0
+- j: 1
+  k: 2
+  beta: 1.0
+- j: 2
+  k: 3
+  beta: 1.0
+- j: 3
+  k: 4
+  beta: 1.0
+- j: 4
+  k: 5
+  beta: 1.0
+- j: 5
+  k: 6
+  beta: 1.0
