@@ -2,29 +2,31 @@
 #include <tuple>
 #include <vector>
 
-#include "Cnqs_Network.hpp"
+#include "Cnqs_Hamiltonian.hpp"
 
 int main() {
     {
         int num_rotor = 4;
+        double vertex_weight = 5.0;
         std::vector<std::tuple<int, int, double>> edges{
             {0, 1, 0.5}, {1, 2, -1.5}, {2, 3, -2.5}, {3, 0, 1.5}};
 
-        Cnqs::Network<double, int> network(num_rotor, edges);
+        Cnqs::Hamiltonian<double, int> hamiltonian(num_rotor, vertex_weight,
+                                                   edges);
 
         std::cout << "Sum of weights: " << std::scientific
-                  << network.sumWeights() << std::endl;
+                  << hamiltonian.sumEdgeWeights() << std::endl;
         std::cout << "Sum of absolute values of weights: " << std::scientific
-                  << network.sumAbsWeights() << std::endl;
+                  << hamiltonian.sumAbsEdgeWeights() << std::endl;
     }
 
     {
-        Cnqs::Network<double, int> network("network.yaml");
+        Cnqs::Hamiltonian<double, int> hamiltonian("hamiltonian.yaml");
 
         std::cout << "Sum of weights: " << std::scientific
-                  << network.sumWeights() << std::endl;
+                  << hamiltonian.sumEdgeWeights() << std::endl;
         std::cout << "Sum of absolute values of weights: " << std::scientific
-                  << network.sumAbsWeights() << std::endl;
+                  << hamiltonian.sumAbsEdgeWeights() << std::endl;
     }
 
     return 0;

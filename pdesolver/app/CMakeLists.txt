@@ -6,4 +6,4 @@ endmacro()
 CNQS_add_app(basic_problem BasicProblem.cpp)
 CNQS_add_app(fourier_problem FourierProblem.cpp)
 
-configure_file(network.yaml network.yaml COPYONLY)
+configure_file(hamiltonian.yaml hamiltonian.yaml COPYONLY)

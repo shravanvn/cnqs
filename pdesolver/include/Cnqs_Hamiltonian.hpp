@@ -1,5 +1,5 @@
-#ifndef CNQS_NETWORK_HPP
-#define CNQS_NETWORK_HPP
+#ifndef CNQS_HAMILTONIAN_HPP
+#define CNQS_HAMILTONIAN_HPP
 
 #include <yaml-cpp/yaml.h>
 
@@ -16,40 +16,44 @@ namespace Cnqs {
 // Declarations
 // =============================================================================
 
-/// Quantum rotor network
+/// Quantum rotor hamiltonian
 ///
-/// This class provides an implementation for describing quantum rotor network
+/// This class provides an implementation for encoding quantum rotor Hamiltonian
 /// described by an undirected graph with vertices \f$\mathcal{V} = \{0, 1,
 /// \ldots, d - 1\}\f$ and edges \f$\mathcal{E} \subseteq \{(j, k) \in
 /// \mathcal{V} \times \mathcal{V}: j < k\}\f$. Each edge \f$(j, k)\f$ has an
 /// associated weight \f$\beta_{jk} \in \mathbb{R}\f$ describing the strength of
 /// interaction between rotors \f$j, k \in \mathcal{V}\f$.
 template <class Real, class Index>
-class Network {
+class Hamiltonian {
 public:
-    /// Construct a new Network object from node and edge specifications
-    Network(Index numRotor,
-            const std::vector<std::tuple<Index, Index, Real>> &edgeList);
+    /// Construct a new Hamiltonian object from node and edge specifications
+    Hamiltonian(Index numRotor, Real vertexWeight,
+                const std::vector<std::tuple<Index, Index, Real>> &edgeList);
 
-    /// Construct a new Network object from YAML formatted file
-    Network(const std::string &networkFileName);
+    /// Construct a new Hamiltonian object from YAML formatted file
+    Hamiltonian(const std::string &hamiltonianFileName);
 
-    /// Number of rotors in the network
+    /// Number of rotors in the Hamiltonian network
     const Index &numRotor() const { return numRotor_; }
 
-    /// List of edges in the network
+    /// Vertex weight of rotors in the Hamiltonian network
+    const Real &vertexWeight() const { return vertexWeight_; }
+
+    /// List of edges in the Hamiltonian network
     const std::vector<std::tuple<Index, Index, Real>> &edgeList() const {
         return edgeList_;
     }
 
     /// Sum of edge weights
-    Real sumWeights() const;
+    Real sumEdgeWeights() const;
 
     /// Sum of absolute value of edge weights
-    Real sumAbsWeights() const;
+    Real sumAbsEdgeWeights() const;
 
 private:
     Index numRotor_;
+    Real vertexWeight_;
     std::vector<std::tuple<Index, Index, Real>> edgeList_;
 };
 
@@ -58,12 +62,17 @@ private:
 // =============================================================================
 
 template <class Real, class Index>
-Network<Real, Index>::Network(
-    Index numRotor, const std::vector<std::tuple<Index, Index, Real>> &edgeList)
-    : numRotor_(numRotor), edgeList_(edgeList) {
+Hamiltonian<Real, Index>::Hamiltonian(
+    Index numRotor, Real vertexWeight,
+    const std::vector<std::tuple<Index, Index, Real>> &edgeList)
+    : numRotor_(numRotor), vertexWeight_(vertexWeight), edgeList_(edgeList) {
     // validate inputs
     if (numRotor_ < 2) {
         throw std::invalid_argument("At least two rotors are required");
+    }
+
+    if (vertexWeight_ < static_cast<Real>(0)) {
+        throw std::invalid_argument("Vertex weight must be non-negative");
     }
 
     for (auto &edge : edgeList_) {
@@ -88,18 +97,26 @@ Network<Real, Index>::Network(
 }
 
 template <class Real, class Index>
-Network<Real, Index>::Network(const std::string &networkFileName) {
-    YAML::Node network = YAML::LoadFile(networkFileName);
+Hamiltonian<Real, Index>::Hamiltonian(const std::string &hamiltonianFileName) {
+    YAML::Node hamiltonian = YAML::LoadFile(hamiltonianFileName);
 
-    const auto &edgeList = network["edges"];
+    numRotor_ = hamiltonian["num_rotor"].as<Index>();
+    if (numRotor_ < 2) {
+        throw std::invalid_argument("At least two rotors are required");
+    }
+
+    vertexWeight_ = hamiltonian["vertex_weight"].as<Real>();
+    if (vertexWeight_ < static_cast<Real>(0)) {
+        throw std::invalid_argument("Vertex weight must be non-negative");
+    }
+
+    const auto &edgeList = hamiltonian["edges"];
     if (!edgeList.IsSequence()) {
         throw std::invalid_argument(
             "The edges must be specified as a YAML array");
     }
 
-    numRotor_ = network["num_rotor"].as<Index>();
     edgeList_.reserve(edgeList.size());
-
     for (const auto &edge : edgeList) {
         Index j = edge["j"].as<Index>();
         Index k = edge["k"].as<Index>();
@@ -119,7 +136,7 @@ Network<Real, Index>::Network(const std::string &networkFileName) {
 }
 
 template <class Real, class Index>
-Real Network<Real, Index>::sumWeights() const {
+Real Hamiltonian<Real, Index>::sumEdgeWeights() const {
     Real sum = static_cast<Real>(0);
 
     for (const auto &edge : edgeList_) {
@@ -130,7 +147,7 @@ Real Network<Real, Index>::sumWeights() const {
 }
 
 template <class Real, class Index>
-Real Network<Real, Index>::sumAbsWeights() const {
+Real Hamiltonian<Real, Index>::sumAbsEdgeWeights() const {
     Real absSum = static_cast<Real>(0);
 
     for (const auto &edge : edgeList_) {

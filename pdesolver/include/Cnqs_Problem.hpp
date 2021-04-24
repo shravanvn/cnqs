@@ -6,20 +6,17 @@
 #include <tuple>
 #include <vector>
 
-#include "Cnqs_Network.hpp"
-
 namespace Cnqs {
 
 /// Abstract interface for defining quantum rotor eigenvalue minimization
 ///
-/// Given a quantum rotor network \f$(\mathcal{V}, \mathcal{E})\f$ (implemented
-/// via `Cnqs::Network`), one can associate a Hamiltonian on the Hilbert space
-/// \f$\mathcal{H}(\mathbb{S}^d)\f$
+/// Given a quantum rotor Hamiltonian defined on rotor network \f$(\mathcal{V},
+/// \mathcal{E})\f$ (implemented via `Cnqs::Hamiltonian`),
 ///
 /// \f[
 ///     H \psi(\theta) = -\frac{h}{2} \sum_{j = 0}^{d - 1} \frac{\partial^2
 ///     \psi}{\partial \theta_j^2} (\theta) + \sum_{(j, k) \in \mathcal{E}}
-///     \beta_{jk} [1 - 2 \cos(\theta_j - \theta_k)] \psi(\theta)
+///     \beta_{jk} [2 - 2 \cos(\theta_j - \theta_k)] \psi(\theta)
 /// \f]
 ///
 /// where we parametrize the circle \f$\mathbb{S}^1\f$ as \f$\theta_j \mapsto

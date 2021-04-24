@@ -21,7 +21,7 @@
 #include <tuple>
 #include <vector>
 
-#include "Cnqs_Network.hpp"
+#include "Cnqs_Hamiltonian.hpp"
 #include "Cnqs_Problem.hpp"
 #include "Cnqs_ShiftedOperator.hpp"
 
@@ -61,10 +61,10 @@ namespace Cnqs {
 template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
 class BasicProblem : public Problem<Real, GlobalOrdinal> {
 public:
-    /// @brief Construct a BasicProblem given network and discretization
+    /// @brief Construct a BasicProblem given hamiltonian and discretization
     ///
-    /// @param [in] network Quantum rotor network \f$(\mathcal{V},
-    /// \mathcal{E})\f$, implemented in Network.
+    /// @param [in] hamiltonian Quantum rotor hamiltonian \f$(\mathcal{V},
+    /// \mathcal{E})\f$, implemented in Hamiltonian.
     ///
     /// @param [in] laplacianFactor Prefactor \f$h\f$ of the Laplacian; must be
     /// non-negative.
@@ -72,10 +72,10 @@ public:
     /// @param [in] numGridPoint Number of grid points per dimension, \f$n\f$.
     ///
     /// @param [in] comm Communicator.
-    BasicProblem(
-        const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
-        Real laplaceFactor, GlobalOrdinal numGridPoint,
-        const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
+    BasicProblem(const std::shared_ptr<const Hamiltonian<Real, GlobalOrdinal>>
+                     &hamiltonian,
+                 GlobalOrdinal numGridPoint,
+                 const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
     Real runInversePowerIteration(int numPowerIter, Real tolPowerIter,
                                   int numCgIter, Real tolCgIter,
@@ -98,8 +98,7 @@ private:
             &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    std::shared_ptr<const Network<Real, GlobalOrdinal>> network_;
-    Real laplaceFactor_;
+    std::shared_ptr<const Hamiltonian<Real, GlobalOrdinal>> hamiltonian_;
     GlobalOrdinal numGridPoint_;
     std::vector<GlobalOrdinal> unfoldingFactors_;
     std::vector<Real> theta_;
@@ -112,22 +111,19 @@ private:
 
 template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
 BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::BasicProblem(
-    const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
-    Real laplaceFactor, GlobalOrdinal numGridPoint,
+    const std::shared_ptr<const Hamiltonian<Real, GlobalOrdinal>> &hamiltonian,
+    GlobalOrdinal numGridPoint,
     const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
-    : network_(network),
-      laplaceFactor_(laplaceFactor),
+    : hamiltonian_(hamiltonian),
       numGridPoint_(numGridPoint),
-      unfoldingFactors_(std::vector<GlobalOrdinal>(network->numRotor() + 1)),
+      unfoldingFactors_(
+          std::vector<GlobalOrdinal>(hamiltonian->numRotor() + 1)),
       theta_(std::vector<Real>(numGridPoint)),
       comm_(comm) {
     TEUCHOS_TEST_FOR_EXCEPTION(numGridPoint_ < 5, std::domain_error,
                                "Need at least 5 grid points");
-    TEUCHOS_TEST_FOR_EXCEPTION(laplaceFactor_ < static_cast<Real>(0),
-                               std::domain_error,
-                               "Laplacian pre-factor cannot be negative");
 
-    const GlobalOrdinal numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
     unfoldingFactors_[0] = 1;
     for (GlobalOrdinal d = 0; d < numRotor; ++d) {
         unfoldingFactors_[d + 1] = numGridPoint_ * unfoldingFactors_[d];
@@ -146,7 +142,7 @@ BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    const GlobalOrdinal numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
 
     const int rank = comm_->getRank();
     const int size = comm_->getSize();
@@ -177,7 +173,7 @@ BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    const GlobalOrdinal numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
     auto state = Teuchos::rcp(
         new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>(map,
                                                                          1));
@@ -219,14 +215,15 @@ BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    // network parameters
-    const GlobalOrdinal numRotor = network_->numRotor();
+    // hamiltonian parameters
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
+    const Real vertexWeight = hamiltonian_->vertexWeight();
     const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Real>>
-        &edgeList = network_->edgeList();
+        &edgeList = hamiltonian_->edgeList();
 
     // finite difference discretization parameters
     const Real h = theta_[1] - theta_[0];
-    const Real fact = -0.5 * laplaceFactor_ / (12.0 * h * h);
+    const Real fact = -0.5 * vertexWeight / (12.0 * h * h);
 
     // allocate memory for the Hamiltonian
     const GlobalOrdinal numEntryPerRow = 4 * numRotor + 1;
@@ -262,7 +259,7 @@ BasicProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
             const Real beta = std::get<2>(edge);
 
             currentRowValues[0] +=
-                beta * (1.0 - 2.0 * std::cos(theta_[globalRowIdDim[j]] -
+                beta * (2.0 - 2.0 * std::cos(theta_[globalRowIdDim[j]] -
                                              theta_[globalRowIdDim[k]]));
         }
 
@@ -347,7 +344,7 @@ Real BasicProblem<Real, LocalOrdinal, GlobalOrdinal,
     auto H = constructHamiltonian(map, hamiltonianTime);
 
     // get lower bound for eigenvalues
-    const Real mu = -3 * network_->sumAbsWeights();
+    const Real mu = -4 * hamiltonian_->sumAbsEdgeWeights();
 
     std::vector<Real> lambda(1);
     {

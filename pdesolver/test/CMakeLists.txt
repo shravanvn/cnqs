@@ -5,8 +5,8 @@ macro(CNQS_add_test TESTNAME)
     set_target_properties(${TESTNAME} PROPERTIES FOLDER test)
 endmacro()
 
-configure_file(network.yaml network.yaml COPYONLY)
+configure_file(hamiltonian.yaml hamiltonian.yaml COPYONLY)
 
-CNQS_add_test(cnqs_network_test Cnqs_NetworkTest.cpp)
+CNQS_add_test(cnqs_hamiltonian_test Cnqs_HamiltonianTest.cpp)
 CNQS_add_test(cnqs_basic_problem_test Cnqs_BasicProblemTest.cpp)
 CNQS_add_test(cnqs_fourier_problem_test Cnqs_FourierProblemTest.cpp)

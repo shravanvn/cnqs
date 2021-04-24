@@ -10,7 +10,7 @@
 #include <string>
 
 #include "Cnqs_FourierProblem.hpp"
-#include "Cnqs_Network.hpp"
+#include "Cnqs_Hamiltonian.hpp"
 
 int main(int argc, char **argv) {
     using Scalar = Tpetra::MultiVector<>::scalar_type;
@@ -22,8 +22,7 @@ int main(int argc, char **argv) {
 
     Tpetra::ScopeGuard tpetraScope(&argc, &argv);
     {
-        std::string networkFileName = "network.yaml";
-        Scalar laplacianFactor = 1.0;
+        std::string hamiltonianFileName = "hamiltonian.yaml";
         GlobalOrdinal maxFreq = 16;
         GlobalOrdinal maxPowerIter = 100;
         Scalar tolPowerIter = 1.0e-06;
@@ -32,11 +31,9 @@ int main(int argc, char **argv) {
         std::string groundStateFileName = "";
 
         auto cmdParser = Teuchos::CommandLineProcessor(false, true, true);
-        cmdParser.setOption("network-file-name", &networkFileName,
-                            "File containing YAML description of rotor network",
-                            true);
-        cmdParser.setOption("laplacian-factor", &laplacianFactor,
-                            "Laplacial pre-factor");
+        cmdParser.setOption(
+            "hamiltonian-file-name", &hamiltonianFileName,
+            "File containing YAML description of rotor hamiltonian", true);
         cmdParser.setOption("max-frequency", &maxFreq,
                             "Frequency cutoff in Fourier expansions", true);
         cmdParser.setOption(
@@ -58,11 +55,11 @@ int main(int argc, char **argv) {
         if (status == Teuchos::CommandLineProcessor::EParseCommandLineReturn::
                           PARSE_SUCCESSFUL) {
             const auto comm = Tpetra::getDefaultComm();
-            const auto network =
-                std::make_shared<Cnqs::Network<Scalar, GlobalOrdinal>>(
-                    networkFileName);
+            const auto hamiltonian =
+                std::make_shared<Cnqs::Hamiltonian<Scalar, GlobalOrdinal>>(
+                    hamiltonianFileName);
             Cnqs::FourierProblem<Scalar, LocalOrdinal, GlobalOrdinal, Node>
-                problem(network, laplacianFactor, maxFreq, comm);
+                problem(hamiltonian, maxFreq, comm);
             problem.runInversePowerIteration(maxPowerIter, tolPowerIter,
                                              maxCgIter, tolCgIter,
                                              groundStateFileName);

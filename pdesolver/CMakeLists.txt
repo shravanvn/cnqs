@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12 FATAL_ERROR)
 project(CNQS LANGUAGES CXX VERSION 0.2.0)
 
 set(CMAKE_PREFIX_PATH ${YAML_CPP_PREFIX}

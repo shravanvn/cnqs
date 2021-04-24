@@ -21,7 +21,7 @@
 #include <tuple>
 #include <vector>
 
-#include "Cnqs_Network.hpp"
+#include "Cnqs_Hamiltonian.hpp"
 #include "Cnqs_Problem.hpp"
 #include "Cnqs_ShiftedOperator.hpp"
 
@@ -60,18 +60,18 @@ namespace Cnqs {
 template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
 class FourierProblem : public Problem<Real, GlobalOrdinal> {
 public:
-    /// Construct a FourierProblem given network and cutoff frequency
+    /// Construct a FourierProblem given hamiltonian and cutoff frequency
     ///
-    /// @param [in] network Quantum rotor network \f$(\mathcal{V},
-    /// \mathcal{E})\f$, implemented in Network.
+    /// @param [in] hamiltonian Quantum rotor hamiltonian \f$(\mathcal{V},
+    /// \mathcal{E})\f$, implemented in Hamiltonian.
     ///
     /// @param [in] maxFreq Cutoff frequency, \f$\omega_\text{max}\f$.
     ///
     /// @param [in] comm Communicator.
-    FourierProblem(
-        const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
-        Real laplacianFactor, GlobalOrdinal maxFreq,
-        const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
+    FourierProblem(const std::shared_ptr<const Hamiltonian<Real, GlobalOrdinal>>
+                       &hamiltonian,
+                   GlobalOrdinal maxFreq,
+                   const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
     /// Run inverse power iteration
     ///
@@ -156,8 +156,7 @@ private:
             &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    std::shared_ptr<const Network<Real, GlobalOrdinal>> network_;
-    Real laplacianFactor_;
+    std::shared_ptr<const Hamiltonian<Real, GlobalOrdinal>> hamiltonian_;
     GlobalOrdinal maxFreq_;
     std::vector<GlobalOrdinal> unfoldingFactors_;
     Teuchos::RCP<const Teuchos::Comm<int>> comm_;
@@ -165,18 +164,18 @@ private:
 
 template <class Real, class LocalOrdinal, class GlobalOrdinal, class Node>
 FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::FourierProblem(
-    const std::shared_ptr<const Network<Real, GlobalOrdinal>> &network,
-    Real laplacianFactor, GlobalOrdinal maxFreq, const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
-    : network_(network),
-      laplacianFactor_(laplacianFactor),
+    const std::shared_ptr<const Hamiltonian<Real, GlobalOrdinal>> &hamiltonian,
+    GlobalOrdinal maxFreq, const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
+    : hamiltonian_(hamiltonian),
       maxFreq_(maxFreq),
-      unfoldingFactors_(std::vector<GlobalOrdinal>(network->numRotor() + 1)),
+      unfoldingFactors_(
+          std::vector<GlobalOrdinal>(hamiltonian->numRotor() + 1)),
       comm_(comm) {
     TEUCHOS_TEST_FOR_EXCEPTION(maxFreq_ < 1, std::domain_error,
                                "==Cnqs::FourierProblem::FourierProblem== Need "
                                "maximum frequency of at least one");
 
-    const GlobalOrdinal numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
     unfoldingFactors_[0] = 1;
     for (GlobalOrdinal d = 0; d < numRotor; ++d) {
         unfoldingFactors_[d + 1] = (2 * maxFreq_ + 1) * unfoldingFactors_[d];
@@ -190,7 +189,7 @@ FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructMap(
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    const GlobalOrdinal numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
 
     const int rank = comm_->getRank();
     const int size = comm_->getSize();
@@ -222,7 +221,7 @@ FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructInitialState(
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    const GlobalOrdinal numRotor = network_->numRotor();
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
     auto state = Teuchos::rcp(
         new Tpetra::MultiVector<Real, LocalOrdinal, GlobalOrdinal, Node>(map,
                                                                          1));
@@ -263,12 +262,13 @@ FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    // network parameters
-    const GlobalOrdinal numRotor = network_->numRotor();
+    // hamiltonian parameters
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
+    const Real vertexWeight = hamiltonian_->vertexWeight();
     const std::vector<std::tuple<GlobalOrdinal, GlobalOrdinal, Real>>
-        &edgeList = network_->edgeList();
+        &edgeList = hamiltonian_->edgeList();
     const GlobalOrdinal numEdge = edgeList.size();
-    const Real sumWeights = network_->sumWeights();
+    const Real sumWeights = hamiltonian_->sumEdgeWeights();
 
     // allocate memory for the Hamiltonian
     const GlobalOrdinal numEntryPerRow = 2 * numEdge + 1;
@@ -301,8 +301,8 @@ FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::constructHamiltonian(
         for (GlobalOrdinal d = 0; d < numRotor; ++d) {
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
-        currentRowValues[0] *= 0.5 * laplacianFactor_;
-        currentRowValues[0] += sumWeights;
+        currentRowValues[0] *= 0.5 * vertexWeight;
+        currentRowValues[0] += 2.0 * sumWeights;
 
         GlobalOrdinal currentRowNonZeroCount = 1;
 
@@ -356,10 +356,11 @@ FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::
     // create local timer
     Teuchos::TimeMonitor localTimer(*timer);
 
-    // network parameters
-    const GlobalOrdinal numRotor = network_->numRotor();
-    const Real sumWeights = network_->sumWeights();
-    const Real mu = -3 * network_->sumAbsWeights();
+    // hamiltonian parameters
+    const GlobalOrdinal numRotor = hamiltonian_->numRotor();
+    const Real vertexWeight = hamiltonian_->vertexWeight();
+    const Real sumWeights = hamiltonian_->sumEdgeWeights();
+    const Real mu = -4 * hamiltonian_->sumAbsEdgeWeights();
 
     // allocate memory for the preconditioner
     auto preconditioner = Teuchos::rcp(
@@ -392,7 +393,8 @@ FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::
             currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
         }
         currentRowValues[0] =
-            1 / std::sqrt(currentRowValues[0] / 2 + sumWeights - mu);
+            1 / std::sqrt(vertexWeight * currentRowValues[0] / 2 +
+                          2 * sumWeights - mu);
 
         preconditioner->insertGlobalValues(
             globalRowIdLin, currentRowColumnIndices, currentRowValues);
@@ -427,7 +429,7 @@ Real FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::
     auto x = constructInitialState(map, initialStateTime);
     auto H = constructHamiltonian(map, hamiltonianTime);
     auto M = constructPreconditioner(map, preconditionerTime);
-    auto mu = -3 * network_->sumAbsWeights();
+    auto mu = -4 * hamiltonian_->sumAbsEdgeWeights();
 
     std::vector<Real> lambda(1);
     {
@@ -458,8 +460,8 @@ Real FourierProblem<Real, LocalOrdinal, GlobalOrdinal, Node>::
 
         // construct shifted Hamiltonian
         auto A = Teuchos::rcp(
-            new ShiftedOperator<Real, LocalOrdinal, GlobalOrdinal, Node>(
-                H, mu));
+            new ShiftedOperator<Real, LocalOrdinal, GlobalOrdinal, Node>(H,
+                                                                         mu));
 
         // create solver parameters
         auto params = Teuchos::rcp(new Teuchos::ParameterList());
