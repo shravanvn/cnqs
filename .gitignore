@@ -1,9 +1,5 @@
 runs/
 !runs/generate_lattice_hamiltonian.py
-!runs/complete_4_hamiltonian.yaml
-!runs/complete_4_pde_submitjob.sbat
-!runs/lattice_2x2_hamiltonian.yaml
-!runs/lattice_2x2_pde_submitjob.sbat
 
 pdesolver/do-configure
 pdesolver/build/
