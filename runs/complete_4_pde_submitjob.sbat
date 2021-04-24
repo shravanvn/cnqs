@@ -27,41 +27,26 @@ export OMP_PLACES=threads
 
 export CNQS_BUILD_DIR=${SLURM_SUBMIT_DIR}/pdesolver/build
 
-echo 'Running on:'
-echo '==========='
-scontrol show hostnames ${SLURM_JOB_NODELIST}
+echo 'Running on:' $(scontrol show hostnames ${SLURM_JOB_NODELIST})
 echo ''
 
 for ((MAX_FREQ = 1; MAX_FREQ <= 32; MAX_FREQ = MAX_FREQ + 1)); do
-    echo 'Start Time:'
-    echo '==========='
-    date +%Y-%m-%dT%H:%M:%S
-    echo ''
+    echo 'Maximum Frequency:' ${MAX_FREQ}
+    echo 'Start Time:' $(date +%Y-%m-%dT%H:%M:%S)
 
-    echo 'Maximum Frequency:'
-    echo '=================='
-    echo ${MAX_FREQ}
-    echo ''
-
-    echo 'Program Output:'
-    echo '==============='
     mpiexec ${CNQS_BUILD_DIR}/app/fourier_problem \
-        --network-file-name=runs/complete_4_hamiltonian.yaml \
+        --hamiltonian-file-name=runs/complete_4_hamiltonian.yaml \
         --max-frequency=${MAX_FREQ} \
         --max-power-iter=10000 \
         --tol-power-iter=1.0e-15 \
         --max-cg-iter=10000 \
         --tol-cg-iter=1.0e-15 \
-        --ground-state-file-name=runs/complete_4_pde_${MAX_FREQ}_ground_state.mm \
-        > runs/complete_4_pde_${MAX_FREQ}_stdout.txt
-    echo ''
+        --ground-state-file-name=runs/complete_4_pde_ground_state_${MAX_FREQ}.mm \
+        > runs/complete_4_pde_stdout_${MAX_FREQ}.txt
 
-    echo 'End Time:'
-    echo '==========='
-    date +%Y-%m-%dT%H:%M:%S
+    echo 'End Time:' $(date +%Y-%m-%dT%H:%M:%S)
     echo ''
 done
 
 echo 'Program Statistics:'
-echo '==================='
 sstat -j ${SLURM_JOB_ID} --format='AveRSS,MaxRSS'
