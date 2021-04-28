@@ -19,4 +19,4 @@ metropolis:
   bump_size: 3.5
 
 logging:
-  stdout_frequency: 10
+  stdout_frequency: 100

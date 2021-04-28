@@ -13,10 +13,10 @@ stoch_reconfig:
   sr_reg: 1.0e-06
 
 metropolis:
-  num_steps: 2000
-  warm_steps: 1000
+  num_steps: 6000
+  warm_steps: 3000
   cherry_pick: 1
   bump_size: 3.5
 
 logging:
-  stdout_frequency: 10
+  stdout_frequency: 100
