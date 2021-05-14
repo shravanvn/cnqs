@@ -60,26 +60,28 @@ int main(int argc, char **argv) {
             double visible_bias_norm = nqs.VisibleBiasNorm();
             double hidden_bias_norm = nqs.HiddenBiasNorm();
 
-            std::vector<double> gradient_avg(num_vars);
-            std::vector<double> gradient_tensor_avg(num_vars * num_vars);
-            std::vector<double> energy_gradient_avg(num_vars);
-            double energy_avg;
-            double energy_std;
+            double local_energy_avg;
+            double local_energy_std;
+            std::vector<double> log_psi_gradient_avg(num_vars);
+            std::vector<double> log_psi_gradient_outer_avg(num_vars * num_vars);
+            std::vector<double> local_energy_log_psi_gradient_avg(num_vars);
             double acceptance_rate;
-            cnqs::MetropolisSampler(config, nqs, gradient_avg,
-                                    gradient_tensor_avg, energy_gradient_avg,
-                                    energy_avg, energy_std, acceptance_rate,
-                                    rng);
+            cnqs::MetropolisSampler(
+                config, nqs, local_energy_avg, local_energy_std,
+                log_psi_gradient_avg, log_psi_gradient_outer_avg,
+                local_energy_log_psi_gradient_avg, acceptance_rate, rng);
 
             double gradient_norm;
             cnqs::StochasticReconfiguration(
-                config, nqs, gradient_avg, gradient_tensor_avg,
-                energy_gradient_avg, energy_avg, gradient_norm);
+                config, nqs, local_energy_avg, log_psi_gradient_avg,
+                log_psi_gradient_outer_avg, local_energy_log_psi_gradient_avg,
+                gradient_norm);
 
             output_file << t << "," << std::scientific << visible_bias_norm
                         << "," << hidden_bias_norm << "," << acceptance_rate
-                        << "," << energy_avg << "," << energy_std << ","
-                        << gradient_norm << std::defaultfloat << std::endl;
+                        << "," << local_energy_avg << "," << local_energy_std
+                        << "," << gradient_norm << std::defaultfloat
+                        << std::endl;
         }
 
         output_file.close();

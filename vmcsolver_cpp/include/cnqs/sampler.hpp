@@ -9,11 +9,11 @@
 
 namespace cnqs {
 
-void MetropolisSampler(const Config &config, Nqs &nqs,
-                       std::vector<double> &gradient_avg,
-                       std::vector<double> &gradient_tensor_avg,
-                       std::vector<double> &energy_gradient_avg,
-                       double &energy_avg, double &energy_std,
+void MetropolisSampler(const Config &config, Nqs &nqs, double &local_energy_avg,
+                       double &local_energy_std,
+                       std::vector<double> &log_psi_gradient_avg,
+                       std::vector<double> &log_psi_gradient_outer_avg,
+                       std::vector<double> &local_energy_log_psi_gradient_avg,
                        double &acceptance_rate, std::mt19937 &rng);
 
 }

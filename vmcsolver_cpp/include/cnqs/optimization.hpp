@@ -6,11 +6,12 @@
 
 namespace cnqs {
 
-void StochasticReconfiguration(const Config &config, Nqs &nqs,
-                               const std::vector<double> &gradient_avg,
-                               const std::vector<double> &gradient_tensor_avg,
-                               const std::vector<double> &energy_gradient_avg,
-                               double energy_avg, double &gradient_norm);
+void StochasticReconfiguration(
+    const Config &config, Nqs &nqs, double local_energy_avg,
+    const std::vector<double> &log_psi_gradient_avg,
+    const std::vector<double> &log_psi_gradient_outer_avg,
+    const std::vector<double> &local_energy_log_psi_gradient_avg,
+    double &gradient_norm);
 
 }
 

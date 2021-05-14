@@ -89,34 +89,35 @@ double cnqs::Nqs::HiddenBiasNorm() const {
 }
 
 double cnqs::Nqs::LogPsi() const {
-    double log_amplitude = 0.0;
+    double log_psi = 0.0;
 
     for (int i = 0; i < n_; ++i) {
         for (int j = 0; j < 2; ++j) {
-            log_amplitude += vars_[i + j * n_] * x_[i + j * n_];
+            log_psi += vars_[i + j * n_] * x_[i + j * n_];
         }
     }
 
     for (int i = 0; i < h_; ++i) {
-        log_amplitude += std::log(boost::math::cyl_bessel_i(0.0, r_[i]));
+        log_psi += std::log(boost::math::cyl_bessel_i(0.0, r_[i]));
     }
 
-    return log_amplitude;
+    return log_psi;
 }
 
 void cnqs::Nqs::LocalEnergyAndLogPsiGradient(
     const cnqs::Config &config, double &local_energy,
-    std::vector<double> &gradient) const {
-    // compute gradient
+    std::vector<double> &log_psi_gradient) const {
+    // compute gradient of log amplitude
     for (int i = 0; i < n_; ++i) {
         for (int j = 0; j < 2; ++j) {
-            gradient[i + j * n_] = x_[i + j * n_];
+            log_psi_gradient[i + j * n_] = x_[i + j * n_];
         }
     }
 
     for (int i = 0; i < h_; ++i) {
         for (int j = 0; j < 2; ++j) {
-            gradient[2 * n_ + i + j * h_] = g_r_over_r_[i] * x_act_[i + j * h_];
+            log_psi_gradient[2 * n_ + i + j * h_] =
+                g_r_over_r_[i] * x_act_[i + j * h_];
         }
     }
 
@@ -128,7 +129,7 @@ void cnqs::Nqs::LocalEnergyAndLogPsiGradient(
 
         for (int i = 0; i < h_; ++i) {
             for (int j = 0; j < n_; ++j) {
-                gradient[2 * n_ + 2 * h_ + i + j * h_] =
+                log_psi_gradient[2 * n_ + 2 * h_ + i + j * h_] =
                     g_r_over_r_[i] * temp[i + j * h_];
             }
         }
@@ -140,7 +141,7 @@ void cnqs::Nqs::LocalEnergyAndLogPsiGradient(
         // z_bar = log_psi_hidden(nqs)
         std::vector<double> z_bar(2 * h_);
         for (int i = 0; i < 2 * h_; ++i) {
-            z_bar[i] = gradient[2 * n_ + i];
+            z_bar[i] = log_psi_gradient[2 * n_ + i];
         }
 
         // z_act_bar = visible_bias + weights.T * z_bar

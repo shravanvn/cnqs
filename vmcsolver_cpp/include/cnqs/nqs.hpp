@@ -25,9 +25,9 @@ public:
 
     double LogPsi() const;
 
-    void LocalEnergyAndLogPsiGradient(const Config &config,
-                                      double &local_energy,
-                                      std::vector<double> &gradient) const;
+    void LocalEnergyAndLogPsiGradient(
+        const Config &config, double &local_energy,
+        std::vector<double> &log_psi_gradient) const;
 
     void Output(const std::string &file_name) const;
 
