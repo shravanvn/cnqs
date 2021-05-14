@@ -44,7 +44,11 @@ cnqs::Config::Config(const std::string &file_name) {
         metropolis_warm_steps = metropolis["warm_steps"].as<int>();
         metropolis_cherry_pick = metropolis["cherry_pick"].as<int>();
         metropolis_bump_size = metropolis["bump_size"].as<double>();
-        metropolis_bump_single = metropolis["bump_single"].as<bool>();
+        if (metropolis["bump_single"]) {
+            metropolis_bump_single = metropolis["bump_single"].as<bool>();
+        } else {
+            metropolis_bump_single = true;
+        }
     }
 
     {
