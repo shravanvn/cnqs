@@ -12,8 +12,8 @@ namespace cnqs {
 namespace vmcsolver {
 
 /// Metropolis sampler
-void MetropolisSampler(const Config &config, Nqs &nqs, double &local_energy_avg,
-                       double &local_energy_std,
+void MetropolisSampler(int step, const Config &config, Nqs &nqs,
+                       double &local_energy_avg, double &local_energy_std,
                        std::vector<double> &log_psi_gradient_avg,
                        std::vector<double> &log_psi_gradient_outer_avg,
                        std::vector<double> &local_energy_log_psi_gradient_avg,

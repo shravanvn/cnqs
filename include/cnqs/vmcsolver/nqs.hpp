@@ -16,11 +16,9 @@ class Nqs {
 public:
     Nqs(const Config &config);
 
-    void RandInit(std::mt19937 &rng);
-
-    void UpdateVars(const std::vector<double> &vars_diff);
-
     int NumVars() const { return vars_.size(); }
+
+    const std::vector<double> &State() const { return theta_; }
 
     double VisibleBiasNorm() const;
 
@@ -32,9 +30,13 @@ public:
         const Config &config, double &local_energy,
         std::vector<double> &log_psi_gradient) const;
 
+    Nqs ProposeUpdate(const Config &config, std::mt19937 &rng) const;
+
     void Output(const std::string &file_name) const;
 
-    Nqs ProposeUpdate(const Config &config, std::mt19937 &rng) const;
+    void RandInit(std::mt19937 &rng);
+
+    void UpdateVars(const std::vector<double> &vars_diff);
 
 private:
     void Recompute();

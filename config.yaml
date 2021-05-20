@@ -7,6 +7,7 @@ metropolis:
   cherry_pick: 10
   bump_size: 3.5
   bump_single: True
+  save_samples: True
 gradient_descent:
   num_steps: 1000
   lr: 0.01

@@ -9,6 +9,7 @@ target_include_directories(cnqs_vmcsolver PUBLIC
 )
 target_link_libraries(cnqs_vmcsolver PRIVATE
     Boost::math_tr1
+    Boost::filesystem
     blaspp
     lapackpp
     yaml-cpp

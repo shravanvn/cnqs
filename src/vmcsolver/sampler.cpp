@@ -1,15 +1,28 @@
 #include "cnqs/vmcsolver/sampler.hpp"
 
 #include <cmath>
+#include <fstream>
+#include <iomanip>
 
 void cnqs::vmcsolver::MetropolisSampler(
-    const cnqs::vmcsolver::Config &config, cnqs::vmcsolver::Nqs &nqs,
+    int step, const cnqs::vmcsolver::Config &config, cnqs::vmcsolver::Nqs &nqs,
     double &local_energy_avg, double &local_energy_std,
     std::vector<double> &log_psi_gradient_avg,
     std::vector<double> &log_psi_gradient_outer_avg,
     std::vector<double> &local_energy_log_psi_gradient_avg,
     double &acceptance_rate, std::mt19937 &rng) {
-    int num_vars = nqs.NumVars();
+    std::ofstream file;
+
+    if (config.metropolis_save_samples) {
+        const std::string file_name =
+            config.output_prefix + "samples_" + std::to_string(step) + ".dat";
+
+        file.open(file_name);
+
+        file << std::scientific;
+    }
+
+    const int num_vars = nqs.NumVars();
 
     for (int i = 0; i < num_vars; ++i) {
         log_psi_gradient_avg[i] = 0.0;
@@ -28,6 +41,14 @@ void cnqs::vmcsolver::MetropolisSampler(
     int num_acceptance = 0;
     int count = 0;
     for (int t = 0; t < config.metropolis_num_steps; ++t) {
+        if (config.metropolis_save_samples) {
+            for (const auto &s : nqs.State()) {
+                file << std::setw(24) << std::setprecision(17) << s << " ";
+            }
+
+            file << std::endl;
+        }
+
         cnqs::vmcsolver::Nqs nqs_new = nqs.ProposeUpdate(config, rng);
 
         double log_psi_old = nqs.LogPsi();
@@ -36,7 +57,7 @@ void cnqs::vmcsolver::MetropolisSampler(
         double log_p = std::log(uniform(rng));
 
         if (log_psi_new > log_psi_old + 0.5 * log_p) {
-            nqs = nqs_new;
+            nqs = std::move(nqs_new);
             ++num_acceptance;
         }
 
@@ -65,6 +86,14 @@ void cnqs::vmcsolver::MetropolisSampler(
 
             ++count;
         }
+    }
+
+    if (config.metropolis_save_samples) {
+        for (const auto &s : nqs.State()) {
+            file << std::setw(13) << s << " ";
+        }
+
+        file << std::endl;
     }
 
     for (int i = 0; i < num_vars; ++i) {

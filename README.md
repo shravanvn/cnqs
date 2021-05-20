@@ -12,8 +12,8 @@ To build the libraries/executables in this project, the following are required:
 *   If building the PDE eigensolvers:
     *   [Trilinos](https://github.com/trilinos/Trilinos/)
 *   If building the VMC eigensolver:
-    *   [Boost](https://www.boost.org/) (only the math_tr1 sub-library is
-        sufficient)
+    *   [Boost](https://www.boost.org/) (only the math_tr1 and filesystem
+        sub-libraries are sufficient)
     *   [BLAS++](https://bitbucket.org/icl/blaspp/)
     *   [LAPACK++](https://bitbucket.org/icl/lapackpp/)
 

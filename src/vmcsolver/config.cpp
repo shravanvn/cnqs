@@ -2,6 +2,7 @@
 
 #include <yaml-cpp/yaml.h>
 
+#include <boost/filesystem.hpp>
 #include <ctime>
 #include <fstream>
 #include <iostream>
@@ -49,6 +50,11 @@ cnqs::vmcsolver::Config::Config(const std::string &file_name) {
         } else {
             metropolis_bump_single = true;
         }
+        if (metropolis["save_samples"]) {
+            metropolis_save_samples = metropolis["save_samples"].as<bool>();
+        } else {
+            metropolis_save_samples = false;
+        }
     }
 
     {
@@ -65,6 +71,23 @@ cnqs::vmcsolver::Config::Config(const std::string &file_name) {
     char time_string[20];
     std::strftime(time_string, 20, "%Y-%m-%d_%H-%M-%S", std::localtime(&time));
     output_prefix = time_string;
+
+    if (output_prefix.back() != '/') {
+        output_prefix += "/";
+    }
+}
+
+void cnqs::vmcsolver::Config::UpdateOutputPrefix(
+    const std::string &new_output_prefix) {
+    output_prefix = new_output_prefix;
+
+    if (output_prefix.back() != '/') {
+        output_prefix += "/";
+    }
+}
+
+void cnqs::vmcsolver::Config::CreateDirs() const {
+    boost::filesystem::create_directories(output_prefix);
 }
 
 void cnqs::vmcsolver::Config::Output() const {
@@ -118,6 +141,8 @@ void cnqs::vmcsolver::Config::Output() const {
         out << YAML::Value << metropolis_bump_size;
         out << YAML::Key << "bump_single";
         out << YAML::Value << metropolis_bump_single;
+        out << YAML::Key << "save_samples";
+        out << YAML::Value << metropolis_save_samples;
         out << YAML::EndMap;
     }
     out << YAML::Key << "gradient_descent";
@@ -142,7 +167,7 @@ void cnqs::vmcsolver::Config::Output() const {
     out << YAML::Value << output_prefix;
     out << YAML::EndMap;
 
-    std::ofstream output_file(output_prefix + "_config.yaml");
+    std::ofstream output_file(output_prefix + "config.yaml");
     if (!output_file.is_open()) {
         throw std::runtime_error("Could not open file to write configuration");
     }

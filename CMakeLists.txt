@@ -10,12 +10,11 @@ if(CNQS_BUILD_PDESOLVER)
     find_package(Trilinos REQUIRED COMPONENTS Teuchos Tpetra Belos)
 
     set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER})
-    set(CMAKE_CXX_FLAGS ${Trilinos_CXX_COMPILER_FLAGS}
-                        ${CMAKE_CXX_FLAGS})
+    set(CMAKE_CXX_FLAGS "${Trilinos_CXX_COMPILER_FLAGS} ${CMAKE_CXX_FLAGS}")
 endif()
 
 if(CNQS_BUILD_VMCSOLVER)
-    find_package(Boost REQUIRED COMPONENTS math_tr1)
+    find_package(Boost REQUIRED COMPONENTS math_tr1 filesystem)
     find_package(blaspp REQUIRED)
     find_package(lapackpp REQUIRED)
 endif()
