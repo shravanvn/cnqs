@@ -14,8 +14,8 @@ void cnqs::vmcsolver::MetropolisSampler(
     std::ofstream file;
 
     if (config.metropolis_save_samples) {
-        const std::string file_name =
-            config.output_prefix + "samples_" + std::to_string(step) + ".dat";
+        const std::string file_name = config.output_prefix + "samples/step_" +
+                                      std::to_string(step) + ".dat";
 
         file.open(file_name);
 

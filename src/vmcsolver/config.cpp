@@ -88,6 +88,7 @@ void cnqs::vmcsolver::Config::UpdateOutputPrefix(
 
 void cnqs::vmcsolver::Config::CreateDirs() const {
     boost::filesystem::create_directories(output_prefix);
+    boost::filesystem::create_directories(output_prefix + "samples/");
 }
 
 void cnqs::vmcsolver::Config::Output() const {
