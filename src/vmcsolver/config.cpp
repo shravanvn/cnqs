@@ -69,7 +69,7 @@ cnqs::vmcsolver::Config::Config(const std::string &file_name) {
     if (output_prefix.compare("") == 0) {
         std::time_t time = std::time(nullptr);
 
-        char time_string[20];
+        char time_string[21];
         std::strftime(time_string, 21, "%Y-%m-%d_%H-%M-%S/",
                       std::localtime(&time));
 
