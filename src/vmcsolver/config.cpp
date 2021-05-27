@@ -45,16 +45,6 @@ cnqs::vmcsolver::Config::Config(const std::string &file_name) {
         metropolis_warm_steps = metropolis["warm_steps"].as<int>();
         metropolis_cherry_pick = metropolis["cherry_pick"].as<int>();
         metropolis_bump_size = metropolis["bump_size"].as<double>();
-        if (metropolis["bump_single"]) {
-            metropolis_bump_single = metropolis["bump_single"].as<bool>();
-        } else {
-            metropolis_bump_single = true;
-        }
-        if (metropolis["save_samples"]) {
-            metropolis_save_samples = metropolis["save_samples"].as<bool>();
-        } else {
-            metropolis_save_samples = false;
-        }
     }
 
     {
@@ -67,28 +57,35 @@ cnqs::vmcsolver::Config::Config(const std::string &file_name) {
     stochastic_reconfig_regularization =
         config["stoch_reconfig"]["sr_reg"].as<double>();
 
-    std::time_t time = std::time(nullptr);
-    char time_string[20];
-    std::strftime(time_string, 20, "%Y-%m-%d_%H-%M-%S", std::localtime(&time));
-    output_prefix = time_string;
+    {
+        YAML::Node output = config["output"];
 
-    if (output_prefix.back() != '/') {
+        output_prefix = output["prefix"].as<std::string>();
+        output_frequency = output["frequency"].as<int>();
+        output_model = output["model"].as<bool>();
+        output_samples = output["samples"].as<bool>();
+    }
+
+    if (output_prefix.compare("") == 0) {
+        std::time_t time = std::time(nullptr);
+
+        char time_string[20];
+        std::strftime(time_string, 21, "%Y-%m-%d_%H-%M-%S/",
+                      std::localtime(&time));
+
+        output_prefix = time_string;
+    } else if (output_prefix.back() != '/') {
         output_prefix += "/";
     }
-}
 
-void cnqs::vmcsolver::Config::UpdateOutputPrefix(
-    const std::string &new_output_prefix) {
-    output_prefix = new_output_prefix;
-
-    if (output_prefix.back() != '/') {
-        output_prefix += "/";
-    }
-}
-
-void cnqs::vmcsolver::Config::CreateDirs() const {
+    // create directories
     boost::filesystem::create_directories(output_prefix);
-    if (metropolis_save_samples) {
+
+    if (output_model && (output_frequency > 0)) {
+        boost::filesystem::create_directories(output_prefix + "model/");
+    }
+
+    if (output_samples && (output_frequency > 0)) {
         boost::filesystem::create_directories(output_prefix + "samples/");
     }
 }
@@ -142,10 +139,6 @@ void cnqs::vmcsolver::Config::Output() const {
         out << YAML::Value << metropolis_cherry_pick;
         out << YAML::Key << "bump_size";
         out << YAML::Value << metropolis_bump_size;
-        out << YAML::Key << "bump_single";
-        out << YAML::Value << metropolis_bump_single;
-        out << YAML::Key << "save_samples";
-        out << YAML::Value << metropolis_save_samples;
         out << YAML::EndMap;
     }
     out << YAML::Key << "gradient_descent";
@@ -166,8 +159,20 @@ void cnqs::vmcsolver::Config::Output() const {
         out << YAML::Value << stochastic_reconfig_regularization;
         out << YAML::EndMap;
     }
-    out << YAML::Key << "output_prefix";
-    out << YAML::Value << output_prefix;
+    out << YAML::Key << "output";
+    out << YAML::Value;
+    {
+        out << YAML::BeginMap;
+        out << YAML::Key << "prefix";
+        out << YAML::Value << output_prefix;
+        out << YAML::Key << "frequency";
+        out << YAML::Value << output_frequency;
+        out << YAML::Key << "model";
+        out << YAML::Value << output_model;
+        out << YAML::Key << "samples";
+        out << YAML::Value << output_samples;
+        out << YAML::EndMap;
+    }
     out << YAML::EndMap;
 
     std::ofstream output_file(output_prefix + "config.yaml");

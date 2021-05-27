@@ -13,9 +13,10 @@ void cnqs::vmcsolver::MetropolisSampler(
     double &acceptance_rate, std::mt19937 &rng) {
     std::ofstream file;
 
-    if (config.metropolis_save_samples) {
+    if (config.output_samples && (config.output_frequency > 0) &&
+        (step % config.output_frequency == 0)) {
         const std::string file_name = config.output_prefix + "samples/step_" +
-                                      std::to_string(step) + ".dat";
+                                      std::to_string(step) + ".txt";
 
         file.open(file_name);
 
@@ -41,7 +42,8 @@ void cnqs::vmcsolver::MetropolisSampler(
     int num_acceptance = 0;
     int count = 0;
     for (int t = 0; t < config.metropolis_num_steps; ++t) {
-        if (config.metropolis_save_samples) {
+        if (config.output_samples && (config.output_frequency > 0) &&
+            (step % config.output_frequency == 0)) {
             for (const auto &s : nqs.State()) {
                 file << std::setw(24) << std::setprecision(17) << s << " ";
             }
@@ -88,9 +90,10 @@ void cnqs::vmcsolver::MetropolisSampler(
         }
     }
 
-    if (config.metropolis_save_samples) {
+    if (config.output_samples && (config.output_frequency > 0) &&
+        (step % config.output_frequency == 0)) {
         for (const auto &s : nqs.State()) {
-            file << std::setw(13) << s << " ";
+            file << std::setw(24) << std::setprecision(17) << s << " ";
         }
 
         file << std::endl;

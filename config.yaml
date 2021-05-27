@@ -1,15 +1,23 @@
-hamiltonian: hamiltonian.yaml
+hamiltonian: "hamiltonian.yaml"
+
 rbm:
   num_hidden: 8
+
 metropolis:
   num_steps: 5000
   warm_steps: 1000
   cherry_pick: 10
   bump_size: 3.5
-  bump_single: True
-  save_samples: True
+
 gradient_descent:
   num_steps: 1000
   lr: 0.01
+
 stoch_reconfig:
   sr_reg: 1.0e-09
+
+output:
+  prefix: ""
+  frequency: 100
+  model: true
+  samples: true

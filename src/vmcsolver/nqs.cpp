@@ -4,6 +4,7 @@
 #include <boost/math/special_functions/bessel.hpp>
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 #include <stdexcept>
 
 static const double PI = 3.14159265358979323846;
@@ -306,13 +307,13 @@ void cnqs::vmcsolver::Nqs::Output(const std::string &file_name) const {
 
     output_file << "variational_parameters" << std::endl;
     for (const auto &v : vars_) {
-        output_file << v << ", ";
+        output_file << std::setw(24) << std::setprecision(17) << v << std::endl;
     }
     output_file << std::endl;
 
     output_file << "state" << std::endl;
     for (const auto &t : theta_) {
-        output_file << t << ", ";
+        output_file << std::setw(24) << std::setprecision(17) << t << std::endl;
     }
     output_file << std::endl;
 
@@ -321,37 +322,23 @@ void cnqs::vmcsolver::Nqs::Output(const std::string &file_name) const {
 
 cnqs::vmcsolver::Nqs cnqs::vmcsolver::Nqs::ProposeUpdate(
     const Config &config, std::mt19937 &rng) const {
-    cnqs::vmcsolver::Nqs nqs_new(*this);
+    // sample site
+    std::uniform_int_distribution<int> uniform_int(0, n_ - 1);
+    int site = uniform_int(rng);
 
+    // sample bump
     std::uniform_real_distribution<double> uniform_real(
         -config.metropolis_bump_size, config.metropolis_bump_size);
+    double bump = uniform_real(rng);
 
-    if (config.metropolis_bump_single) {
-        std::uniform_int_distribution<int> uniform_int(0, n_ - 1);
-        int site = uniform_int(rng);
+    // new theta
+    double theta = Center(theta_[site] + bump);
 
-        double bump = uniform_real(rng);
-        double theta = Center(nqs_new.theta_[site] + bump);
-
-        std::vector<double> dx{std::cos(theta) - std::cos(theta_[site]),
-                               std::sin(theta) - std::sin(theta_[site])};
-
-        nqs_new.theta_[site] = theta;
-
-        nqs_new.x_[site] += dx[0];
-        nqs_new.x_[site + n_] += dx[1];
-    } else {
-        for (int i = 0; i < n_; ++i) {
-            double bump = uniform_real(rng);
-            double theta = Center(nqs_new.theta_[i] + bump);
-
-            nqs_new.theta_[i] = theta;
-
-            nqs_new.x_[i] = std::cos(theta);
-            nqs_new.x_[i + n_] = std::sin(theta);
-        }
-    }
-
+    // new NQS
+    cnqs::vmcsolver::Nqs nqs_new(*this);
+    nqs_new.theta_[site] = theta;
+    nqs_new.x_[site] = std::cos(theta);
+    nqs_new.x_[site + n_] = std::sin(theta);
     nqs_new.Recompute();
 
     return nqs_new;

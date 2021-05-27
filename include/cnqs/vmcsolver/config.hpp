@@ -13,10 +13,6 @@ class Config {
 public:
     Config(const std::string &file_name);
 
-    void UpdateOutputPrefix(const std::string &new_output_prefix);
-
-    void CreateDirs() const;
-
     void Output() const;
 
     int hamiltonian_num_rotor;
@@ -32,8 +28,6 @@ public:
     int metropolis_warm_steps;
     int metropolis_cherry_pick;
     double metropolis_bump_size;
-    bool metropolis_bump_single;
-    bool metropolis_save_samples;
 
     int gradient_descent_num_steps;
     double gradient_descent_learning_rate;
@@ -41,6 +35,9 @@ public:
     double stochastic_reconfig_regularization;
 
     std::string output_prefix;
+    int output_frequency;
+    bool output_model;
+    bool output_samples;
 };
 
 }  // namespace vmcsolver
