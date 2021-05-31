@@ -1,2 +1,0 @@
-/usr/bin/ar qc libcnqs_vmcsolver.a CMakeFiles/cnqs_vmcsolver.dir/config.cpp.o CMakeFiles/cnqs_vmcsolver.dir/nqs.cpp.o CMakeFiles/cnqs_vmcsolver.dir/optimization.cpp.o CMakeFiles/cnqs_vmcsolver.dir/sampler.cpp.o
-/usr/bin/ranlib libcnqs_vmcsolver.a
