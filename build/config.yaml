@@ -1,0 +1,33 @@
+# the Hamiltonian can also be directly speficied here
+hamiltonian: "hamiltonian.yaml"
+
+# restricted Boltzmann machine
+rbm:
+  num_hidden: 8
+
+metropolis:
+  # number of samples to generate
+  num_steps: 5000
+  # number of initial samples to discard
+  warm_steps: 1000
+  # downsampling frequency of the remaining samples in computing expectations
+  cherry_pick: 10
+  # range of uniform distribution used in Metropolis-Hasting proposal
+  bump_size: 3.5
+
+gradient_descent:
+  num_steps: 1000
+  # learning rate
+  lr: 0.01
+
+# Stochastic reconfiguration
+stoch_reconfig:
+  sr_reg: 1.0e-09
+
+output:
+  # if prefix is empty string, then an timestamp based prefix will be generated
+  prefix: ""
+  # save model and/or samples at every speficied SGD step
+  frequency: 100
+  model: true
+  samples: true
