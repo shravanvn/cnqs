@@ -1,9 +1,15 @@
 ---
 
-hamiltonian: runs/lattice_2x2_hamiltonian.yaml
+hamiltonian: "runs/lattice_2x2_hamiltonian.yaml"
 
 rbm:
   num_hidden: 20
+
+metropolis:
+  num_steps: 24000
+  warm_steps: 4000
+  cherry_pick: 20
+  bump_size: 3.5
 
 gradient_descent:
   num_steps: 10000
@@ -12,11 +18,8 @@ gradient_descent:
 stoch_reconfig:
   sr_reg: 1.0e-06
 
-metropolis:
-  num_steps: 2000
-  warm_steps: 1000
-  cherry_pick: 1
-  bump_size: 3.5
-
-logging:
-  stdout_frequency: 100
+output:
+  prefix: "runs/lattice_2x2_vmc"
+  frequency: 1000
+  model: true
+  samples: true
