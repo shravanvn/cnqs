@@ -4,6 +4,8 @@ hamiltonian: "hamiltonian.yaml"
 # restricted Boltzmann machine
 rbm:
   num_hidden: 8
+  init_bias_range: 1.0
+  init_weight_std: 4.47213595499957939e-01 # sqrt(2 / (2 + 8))
 
 metropolis:
   # number of samples to generate

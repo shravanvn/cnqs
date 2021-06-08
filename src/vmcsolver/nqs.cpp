@@ -26,9 +26,10 @@ cnqs::vmcsolver::Nqs::Nqs(const Config &config) {
     g_r_over_r_.resize(h_);
 }
 
-void cnqs::vmcsolver::Nqs::RandInit(std::mt19937 &rng) {
-    std::uniform_real_distribution<double> uniform(-1.0, 1.0);
-    std::normal_distribution<double> normal(0.0, 1.0);
+void cnqs::vmcsolver::Nqs::RandInit(const Config &config, std::mt19937 &rng) {
+    std::uniform_real_distribution<double> uniform(-config.rbm_init_bias_range,
+                                                   config.rbm_init_bias_range);
+    std::normal_distribution<double> normal(0.0, config.rbm_init_weight_std);
 
     int offset = 0;
     for (int i = 0; i < 2 * n_; ++i) {

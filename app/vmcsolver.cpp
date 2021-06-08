@@ -32,7 +32,7 @@ int main(int argc, char **argv) {
 
         // construct initial NQS and randomly initialize
         cnqs::vmcsolver::Nqs nqs(config);
-        nqs.RandInit(rng);
+        nqs.RandInit(config, rng);
 
         const int num_vars = nqs.NumVars();
 

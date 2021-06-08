@@ -23,6 +23,8 @@ public:
     std::vector<double> hamiltonian_edge_weights;
 
     int rbm_num_hidden;
+    double rbm_init_bias_range;
+    double rbm_init_weight_std;
 
     int metropolis_num_steps;
     int metropolis_warm_steps;

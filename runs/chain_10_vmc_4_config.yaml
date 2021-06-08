@@ -4,6 +4,8 @@ hamiltonian: "runs/chain_10_hamiltonian.yaml"
 
 rbm:
   num_hidden: 80
+  init_bias_range: 1.0
+  init_weight_std: 1.0
 
 metropolis:
   num_steps: 120000

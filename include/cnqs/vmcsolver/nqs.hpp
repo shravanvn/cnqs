@@ -34,7 +34,7 @@ public:
 
     void Output(const std::string &file_name) const;
 
-    void RandInit(std::mt19937 &rng);
+    void RandInit(const Config &config, std::mt19937 &rng);
 
     void UpdateVars(const std::vector<double> &vars_diff);
 

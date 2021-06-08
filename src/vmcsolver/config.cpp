@@ -36,7 +36,12 @@ cnqs::vmcsolver::Config::Config(const std::string &file_name) {
         }
     }
 
-    rbm_num_hidden = config["rbm"]["num_hidden"].as<int>();
+    {
+        YAML::Node rbm = config["rbm"];
+        rbm_num_hidden = rbm["num_hidden"].as<int>();
+        rbm_init_bias_range = rbm["init_bias_range"].as<double>();
+        rbm_init_weight_std = rbm["init_weight_std"].as<double>();
+    }
 
     {
         YAML::Node metropolis = config["metropolis"];
@@ -125,6 +130,10 @@ void cnqs::vmcsolver::Config::Output() const {
         out << YAML::BeginMap;
         out << YAML::Key << "num_hidden";
         out << YAML::Value << rbm_num_hidden;
+        out << YAML::Key << "init_bias_range";
+        out << YAML::Value << rbm_init_bias_range;
+        out << YAML::Key << "init_weight_std";
+        out << YAML::Value << rbm_init_weight_std;
         out << YAML::EndMap;
     }
     out << YAML::Key << "metropolis";
