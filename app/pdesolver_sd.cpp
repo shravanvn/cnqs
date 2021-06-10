@@ -1,33 +1,23 @@
-#include <Teuchos_Comm.hpp>
 #include <Teuchos_CommandLineProcessor.hpp>
-#include <Teuchos_RCP.hpp>
 #include <Tpetra_Core.hpp>
-#include <Tpetra_MultiVector.hpp>
-#include <cstdlib>
 #include <iostream>
 #include <memory>
-#include <stdexcept>
 #include <string>
 
 #include "cnqs/pdesolver/hamiltonian.hpp"
 #include "cnqs/pdesolver/spectral_difference_problem.hpp"
 
 int main(int argc, char **argv) {
-    using Scalar = Tpetra::MultiVector<>::scalar_type;
-    using LocalOrdinal = Tpetra::MultiVector<>::local_ordinal_type;
-    using GlobalOrdinal = Tpetra::MultiVector<>::global_ordinal_type;
-    using Node = Tpetra::MultiVector<>::node_type;
-
     int exitCode = 1;
 
     Tpetra::ScopeGuard tpetraScope(&argc, &argv);
     {
         std::string hamiltonianFileName = "hamiltonian.yaml";
-        GlobalOrdinal maxFreq = 32;
-        GlobalOrdinal maxPowerIter = 10000;
-        Scalar tolPowerIter = 1.0e-15;
-        GlobalOrdinal maxCgIter = 10000;
-        Scalar tolCgIter = 1.0e-15;
+        long maxFreq = 32;
+        long maxPowerIter = 10000;
+        double tolPowerIter = 1.0e-15;
+        long maxCgIter = 10000;
+        double tolCgIter = 1.0e-15;
         std::string groundStateFileName = "";
 
         auto cmdParser = Teuchos::CommandLineProcessor(false, true, true);
@@ -55,12 +45,11 @@ int main(int argc, char **argv) {
         if (status == Teuchos::CommandLineProcessor::EParseCommandLineReturn::
                           PARSE_SUCCESSFUL) {
             const auto comm = Tpetra::getDefaultComm();
-            const auto hamiltonian = std::make_shared<
-                cnqs::pdesolver::Hamiltonian<Scalar, GlobalOrdinal>>(
-                hamiltonianFileName);
-            cnqs::pdesolver::SpectralDifferenceProblem<Scalar, LocalOrdinal,
-                                                       GlobalOrdinal, Node>
-                problem(hamiltonian, maxFreq, comm);
+            const auto hamiltonian =
+                std::make_shared<cnqs::pdesolver::Hamiltonian>(
+                    hamiltonianFileName);
+            cnqs::pdesolver::SpectralDifferenceProblem problem(hamiltonian,
+                                                               maxFreq, comm);
             problem.runInversePowerIteration(maxPowerIter, tolPowerIter,
                                              maxCgIter, tolCgIter,
                                              groundStateFileName);

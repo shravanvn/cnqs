@@ -28,7 +28,6 @@ namespace pdesolver {
 ///
 /// Its concrete subclasses implement various ways to discretize the
 /// Hamiltonian.
-template <class Real, class Index>
 class Problem {
 public:
     /// Default destructor
@@ -75,9 +74,9 @@ public:
     /// set to the empty string `""`, then the eigenstate is not saved.
     ///
     /// @return Estimated smallest eigenvalue of the Hamiltonian.
-    virtual Real runInversePowerIteration(
-        int maxPowerIter, Real tolPowerIter, int maxCgIter, Real tolCgIter,
-        const std::string &fileName) const = 0;
+    virtual double runInversePowerIteration(
+        long maxPowerIter, double tolPowerIter, long maxCgIter,
+        double tolCgIter, const std::string &fileName) const = 0;
 };
 
 }  // namespace pdesolver
