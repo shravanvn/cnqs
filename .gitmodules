@@ -1,0 +1,3 @@
+[submodule "extern/tensorfact"]
+	path = extern/tensorfact
+	url = https://github.com/saibalde/tensorfact.git
