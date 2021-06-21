@@ -1,0 +1,33 @@
+---
+
+hamiltonian:
+  num_rotor: 2
+  vertex_weight: 5.0
+  edges:
+  - j: 0
+    k: 1
+    beta: 1.0
+
+rbm:
+  num_hidden: 10
+  init_bias_range: 1.0
+  init_weight_std: 0.40824829046386302 # sqrt(2 / (2 + 10))
+
+metropolis:
+  num_steps: 12000
+  warm_steps: 2000
+  cherry_pick: 10
+  bump_size: 3.5
+
+gradient_descent:
+  num_steps: 10000
+  lr: 1.0e-02
+
+stoch_reconfig:
+  sr_reg: 1.0e-06
+
+output:
+  prefix: "runs/chain_2_vmc"
+  frequency: 1000
+  model: true
+  samples: true

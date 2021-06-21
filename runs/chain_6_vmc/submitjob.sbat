@@ -1,0 +1,56 @@
+#!/bin/bash
+
+#SBATCH --job-name="chain_6_vmc"
+#SBATCH --output="runs/chain_6_vmc/stdout_%j.txt"
+
+#SBATCH --mail-type="BEGIN,END,TIME_LIMIT,FAIL"
+#SBATCH --mail-user="saibalde@umich.edu"
+
+#SBATCH --account=lsa1
+#SBATCH --partition=standard
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=1
+#SBATCH --cpus-per-task=1
+#SBATCH --mem-per-cpu=5G
+#SBATCH --time=18:00:00
+
+#SBATCH --export=ALL
+
+module purge
+module load gcc/8.2.0
+module load openblas/0.3.9
+module load openmpi/4.0.4
+module load python3.8-anaconda/2020.07
+
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-1}
+export OMP_PROC_BIND=spread
+export OMP_PLACES=threads
+
+
+if [ ! -z "${SLURM_JOB_NODELIST+x}" ]; then
+    echo 'Running on' $(scontrol show hostnames ${SLURM_JOB_NODELIST})
+else
+    echo 'Running locally'
+fi
+
+echo ''
+
+echo 'Running program'
+./build/app/vmcsolver runs/chain_6_vmc/config.yaml
+
+echo ''
+
+if [ ! -z "${SLURM_JOB_NODELIST+x}" ]; then
+    echo 'Getting resource statistics'
+    sstat -j ${SLURM_JOB_ID} --format='AveRSS,MaxRSS'
+
+    echo ''
+fi
+
+echo 'Creating correlation plots'
+python ./utils/analyze_samples.py --config_file runs/chain_6_vmc/config.yaml --max_lag 500
+
+echo ''
+
+echo 'Archiving output'
+tar -czf runs/chain_6_vmc.tar.gz runs/chain_6_vmc

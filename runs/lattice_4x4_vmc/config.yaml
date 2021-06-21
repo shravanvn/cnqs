@@ -1,0 +1,27 @@
+---
+
+hamiltonian: "runs/lattice_4x4_vmc/hamiltonian.yaml"
+
+rbm:
+  num_hidden: 80
+  init_bias_range: 1.0
+  init_weight_std: 0.14433756729740644 # sqrt(2 / (16 + 80))
+
+metropolis:
+  num_steps: 96000
+  warm_steps: 16000
+  cherry_pick: 80
+  bump_size: 2.0
+
+gradient_descent:
+  num_steps: 10000
+  lr: 1.0e-02
+
+stoch_reconfig:
+  sr_reg: 1.0e-06
+
+output:
+  prefix: "runs/lattice_4x4_vmc"
+  frequency: 1000
+  model: true
+  samples: true
