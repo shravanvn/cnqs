@@ -2,6 +2,7 @@ add_library(cnqs_pdesolver
     hamiltonian.cpp
     finite_difference_problem.cpp
     spectral_difference_problem.cpp
+    tensor_train_problem.cpp
 )
 target_include_directories(cnqs_pdesolver PUBLIC
     ${PROJECT_SOURCE_DIR}/include
@@ -11,6 +12,7 @@ target_include_directories(cnqs_pdesolver PUBLIC
 target_link_libraries(cnqs_pdesolver PUBLIC
     ${Trilinos_LIBRARIES}
     ${Trilinos_TPL_LIBRARIES}
+    tensorfact
 )
 target_link_libraries(cnqs_pdesolver PRIVATE yaml-cpp)
 target_compile_features(cnqs_pdesolver PUBLIC cxx_std_11)

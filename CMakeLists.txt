@@ -7,6 +7,8 @@ option(CNQS_BUILD_VMCSOLVER "Build VMC eigensolver subpackage" ON)
 find_package(yaml-cpp REQUIRED)
 
 if(CNQS_BUILD_PDESOLVER)
+    add_subdirectory(extern/tensorfact)
+
     find_package(Trilinos REQUIRED COMPONENTS Teuchos Tpetra Belos)
 
     set(CMAKE_CXX_COMPILER ${Trilinos_CXX_COMPILER})
