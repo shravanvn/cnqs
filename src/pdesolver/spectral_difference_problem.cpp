@@ -14,44 +14,44 @@
 #include "shifted_operator.hpp"
 
 cnqs::pdesolver::SpectralDifferenceProblem::SpectralDifferenceProblem(
-    const std::shared_ptr<const Hamiltonian> &hamiltonian, long maxFreq,
+    const std::shared_ptr<const Hamiltonian> &hamiltonian, long max_freq,
     const Teuchos::RCP<const Teuchos::Comm<int>> &comm)
     : hamiltonian_(hamiltonian),
-      maxFreq_(maxFreq),
-      unfoldingFactors_(std::vector<long>(hamiltonian->numRotor() + 1)),
+      max_freq_(max_freq),
+      unfolding_factors_(std::vector<long>(hamiltonian->NumRotor() + 1)),
       comm_(comm) {
     TEUCHOS_TEST_FOR_EXCEPTION(
-        maxFreq_ < 1, std::domain_error,
+        max_freq_ < 1, std::domain_error,
         "SpectralDifferenceProblem== Need maximum frequency of at least one");
 
-    const long numRotor = hamiltonian_->numRotor();
-    unfoldingFactors_[0] = 1;
-    for (long d = 0; d < numRotor; ++d) {
-        unfoldingFactors_[d + 1] = (2 * maxFreq_ + 1) * unfoldingFactors_[d];
+    const long num_rotor = hamiltonian_->NumRotor();
+    unfolding_factors_[0] = 1;
+    for (long d = 0; d < num_rotor; ++d) {
+        unfolding_factors_[d + 1] = (2 * max_freq_ + 1) * unfolding_factors_[d];
     }
 }
 
 Teuchos::RCP<const Tpetra::Map<int, long>>
-cnqs::pdesolver::SpectralDifferenceProblem::constructMap(
+cnqs::pdesolver::SpectralDifferenceProblem::ConstructMap(
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
-    Teuchos::TimeMonitor localTimer(*timer);
+    Teuchos::TimeMonitor local_timer(*timer);
 
-    const long numRotor = hamiltonian_->numRotor();
+    const long num_rotor = hamiltonian_->NumRotor();
 
     const int rank = comm_->getRank();
     const int size = comm_->getSize();
 
-    const long globalIndexBase = 0;
-    const long globalNumElem = unfoldingFactors_[numRotor];
+    const long global_index_base = 0;
+    const long global_num_element = unfolding_factors_[num_rotor];
 
-    long localNumElem = (globalNumElem + size - 1) / size;
+    long local_num_element = (global_num_element + size - 1) / size;
     if (rank == size - 1) {
-        localNumElem = globalNumElem - rank * localNumElem;
+        local_num_element = global_num_element - rank * local_num_element;
     }
 
     auto map = Teuchos::rcp(new Tpetra::Map<int, long>(
-        globalNumElem, localNumElem, globalIndexBase, comm_));
+        global_num_element, local_num_element, global_index_base, comm_));
     TEUCHOS_TEST_FOR_EXCEPTION(!map->isContiguous(), std::logic_error,
                                "Could not construct a contiguous map");
 
@@ -59,125 +59,131 @@ cnqs::pdesolver::SpectralDifferenceProblem::constructMap(
 }
 
 Teuchos::RCP<Tpetra::MultiVector<double, int, long>>
-cnqs::pdesolver::SpectralDifferenceProblem::constructInitialState(
+cnqs::pdesolver::SpectralDifferenceProblem::ConstructInitialState(
     const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
-    Teuchos::TimeMonitor localTimer(*timer);
+    Teuchos::TimeMonitor local_timer(*timer);
 
-    const long numRotor = hamiltonian_->numRotor();
+    const long num_rotor = hamiltonian_->NumRotor();
     auto state =
         Teuchos::rcp(new Tpetra::MultiVector<double, int, long>(map, 1));
+
     std::random_device device;
     std::mt19937 generator(device());
     std::uniform_real_distribution<double> distribution(-1.0, 1.0);
 
     {
-        const long numLocalRows = map->getNodeNumElements();
+        const long num_local_rows = map->getNodeNumElements();
 
         state->sync_host();
         auto x_2d = state->getLocalViewHost();
         state->modify_host();
 
-        for (long i = 0; i < numLocalRows; ++i) {
+        for (long i = 0; i < num_local_rows; ++i) {
             x_2d(i, 0) = distribution(generator);
         }
 
         state->sync_device();
     }
 
-    std::vector<double> stateNorm(1);
-    state->norm2(stateNorm);
+    std::vector<double> state_norm(1);
+    state->norm2(state_norm);
 
-    std::vector<double> scaleFactor(1);
-    scaleFactor[0] = 1.0 / stateNorm[0];
-    state->scale(scaleFactor);
+    std::vector<double> scale_factor(1);
+    scale_factor[0] = 1.0 / state_norm[0];
+    state->scale(scale_factor);
 
     return state;
 }
 
 Teuchos::RCP<const Tpetra::CrsMatrix<double, int, long>>
-cnqs::pdesolver::SpectralDifferenceProblem::constructHamiltonian(
+cnqs::pdesolver::SpectralDifferenceProblem::ConstructHamiltonian(
     const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
-    Teuchos::TimeMonitor localTimer(*timer);
+    Teuchos::TimeMonitor local_timer(*timer);
 
     // hamiltonian parameters
-    const long numRotor = hamiltonian_->numRotor();
-    const double vertexWeight = hamiltonian_->vertexWeight();
-    const std::vector<std::tuple<long, long, double>> &edgeList =
-        hamiltonian_->edgeList();
-    const long numEdge = edgeList.size();
-    const double sumWeights = hamiltonian_->sumEdgeWeights();
+    const long num_rotor = hamiltonian_->NumRotor();
+    const double vertex_weight = hamiltonian_->VertexWeight();
+    const std::vector<std::tuple<long, long, double>> &edge_list =
+        hamiltonian_->EdgeList();
+    const long num_edge = edge_list.size();
+    const double sum_weights = hamiltonian_->SumEdgeWeights();
 
     // allocate memory for the Hamiltonian
-    const long numEntryPerRow = 2 * numEdge + 1;
+    const long num_entry_per_row = 2 * num_edge + 1;
     auto hamiltonian = Teuchos::rcp(new Tpetra::CrsMatrix<double, int, long>(
-        map, numEntryPerRow, Tpetra::StaticProfile));
+        map, num_entry_per_row, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
-    const long numLocalRows = map->getNodeNumElements();
-    for (long localRowId = 0; localRowId < numLocalRows; ++localRowId) {
-        const long globalRowIdLin = map->getGlobalElement(localRowId);
+    const long num_local_rows = map->getNodeNumElements();
+    for (long local_row_id = 0; local_row_id < num_local_rows; ++local_row_id) {
+        const long global_row_id_linear = map->getGlobalElement(local_row_id);
 
         // unwrap linear index i -> dimensional index (i_0, ..., i_{d - 1})
-        std::vector<long> globalRowIdDim(numRotor);
-        globalRowIdDim[0] = globalRowIdLin;
-        for (long d = 0; d < numRotor; ++d) {
-            if (d < numRotor - 1) {
-                globalRowIdDim[d + 1] = globalRowIdDim[d] / (2 * maxFreq_ + 1);
+        std::vector<long> global_row_id_cartesian(num_rotor);
+        global_row_id_cartesian[0] = global_row_id_linear;
+        for (long d = 0; d < num_rotor; ++d) {
+            if (d < num_rotor - 1) {
+                global_row_id_cartesian[d + 1] =
+                    global_row_id_cartesian[d] / (2 * max_freq_ + 1);
             }
-            globalRowIdDim[d] %= 2 * maxFreq_ + 1;
+            global_row_id_cartesian[d] %= 2 * max_freq_ + 1;
         }
 
         // collect column indices and values for current row
-        std::vector<long> currentRowColumnIndices(numEntryPerRow);
-        std::vector<double> currentRowValues(numEntryPerRow);
+        std::vector<long> current_row_column_indices(num_entry_per_row);
+        std::vector<double> current_row_values(num_entry_per_row);
 
-        currentRowColumnIndices[0] = globalRowIdLin;
-        currentRowValues[0] = 0.0;
-        for (long d = 0; d < numRotor; ++d) {
-            currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
+        current_row_column_indices[0] = global_row_id_linear;
+        current_row_values[0] = 0.0;
+        for (long d = 0; d < num_rotor; ++d) {
+            current_row_values[0] +=
+                std::pow(global_row_id_cartesian[d] - max_freq_, 2.0);
         }
-        currentRowValues[0] *= 0.5 * vertexWeight;
-        currentRowValues[0] += 2.0 * sumWeights;
+        current_row_values[0] *= 0.5 * vertex_weight;
+        current_row_values[0] += 2.0 * sum_weights;
 
-        long currentRowNonZeroCount = 1;
+        long current_row_non_zero_count = 1;
 
-        for (long e = 0; e < numEdge; ++e) {
-            const long j = std::get<0>(edgeList[e]);
-            const long k = std::get<1>(edgeList[e]);
-            const double beta = std::get<2>(edgeList[e]);
+        for (long e = 0; e < num_edge; ++e) {
+            const long j = std::get<0>(edge_list[e]);
+            const long k = std::get<1>(edge_list[e]);
+            const double beta = std::get<2>(edge_list[e]);
 
             for (long f = -1; f <= 1; ++f) {
                 if (f != 0) {
-                    std::vector<long> globalColumnIdDim(globalRowIdDim);
-                    globalColumnIdDim[j] += (f == -1) ? 1 : -1;
-                    globalColumnIdDim[k] -= (f == -1) ? 1 : -1;
+                    std::vector<long> global_column_id_cartesian(
+                        global_row_id_cartesian);
+                    global_column_id_cartesian[j] += (f == -1) ? 1 : -1;
+                    global_column_id_cartesian[k] -= (f == -1) ? 1 : -1;
 
-                    if ((globalColumnIdDim[j] >= 0) &&
-                        (globalColumnIdDim[j] <= 2 * maxFreq_) &&
-                        (globalColumnIdDim[k] >= 0) &&
-                        (globalColumnIdDim[k] <= 2 * maxFreq_)) {
-                        long globalColumnIdLin = 0;
-                        for (long d = 0; d < numRotor; ++d) {
-                            globalColumnIdLin +=
-                                unfoldingFactors_[d] * globalColumnIdDim[d];
+                    if ((global_column_id_cartesian[j] >= 0) &&
+                        (global_column_id_cartesian[j] <= 2 * max_freq_) &&
+                        (global_column_id_cartesian[k] >= 0) &&
+                        (global_column_id_cartesian[k] <= 2 * max_freq_)) {
+                        long global_column_id_linear = 0;
+                        for (long d = 0; d < num_rotor; ++d) {
+                            global_column_id_linear +=
+                                unfolding_factors_[d] *
+                                global_column_id_cartesian[d];
                         }
 
-                        currentRowColumnIndices[currentRowNonZeroCount] =
-                            globalColumnIdLin;
-                        currentRowValues[currentRowNonZeroCount] = -beta;
+                        current_row_column_indices[current_row_non_zero_count] =
+                            global_column_id_linear;
+                        current_row_values[current_row_non_zero_count] = -beta;
 
-                        ++currentRowNonZeroCount;
+                        ++current_row_non_zero_count;
                     }
                 }
             }
         }
 
-        hamiltonian->insertGlobalValues(globalRowIdLin, currentRowColumnIndices,
-                                        currentRowValues);
+        hamiltonian->insertGlobalValues(global_row_id_linear,
+                                        current_row_column_indices,
+                                        current_row_values);
     }
 
     hamiltonian->fillComplete();
@@ -185,87 +191,90 @@ cnqs::pdesolver::SpectralDifferenceProblem::constructHamiltonian(
 }
 
 Teuchos::RCP<const Tpetra::CrsMatrix<double, int, long>>
-cnqs::pdesolver::SpectralDifferenceProblem::constructPreconditioner(
+cnqs::pdesolver::SpectralDifferenceProblem::ConstructPreconditioner(
     const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
     const Teuchos::RCP<Teuchos::Time> &timer) const {
     // create local timer
-    Teuchos::TimeMonitor localTimer(*timer);
+    Teuchos::TimeMonitor local_timer(*timer);
 
     // hamiltonian parameters
-    const long numRotor = hamiltonian_->numRotor();
-    const double vertexWeight = hamiltonian_->vertexWeight();
-    const double sumWeights = hamiltonian_->sumEdgeWeights();
-    const double mu = -4 * hamiltonian_->sumAbsEdgeWeights();
+    const long num_rotor = hamiltonian_->NumRotor();
+    const double vertex_weight = hamiltonian_->VertexWeight();
+    const double sum_weights = hamiltonian_->SumEdgeWeights();
+    const double mu = -4 * hamiltonian_->SumAbsEdgeWeights();
 
     // allocate memory for the preconditioner
     auto preconditioner = Teuchos::rcp(new Tpetra::CrsMatrix<double, int, long>(
         map, 1, Tpetra::StaticProfile));
 
     // assemble the Hamiltonian, one row at a time
-    const long numLocalRows = map->getNodeNumElements();
-    for (long localRowId = 0; localRowId < numLocalRows; ++localRowId) {
-        const long globalRowIdLin = map->getGlobalElement(localRowId);
+    const long num_local_rows = map->getNodeNumElements();
+    for (long local_row_id = 0; local_row_id < num_local_rows; ++local_row_id) {
+        const long global_row_id_linear = map->getGlobalElement(local_row_id);
 
         // unwrap linear index i -> dimensional index (i_0, ..., i_{d - 1})
-        std::vector<long> globalRowIdDim(numRotor);
-        globalRowIdDim[0] = globalRowIdLin;
-        for (long d = 0; d < numRotor; ++d) {
-            if (d < numRotor - 1) {
-                globalRowIdDim[d + 1] = globalRowIdDim[d] / (2 * maxFreq_ + 1);
+        std::vector<long> global_row_id_cartesian(num_rotor);
+        global_row_id_cartesian[0] = global_row_id_linear;
+        for (long d = 0; d < num_rotor; ++d) {
+            if (d < num_rotor - 1) {
+                global_row_id_cartesian[d + 1] =
+                    global_row_id_cartesian[d] / (2 * max_freq_ + 1);
             }
-            globalRowIdDim[d] %= 2 * maxFreq_ + 1;
+            global_row_id_cartesian[d] %= 2 * max_freq_ + 1;
         }
 
         // collect column indices and values for current row
-        std::vector<long> currentRowColumnIndices(1);
-        std::vector<double> currentRowValues(1);
+        std::vector<long> current_row_column_indices(1);
+        std::vector<double> current_row_values(1);
 
-        currentRowColumnIndices[0] = globalRowIdLin;
-        currentRowValues[0] = 0.0;
-        for (long d = 0; d < numRotor; ++d) {
-            currentRowValues[0] += std::pow(globalRowIdDim[d] - maxFreq_, 2.0);
+        current_row_column_indices[0] = global_row_id_linear;
+        current_row_values[0] = 0.0;
+        for (long d = 0; d < num_rotor; ++d) {
+            current_row_values[0] +=
+                std::pow(global_row_id_cartesian[d] - max_freq_, 2.0);
         }
-        currentRowValues[0] =
-            1 / std::sqrt(vertexWeight * currentRowValues[0] / 2 +
-                          2 * sumWeights - mu);
+        current_row_values[0] =
+            1 / std::sqrt(vertex_weight * current_row_values[0] / 2 +
+                          2 * sum_weights - mu);
 
-        preconditioner->insertGlobalValues(
-            globalRowIdLin, currentRowColumnIndices, currentRowValues);
+        preconditioner->insertGlobalValues(global_row_id_linear,
+                                           current_row_column_indices,
+                                           current_row_values);
     }
 
     preconditioner->fillComplete();
     return preconditioner.getConst();
 }
 
-double cnqs::pdesolver::SpectralDifferenceProblem::runInversePowerIteration(
-    long maxPowerIter, double tolPowerIter, long maxCgIter, double tolCgIter,
-    const std::string &fileName) const {
+double cnqs::pdesolver::SpectralDifferenceProblem::RunInversePowerIteration(
+    long num_power_iter, double tol_power_iter, long num_cg_iter,
+    double tol_cg_iter, const std::string &file_name) const {
     // create timers
-    Teuchos::RCP<Teuchos::Time> mapTime =
+    Teuchos::RCP<Teuchos::Time> map_time =
         Teuchos::TimeMonitor::getNewCounter("CNQS: Map Construction Time");
-    Teuchos::RCP<Teuchos::Time> initialStateTime =
+    Teuchos::RCP<Teuchos::Time> initial_state_time =
         Teuchos::TimeMonitor::getNewCounter(
             "CNQS: Initial State Construction Time");
-    Teuchos::RCP<Teuchos::Time> hamiltonianTime =
+    Teuchos::RCP<Teuchos::Time> hamiltonian_time =
         Teuchos::TimeMonitor::getNewCounter(
             "CNQS: Hamiltonian Construction Time");
-    Teuchos::RCP<Teuchos::Time> preconditionerTime =
+    Teuchos::RCP<Teuchos::Time> preconditioner_time =
         Teuchos::TimeMonitor::getNewCounter(
             "CNQS: Preconditioner Construction Time");
-    Teuchos::RCP<Teuchos::Time> powerIterationTime =
+    Teuchos::RCP<Teuchos::Time> power_iteration_time =
         Teuchos::TimeMonitor::getNewCounter(
             "CNQS: Inverse Power Iteration Time");
 
-    auto map = constructMap(mapTime);
-    auto x = constructInitialState(map, initialStateTime);
-    auto H = constructHamiltonian(map, hamiltonianTime);
-    auto M = constructPreconditioner(map, preconditionerTime);
-    auto mu = -4 * hamiltonian_->sumAbsEdgeWeights();
+    auto map = ConstructMap(map_time);
+    auto x = ConstructInitialState(map, initial_state_time);
+    auto H = ConstructHamiltonian(map, hamiltonian_time);
+    auto M = ConstructPreconditioner(map, preconditioner_time);
+    auto mu = -4 * hamiltonian_->SumAbsEdgeWeights();
 
     std::vector<double> lambda(1);
     {
         // create local timer
-        Teuchos::TimeMonitor localTimer(*powerIterationTime);
+        Teuchos::TimeMonitor local_timer(*power_iteration_time);
 
         // compute initial guess for lambda
         auto y = Teuchos::rcp(
@@ -293,10 +302,10 @@ double cnqs::pdesolver::SpectralDifferenceProblem::runInversePowerIteration(
 
         // create solver parameters
         auto params = Teuchos::rcp(new Teuchos::ParameterList());
-        params->set("Maximum Iterations", static_cast<int>(maxCgIter));
-        params->set("Convergence Tolerance", tolCgIter);
+        params->set("Maximum Iterations", static_cast<int>(num_cg_iter));
+        params->set("Convergence Tolerance", tol_cg_iter);
 
-        for (long i = 1; i <= maxPowerIter; ++i) {
+        for (long i = 1; i <= num_power_iter; ++i) {
             // create linear problem
             auto z = Teuchos::rcp(
                 new Tpetra::MultiVector<double, int, long>(x->getMap(), 1));
@@ -327,31 +336,31 @@ double cnqs::pdesolver::SpectralDifferenceProblem::runInversePowerIteration(
             x = problem->getLHS();
 
             // normalize x = x / norm2(x)
-            std::vector<double> xNorm(1);
-            x->norm2(xNorm);
+            std::vector<double> x_norm(1);
+            x->norm2(x_norm);
 
-            std::vector<double> scaleFactor(1);
-            scaleFactor[0] = 1.0 / xNorm[0];
-            x->scale(scaleFactor);
+            std::vector<double> scale_factor(1);
+            scale_factor[0] = 1.0 / x_norm[0];
+            x->scale(scale_factor);
 
             // compute new estimate for lambda
-            std::vector<double> lambdaNew(1);
+            std::vector<double> lambda_new(1);
 
             H->apply(*x, *y);
-            x->dot(*y, lambdaNew);
-            const double dLambda = std::abs(lambda[0] - lambdaNew[0]);
-            lambda[0] = lambdaNew[0];
+            x->dot(*y, lambda_new);
+            const double d_lambda = std::abs(lambda[0] - lambda_new[0]);
+            lambda[0] = lambda_new[0];
 
             if (comm_->getRank() == 0) {
                 std::cout << std::setw(9) << i << " " << std::setw(24)
                           << std::setprecision(16) << lambda[0] << " "
-                          << std::setw(12) << std::setprecision(6) << dLambda
+                          << std::setw(12) << std::setprecision(6) << d_lambda
                           << " " << std::setw(9) << solver.getNumIters() << " "
                           << std::setw(12) << solver.achievedTol() << std::endl;
             }
 
             // check for convergence
-            if (dLambda < tolPowerIter) {
+            if (d_lambda < tol_power_iter) {
                 break;
             }
         }
@@ -364,9 +373,9 @@ double cnqs::pdesolver::SpectralDifferenceProblem::runInversePowerIteration(
     }
 
     // save estimated state
-    if (fileName.compare("") != 0) {
+    if (file_name.compare("") != 0) {
         Tpetra::MatrixMarket::Writer<Tpetra::CrsMatrix<double, int, long>>::
-            writeDenseFile(fileName, *x, "low_eigen_state",
+            writeDenseFile(file_name, *x, "low_eigen_state",
                            "Estimated lowest energy eigenstate of Hamiltonian");
     }
 

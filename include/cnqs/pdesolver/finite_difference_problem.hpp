@@ -18,7 +18,7 @@ namespace cnqs {
 
 namespace pdesolver {
 
-/// Basic finite-difference implementation of Problem
+/// @brief Basic finite-difference implementation of Problem
 ///
 /// The space \f$[0, 2\pi]^d\f$ is discretized uniformly with \f$n\f$ grid
 /// points per dimension. Then any state \f$\psi \in \mathcal{H}^1([0,
@@ -53,35 +53,33 @@ public:
     /// @param [in] hamiltonian Quantum rotor hamiltonian \f$(\mathcal{V},
     /// \mathcal{E})\f$, implemented in Hamiltonian.
     ///
-    /// @param [in] laplacianFactor Prefactor \f$h\f$ of the Laplacian; must be
-    /// non-negative.
-    ///
-    /// @param [in] numGridPoint Number of grid points per dimension, \f$n\f$.
+    /// @param [in] num_grid_point Number of grid points per dimension, \f$n\f$.
     ///
     /// @param [in] comm Communicator.
     FiniteDifferenceProblem(
         const std::shared_ptr<const Hamiltonian> &hamiltonian,
-        long numGridPoint, const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
+        long num_grid_point,
+        const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
-    double runInversePowerIteration(long numPowerIter, double tolPowerIter,
-                                    long numCgIter, double tolCgIter,
-                                    const std::string &fileName) const;
+    double RunInversePowerIteration(long num_power_iter, double tol_power_iter,
+                                    long num_cg_iter, double tol_cg_iter,
+                                    const std::string &file_name) const;
 
 private:
-    Teuchos::RCP<const Tpetra::Map<int, long>> constructMap(
+    Teuchos::RCP<const Tpetra::Map<int, long>> ConstructMap(
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<Tpetra::MultiVector<double, int, long>> constructInitialState(
+    Teuchos::RCP<Tpetra::MultiVector<double, int, long>> ConstructInitialState(
         const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     Teuchos::RCP<const Tpetra::CrsMatrix<double, int, long>>
-    constructHamiltonian(const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
+    ConstructHamiltonian(const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
                          const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     std::shared_ptr<const Hamiltonian> hamiltonian_;
-    long numGridPoint_;
-    std::vector<long> unfoldingFactors_;
+    long num_grid_point_;
+    std::vector<long> unfolding_factors_;
     std::vector<double> theta_;
     Teuchos::RCP<const Teuchos::Comm<int>> comm_;
 };

@@ -1,16 +1,13 @@
 #ifndef CNQS_PDESOLVER_PROBLEM_HPP
 #define CNQS_PDESOLVER_PROBLEM_HPP
 
-#include <iostream>
 #include <string>
-#include <tuple>
-#include <vector>
 
 namespace cnqs {
 
 namespace pdesolver {
 
-/// Abstract interface for defining quantum rotor eigenvalue minimization
+/// @brief Abstract interface for defining quantum rotor eigenvalue minimization
 ///
 /// Given a quantum rotor Hamiltonian defined on rotor network \f$(\mathcal{V},
 /// \mathcal{E})\f$ (implemented via `cnqs::Hamiltonian`),
@@ -30,10 +27,10 @@ namespace pdesolver {
 /// Hamiltonian.
 class Problem {
 public:
-    /// Default destructor
+    /// @brief Default destructor
     virtual ~Problem() = default;
 
-    /// Run inverse power iteration
+    /// @brief Run inverse power iteration
     ///
     /// Computing the lowest-energy eigenpair of the Hamiltonian \f$H\f$ can be
     /// achieved using inverse power iteration. Given a lower-bound \f$\mu\f$ of
@@ -58,25 +55,25 @@ public:
     /// iterative solver with maxinum number of iterations \f$k_\text{CG}\f$ and
     /// tolerance \f$\tau_\text{CG}\f$.
     ///
-    /// @param [in] maxPowerIter Maximum number of power iterations,
+    /// @param [in] num_power_iter Maximum number of power iterations,
     /// \f$k_\text{power}\f$.
     ///
-    /// @param [in] tolPowerIter Tolerance at which to stop power iteration,
+    /// @param [in] tol_power_iter Tolerance at which to stop power iteration,
     /// \f$\tau_\text{power}\f$.
     ///
-    /// @param [in] maxCgIter Number of CG iterations to run per power
+    /// @param [in] num_cg_iter Number of CG iterations to run per power
     /// iteration, \f$k_\text{CG}\f$.
     ///
-    /// @param [in] tolCgIter Tolerance at which to stop CG iteration,
+    /// @param [in] tol_cg_iter Tolerance at which to stop CG iteration,
     /// \f$\tau_\text{CG}\f$.
     ///
-    /// @param [in] fileName File where to store the estimated eigenstate. If
+    /// @param [in] file_name File where to store the estimated eigenstate. If
     /// set to the empty string `""`, then the eigenstate is not saved.
     ///
     /// @return Estimated smallest eigenvalue of the Hamiltonian.
-    virtual double runInversePowerIteration(
-        long maxPowerIter, double tolPowerIter, long maxCgIter,
-        double tolCgIter, const std::string &fileName) const = 0;
+    virtual double RunInversePowerIteration(
+        long num_power_iter, double tol_power_iter, long num_cg_iter,
+        double tol_cg_iter, const std::string &file_name) const = 0;
 };
 
 }  // namespace pdesolver

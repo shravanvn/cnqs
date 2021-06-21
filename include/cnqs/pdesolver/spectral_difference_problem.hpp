@@ -18,7 +18,7 @@ namespace cnqs {
 
 namespace pdesolver {
 
-/// Fourier-series based implementation of Problem
+/// @brief Fourier-series based implementation of Problem
 ///
 /// Since the state \f$\psi \in \mathcal{H}^1([0, 2\pi]^d)\f$ is assumed to be
 /// \f$2\pi\f$-periodic along each of the dimensions, it can be represented in
@@ -50,20 +50,20 @@ namespace pdesolver {
 /// computing.
 class SpectralDifferenceProblem : public Problem {
 public:
-    /// Construct a SpectralDifferenceProblem given hamiltonian and cutoff
-    /// frequency
+    /// @brief Construct a SpectralDifferenceProblem given hamiltonian and
+    /// cutoff frequency
     ///
     /// @param [in] hamiltonian Quantum rotor hamiltonian \f$(\mathcal{V},
     /// \mathcal{E})\f$, implemented in Hamiltonian.
     ///
-    /// @param [in] maxFreq Cutoff frequency, \f$\omega_\text{max}\f$.
+    /// @param [in] max_freq Cutoff frequency, \f$\omega_\text{max}\f$.
     ///
     /// @param [in] comm Communicator.
     SpectralDifferenceProblem(
-        const std::shared_ptr<const Hamiltonian> &hamiltonian, long maxFreq,
+        const std::shared_ptr<const Hamiltonian> &hamiltonian, long max_freq,
         const Teuchos::RCP<const Teuchos::Comm<int>> &comm);
 
-    /// Run inverse power iteration
+    /// @brief Run inverse power iteration
     ///
     /// Computing the lowest-energy eigenpair of the Hamiltonian \f$\hat{H}\f$
     /// can be achieved using inverse power iteration. Given a lower-bound
@@ -102,46 +102,46 @@ public:
     ///     \hat{\phi}_{k + 1} = \hat{M}^{-1} \hat{\psi}_k
     /// \f]
     ///
-    /// @param [in] maxPowerIter Maximum number of power iterations,
+    /// @param [in] num_power_iter Maximum number of power iterations,
     /// \f$k_\text{power}\f$.
     ///
-    /// @param [in] tolPowerIter Tolerance at which to stop power iteration,
+    /// @param [in] tol_power_iter Tolerance at which to stop power iteration,
     /// \f$\tau_\text{power}\f$.
     ///
-    /// @param [in] maxCgIter Number of CG iterations to run per power
+    /// @param [in] num_cg_iter Number of CG iterations to run per power
     /// iteration, \f$k_\text{CG}\f$.
     ///
-    /// @param [in] tolCgIter Tolerance at which to stop CG iteration,
+    /// @param [in] tol_cg_iter Tolerance at which to stop CG iteration,
     /// \f$\tau_\text{CG}\f$.
     ///
-    /// @param [in] fileName File where to store the estimated eigenstate. If
+    /// @param [in] file_name File where to store the estimated eigenstate. If
     /// set to the empty string `""`, then the eigenstate is not saved.
     ///
     /// @return Estimated smallest eigenvalue of the Hamiltonian.
-    double runInversePowerIteration(long numPowerIter, double tolPowerIter,
-                                    long numCgIter, double tolCgIter,
-                                    const std::string &fileName) const;
+    double RunInversePowerIteration(long num_power_iter, double tol_power_iter,
+                                    long num_cg_iter, double tol_cg_iter,
+                                    const std::string &file_name) const;
 
 private:
-    Teuchos::RCP<const Tpetra::Map<int, long>> constructMap(
+    Teuchos::RCP<const Tpetra::Map<int, long>> ConstructMap(
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
-    Teuchos::RCP<Tpetra::MultiVector<double, int, long>> constructInitialState(
+    Teuchos::RCP<Tpetra::MultiVector<double, int, long>> ConstructInitialState(
         const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     Teuchos::RCP<const Tpetra::CrsMatrix<double, int, long>>
-    constructHamiltonian(const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
+    ConstructHamiltonian(const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
                          const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     Teuchos::RCP<const Tpetra::CrsMatrix<double, int, long>>
-    constructPreconditioner(
+    ConstructPreconditioner(
         const Teuchos::RCP<const Tpetra::Map<int, long>> &map,
         const Teuchos::RCP<Teuchos::Time> &timer) const;
 
     std::shared_ptr<const Hamiltonian> hamiltonian_;
-    long maxFreq_;
-    std::vector<long> unfoldingFactors_;
+    long max_freq_;
+    std::vector<long> unfolding_factors_;
     Teuchos::RCP<const Teuchos::Comm<int>> comm_;
 };
 

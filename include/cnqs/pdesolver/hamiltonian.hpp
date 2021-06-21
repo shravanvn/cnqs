@@ -9,7 +9,7 @@ namespace cnqs {
 
 namespace pdesolver {
 
-/// Quantum rotor hamiltonian
+/// @brief Quantum rotor hamiltonian
 ///
 /// This class provides an implementation for encoding quantum rotor Hamiltonian
 /// described by an undirected graph with vertices \f$\mathcal{V} = \{0, 1,
@@ -19,34 +19,49 @@ namespace pdesolver {
 /// interaction between rotors \f$j, k \in \mathcal{V}\f$.
 class Hamiltonian {
 public:
-    /// Construct a new Hamiltonian object from node and edge specifications
-    Hamiltonian(long numRotor, double vertexWeight,
-                const std::vector<std::tuple<long, long, double>> &edgeList);
+    /// @brief Construct Hamiltonian from node and edge specifications
+    Hamiltonian(long num_rotor, double vertex_weight,
+                const std::vector<std::tuple<long, long, double>> &edge_list);
 
-    /// Construct a new Hamiltonian object from YAML formatted file
-    Hamiltonian(const std::string &hamiltonianFileName);
+    /// @brief Construct Hamiltonian from YAML formatted file
+    Hamiltonian(const std::string &hamiltonian_file_name);
 
-    /// Number of rotors in the Hamiltonian network
-    const long &numRotor() const { return numRotor_; }
+    /// @brief Default destructor
+    ~Hamiltonian() = default;
 
-    /// Vertex weight of rotors in the Hamiltonian network
-    const double &vertexWeight() const { return vertexWeight_; }
+    /// @brief Default copy constructor
+    Hamiltonian(const Hamiltonian &) = default;
 
-    /// List of edges in the Hamiltonian network
-    const std::vector<std::tuple<long, long, double>> &edgeList() const {
-        return edgeList_;
+    /// @brief Default move constructor
+    Hamiltonian(Hamiltonian &&) = default;
+
+    /// @brief Default copy assignment
+    Hamiltonian &operator=(const Hamiltonian &) = default;
+
+    /// @brief Default move assignment
+    Hamiltonian &operator=(Hamiltonian &&) = default;
+
+    /// @brief Number of rotors in the quantum rotor network
+    const long &NumRotor() const { return num_rotor_; }
+
+    /// @brief Vertex weight of rotors in the quantum rotor network
+    const double &VertexWeight() const { return vertex_weight_; }
+
+    /// @brief List of edges in the quantum rotor network
+    const std::vector<std::tuple<long, long, double>> &EdgeList() const {
+        return edge_list_;
     }
 
-    /// Sum of edge weights
-    double sumEdgeWeights() const;
+    /// @brief Sum of edge weights
+    double SumEdgeWeights() const;
 
-    /// Sum of absolute value of edge weights
-    double sumAbsEdgeWeights() const;
+    /// @brief Sum of absolute value of edge weights
+    double SumAbsEdgeWeights() const;
 
 private:
-    long numRotor_;
-    double vertexWeight_;
-    std::vector<std::tuple<long, long, double>> edgeList_;
+    long num_rotor_;
+    double vertex_weight_;
+    std::vector<std::tuple<long, long, double>> edge_list_;
 };
 
 }  // namespace pdesolver
