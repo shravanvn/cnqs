@@ -25,7 +25,6 @@ int main(int argc, char **argv) {
 
         // construct config and save to file
         cnqs::vmcsolver::Config config(argv[1]);
-        config.Output();
 
         // construct random number generator
         std::mt19937 rng(0);
